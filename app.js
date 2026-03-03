@@ -101,16 +101,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 自动刷新逻辑 (GitHub Webhook 触发)
-    // 注意：需要您在本地配置 GITHUB_TOKEN_FOR_NASDAQ 环境变量或者直接在此处填入具有 repo 权限的 PAT (Personal Access Token)
-    // 强烈建议不要将 Token 硬编码提交到公开仓库，如需配置请将其作为密码输入或使用后端中转。
-    // 这里仅提供基础调用代码结构供您（如果在私有环境中运行）使用。
-    const GITHUB_TOKEN = 'ghp_xxx'; // 已经填入您的 PAT
-    const REPO_OWNER = '您的GitHub用户名';
-    const REPO_NAME = '您的仓库名';
+    // 这里的配置从本地的 config.js 读取 (避免上传到公开仓库)
+    let GITHUB_TOKEN = '';
+    let REPO_OWNER = '';
+    let REPO_NAME = '';
+
+    if (typeof window.CONFIG !== 'undefined') {
+        GITHUB_TOKEN = window.CONFIG.GITHUB_TOKEN || '';
+        REPO_OWNER = window.CONFIG.GITHUB_USERNAME || '';
+        REPO_NAME = window.CONFIG.GITHUB_REPO_NAME || '';
+    }
+
     const WORKFLOW_ID = 'daily_update.yml'; // 与 workflows 目录下的文件名一致
 
     const refreshBtn = document.getElementById('refresh-btn');
-    if (GITHUB_TOKEN) {
+    if (GITHUB_TOKEN && REPO_OWNER && REPO_NAME) {
         refreshBtn.style.display = 'inline-block';
         refreshBtn.addEventListener('click', () => {
             if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 10-20 秒。')) return;
