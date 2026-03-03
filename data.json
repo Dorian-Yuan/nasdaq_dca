@@ -1,16 +1,21 @@
 {
-  "update_time": "2026-03-03 21:38:10",
-  "decision": "普通定投",
+  "update_time": "2026-03-03 22:33:15",
+  "decision": "加倍定投",
   "reasons": [
-    "各项指标均处于正常波动区间"
+    "市场极度恐慌 (FG指数 14)"
   ],
+  "individual_decisions": {
+    "bias_decision": "普通定投",
+    "pe_decision": "普通定投",
+    "fg_decision": "加倍定投"
+  },
   "metrics": {
-    "qqq_price": null,
-    "ma200": null,
-    "bias_percent": null,
-    "pe": null,
-    "pe_percentile": null,
-    "fear_greed_score": null,
-    "fear_greed_rating": "未知"
+    "qqq_price": 597.41,
+    "ma200": 587.52,
+    "bias_percent": 1.68,
+    "pe": 33.8923,
+    "pe_percentile": 0.3308,
+    "fear_greed_score": 14,
+    "fear_greed_rating": "Extreme Fear"
   }
 }
