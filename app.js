@@ -101,11 +101,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderData(data);
             })
             .catch(error => {
-                console.error('获取数据失败:', error);
-                dom.updateTime.textContent = '数据加载失败，请检查网络或是否已生成 JSON';
-                dom.decisionText.textContent = '获取失败';
-                resetLights();
-                dom.lightRed.classList.add('active-red');
+                console.error('获取策略数据失败:', error);
+                dom.updateTime.textContent = '数据加载失败，请检查网络或点击刷新按钮重试。';
+                dom.decisionText.textContent = '读取失败';
+                dom.decisionText.className = 'text-red';
+                dom.reasonsList.innerHTML = `<li style="color:var(--color-red);">错误详情: ${error.message}</li>`;
+
+                // 将所有指标设置为错误状态
+                const errText = '错误';
+                dom.valBias.textContent = errText;
+                dom.valPrice.textContent = '--';
+                document.getElementById('decision-bias').textContent = '--';
+
+                dom.valPePct.textContent = errText;
+                dom.valPe.textContent = '--';
+                document.getElementById('decision-pe').textContent = '--';
+
+                dom.valFgScore.textContent = errText;
+                dom.valFgRating.textContent = '--';
+                document.getElementById('decision-fg').textContent = '--';
             });
     }
 

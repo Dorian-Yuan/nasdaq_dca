@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import requests
 
 # ---------------------------------------------------------
@@ -193,9 +193,13 @@ def main():
     print(f"\n=> 最终建议: {decision}")
     print(f"=> 理由: {', '.join(reasons)}")
     
+    # 获取北京时间
+    beijing_tz = timezone(timedelta(hours=8))
+    bj_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
+
     # 拼装最终要写入 JSON 的数据
     result_data = {
-        "update_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "update_time": bj_time,
         "decision": decision,
         "reasons": reasons,
         "individual_decisions": individual_decisions,
