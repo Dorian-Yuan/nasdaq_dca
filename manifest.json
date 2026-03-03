@@ -1,0 +1,21 @@
+{
+  "name": "纳斯达克定投评估",
+  "short_name": "NASDAQ DCA",
+  "description": "基于历史PE和技术指标的纳指100定投辅助工具",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "icons": [
+    {
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

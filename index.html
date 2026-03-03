@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>纳斯达克定投策略</title>
+    <!-- PWA Settings -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="./icon.png">
+    <!-- Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>纳斯达克 (QQQ) 定投评估</h1>
+            <p id="update-time" class="subtitle">加载中...</p>
+        </header>
+
+        <!-- 主状态红绿灯区 -->
+        <section class="status-card" id="main-status-card">
+            <div class="status-indicator">
+                <div class="light" id="light-red"></div>
+                <div class="light" id="light-yellow"></div>
+                <div class="light" id="light-green"></div>
+            </div>
+            <h2 id="decision-text">评估中</h2>
+            <div id="reasons-list" class="reasons">
+                <!-- 理由会注入到这里 -->
+            </div>
+        </section>
+
+        <!-- 详细指标区 -->
+        <section class="metrics-grid">
+            <!-- 乖离率卡片 -->
+            <div class="metric-card">
+                <div class="metric-title">200日均线乖离率</div>
+                <div class="metric-value" id="val-bias">--%</div>
+                <div class="metric-sub">QQQ 价格: <span id="val-price">--</span></div>
+            </div>
+            
+            <!-- 估值卡片 -->
+            <div class="metric-card">
+                <div class="metric-title">纳指100 PE 百分位</div>
+                <div class="metric-value" id="val-pe-pct">--%</div>
+                <div class="metric-sub">相对估值: <span id="val-pe">--</span></div>
+            </div>
+            
+            <!-- 情绪卡片 -->
+            <div class="metric-card">
+                <div class="metric-title">市场恐慌贪婪指数</div>
+                <div class="metric-value" id="val-fg-score">--</div>
+                <div class="metric-sub">状态: <span id="val-fg-rating">--</span></div>
+            </div>
+        </section>
+
+        <!-- 刷新按钮区 (暂留给 Github Webhook 扩展) -->
+        <section class="action-section">
+            <button id="refresh-btn" class="btn primary-btn" style="display: none;">强制刷新策略数据 (调用 GitHub Actions)</button>
+        </section>
+        
+        <footer>
+            <p>数据每日自动从雅虎财经、蛋卷基金及市场情绪接口获取。不构成投资建议。</p>
+        </footer>
+    </div>
+    
+    <script src="./app.js"></script>
+</body>
+</html>

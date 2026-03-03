@@ -1,0 +1,16 @@
+{
+  "update_time": "2026-03-03 21:38:10",
+  "decision": "普通定投",
+  "reasons": [
+    "各项指标均处于正常波动区间"
+  ],
+  "metrics": {
+    "qqq_price": null,
+    "ma200": null,
+    "bias_percent": null,
+    "pe": null,
+    "pe_percentile": null,
+    "fear_greed_score": null,
+    "fear_greed_rating": "未知"
+  }
+}

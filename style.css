@@ -1,0 +1,204 @@
+:root {
+    --bg-color: #f5f7fa;
+    --card-bg: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    
+    --color-green: #10b981;
+    --color-yellow: #f59e0b;
+    --color-red: #ef4444;
+    --color-gray: #e2e8f0;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    --radius-md: 12px;
+    --radius-lg: 20px;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --color-gray: #334155;
+    }
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-top: 20px;
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* 状态主卡片 */
+.status-card {
+    background-color: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: 32px 24px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 24px;
+    transition: transform 0.2s ease;
+}
+
+/* 红绿灯效果 */
+.status-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.light {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--color-gray);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.light.active-red { background-color: var(--color-red); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+.light.active-yellow { background-color: var(--color-yellow); box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); }
+.light.active-green { background-color: var(--color-green); box-shadow: 0 0 20px rgba(16, 185, 129, 0.6); }
+
+#decision-text {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.decision-red { color: var(--color-red); }
+.decision-yellow { color: var(--color-yellow); }
+.decision-green { color: var(--color-green); }
+
+.reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reason-tag {
+    display: inline-block;
+    background-color: var(--bg-color);
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* 指标网格 */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+@media (min-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.metric-card {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+}
+
+.metric-title {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.metric-sub {
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* 按钮区 */
+.action-section {
+    margin-top: auto;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.btn {
+    border: none;
+    padding: 14px 24px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    width: 100%;
+    max-width: 300px;
+}
+
+.primary-btn {
+    background-color: var(--text-primary);
+    color: var(--bg-color);
+}
+
+.primary-btn:active {
+    transform: scale(0.98);
+}
+
+footer {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding-bottom: 20px;
+}
