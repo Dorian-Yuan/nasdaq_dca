@@ -67,14 +67,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // 渲染详细指标数据 (处理可能为空的情况)
         if (data.metrics) {
             const m = data.metrics;
+            const ind = data.individual_decisions || {};
+
             dom.valBias.textContent = m.bias_percent !== null ? `${m.bias_percent}%` : '--%';
             dom.valPrice.textContent = m.qqq_price !== null ? `$${m.qqq_price}` : '--';
+            document.getElementById('decision-bias').textContent = ind.bias_decision || '--';
+            document.getElementById('decision-bias').className = `metric-decision ${ind.bias_decision === '加倍定投' ? 'text-green' : ind.bias_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
 
             dom.valPePct.textContent = m.pe_percentile !== null ? `${(m.pe_percentile * 100).toFixed(1)}%` : '--%';
             dom.valPe.textContent = m.pe !== null ? m.pe : '--';
+            document.getElementById('decision-pe').textContent = ind.pe_decision || '--';
+            document.getElementById('decision-pe').className = `metric-decision ${ind.pe_decision === '加倍定投' ? 'text-green' : ind.pe_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
+
 
             dom.valFgScore.textContent = m.fear_greed_score !== null ? m.fear_greed_score : '--';
             dom.valFgRating.textContent = m.fear_greed_rating !== null ? m.fear_greed_rating : '--';
+            document.getElementById('decision-fg').textContent = ind.fg_decision || '--';
+            document.getElementById('decision-fg').className = `metric-decision ${ind.fg_decision === '加倍定投' ? 'text-green' : ind.fg_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
         }
     }
 

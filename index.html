@@ -40,30 +40,35 @@
         <section class="metrics-grid">
             <!-- 乖离率卡片 -->
             <div class="metric-card">
-                <div class="metric-title">200日均线乖离率</div>
+                <div class="metric-title">200日均线乖离率
+                    <span id="decision-bias" class="metric-decision">--</span>
+                </div>
                 <div class="metric-value" id="val-bias">--%</div>
                 <div class="metric-sub">QQQ 价格: <span id="val-price">--</span></div>
             </div>
 
             <!-- 估值卡片 -->
             <div class="metric-card">
-                <div class="metric-title">纳指100 PE 百分位</div>
+                <div class="metric-title">纳指100 PE 百分位
+                    <span id="decision-pe" class="metric-decision">--</span>
+                </div>
                 <div class="metric-value" id="val-pe-pct">--%</div>
                 <div class="metric-sub">相对估值: <span id="val-pe">--</span></div>
             </div>
 
             <!-- 情绪卡片 -->
             <div class="metric-card">
-                <div class="metric-title">市场恐慌贪婪指数</div>
+                <div class="metric-title">市场恐慌贪婪指数
+                    <span id="decision-fg" class="metric-decision">--</span>
+                </div>
                 <div class="metric-value" id="val-fg-score">--</div>
                 <div class="metric-sub">状态: <span id="val-fg-rating">--</span></div>
             </div>
         </section>
 
-        <!-- 刷新按钮区 (暂留给 Github Webhook 扩展) -->
+        <!-- 刷新按钮区 -->
         <section class="action-section">
-            <button id="refresh-btn" class="btn primary-btn" style="display: none;">强制刷新策略数据 (调用 GitHub
-                Actions)</button>
+            <button id="refresh-btn" class="btn primary-btn">强制刷新策略数据</button>
         </section>
 
         <footer>

@@ -154,7 +154,24 @@ def evaluate_strategy(bias, pe_percentile, fg_score):
     if len(reasons) == 0:
         reasons.append("各项指标均处于正常波动区间")
         
-    return decision, reasons
+    # 保存单个指标的判断结果，供前端展示
+    individual_decisions = {
+        "bias_decision": "普通定投",
+        "pe_decision": "普通定投",
+        "fg_decision": "普通定投"
+    }
+    
+    if bias is not None:
+        if bias >= BIAS_HALT_BUY: individual_decisions["bias_decision"] = "暂停定投"
+        elif bias <= BIAS_DOUBLE_BUY: individual_decisions["bias_decision"] = "加倍定投"
+    if pe_percentile is not None:
+        if pe_percentile >= PE_PCT_HALT_BUY: individual_decisions["pe_decision"] = "暂停定投"
+        elif pe_percentile <= PE_PCT_DOUBLE_BUY: individual_decisions["pe_decision"] = "加倍定投"
+    if fg_score is not None:
+        if fg_score >= FG_HALT_BUY: individual_decisions["fg_decision"] = "暂停定投"
+        elif fg_score <= FG_DOUBLE_BUY: individual_decisions["fg_decision"] = "加倍定投"
+        
+    return decision, reasons, individual_decisions
 
 def main():
     print("开始获取核心指标...")
@@ -172,7 +189,7 @@ def main():
     print(f"-> 市场情緖: {fg_score} ({fg_rating})")
     
     # 评估策略
-    decision, reasons = evaluate_strategy(bias, pe_percentile, fg_score)
+    decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, fg_score)
     print(f"\n=> 最终建议: {decision}")
     print(f"=> 理由: {', '.join(reasons)}")
     
@@ -181,6 +198,7 @@ def main():
         "update_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "decision": decision,
         "reasons": reasons,
+        "individual_decisions": individual_decisions,
         "metrics": {
             "qqq_price": round(current_price, 2) if current_price else None,
             "ma200": round(ma200, 2) if ma200 else None,
