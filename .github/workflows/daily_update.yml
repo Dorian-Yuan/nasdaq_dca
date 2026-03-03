@@ -1,11 +1,12 @@
 name: Daily NASDAQ DCA Strategy Update
 
 on:
-  # 每天定时执行 (使用 cron，此处设为 UTC 21:30，大约北京时间早上 5:30，涵盖夏令时和冬令时美股收盘后)
+  # 每天定时执行 (使用 cron，UTC时间)
   schedule:
-    - cron: '30 21 * * 1-5'  # 周一到周五执行
+    - cron: '30 21 * * 1-5'  # 美股收盘后 (北京时间早上 5:30)，周二到周六早晨
+    - cron: '0 6 * * 1-5'    # 北京时间 14:00 (UTC 6:00)，周一到周五
   
-  # 允许手动在 GitHub Actions 页面触发执行
+  # 允许手动在 GitHub Actions 页面或通过 Webhook 触发
   workflow_dispatch:
 
 permissions:
@@ -29,7 +30,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests
         
-    - name: Run Python Script (Fetch and Calc)
+    - name: Run Python Script (Fetch, Calc & Notify)
+      env:
+        BARK_KEY: ${{ secrets.BARK_KEY }}
       run: |
         python backend/fetch_and_calc.py
         

@@ -206,5 +206,49 @@ def main():
     except Exception as e:
         print(f"写入文件失败: {e}")
 
+    # 发送 Bark 推送 (如果配置了 BARK_KEY 环境变量)
+    bark_key = os.environ.get("BARK_KEY")
+    if bark_key:
+        print("\n检测到 BARK_KEY，正在发送由推送...")
+        try:
+            # 构建消息标题和内容
+            title = f"纳指定投评估 - {decision}"
+            
+            # 使用 URL 编码的换行符
+            body_lines = [
+                f"当前建议: {decision}",
+                f"QQQ价格: ${result_data['metrics']['qqq_price']}",
+                f"均线乖离: {result_data['metrics']['bias_percent']}%",
+                f"纳指100 PE: {result_data['metrics']['pe']} ({result_data['metrics']['pe_percentile']*100:.1f}%)",
+                f"市场情绪: {result_data['metrics']['fear_greed_score']} ({result_data['metrics']['fear_greed_rating']})"
+            ]
+            body = "\n".join(body_lines)
+            
+            # 发送 POST 请求到 Bark API
+            bark_url = f"https://api.day.app/{bark_key}/"
+            payload = {
+                "title": title,
+                "body": body,
+                "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/icon.png",
+                "group": "NASDAQ",
+                "sound": "minuet"
+            }
+            
+            # 如果是加倍买入，使用更响亮的提示音
+            if decision == "加倍定投":
+                payload["sound"] = "alarm"
+            elif decision == "暂停定投":
+                payload["sound"] = "fail"
+                
+            response = requests.post(bark_url, json=payload, timeout=10)
+            if response.status_code == 200:
+                print("Bark 推送成功！")
+            else:
+                print(f"Bark 推送失败，状态码: {response.status_code}, 返回数据: {response.text}")
+        except Exception as e:
+            print(f"发送 Bark 推送异常: {e}")
+    else:
+        print("\n未配置 BARK_KEY 环境变量，跳过消息推送。")
+
 if __name__ == "__main__":
     main()
