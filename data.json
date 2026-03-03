@@ -1,5 +1,5 @@
 {
-  "update_time": "2026-03-03 22:33:15",
+  "update_time": "2026-03-03 22:41:36",
   "decision": "加倍定投",
   "reasons": [
     "市场极度恐慌 (FG指数 14)"
@@ -10,11 +10,11 @@
     "fg_decision": "加倍定投"
   },
   "metrics": {
-    "qqq_price": 597.41,
+    "qqq_price": 597.72,
     "ma200": 587.52,
-    "bias_percent": 1.68,
+    "bias_percent": 1.74,
     "pe": 33.8923,
-    "pe_percentile": 0.3308,
+    "pe_percentile": 0.6692,
     "fear_greed_score": 14,
     "fear_greed_rating": "Extreme Fear"
   }

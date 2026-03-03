@@ -68,7 +68,8 @@ def fetch_ndx_pe_from_danjuan():
                     data = response.json()
                     if data.get("result_code") == 0 and "pe" in data["data"]:
                         pe = float(data["data"]["pe"])
-                        pe_percentile = float(data["data"]["pe_over_history"])
+                        # 蛋卷的 pe_over_history 若为 0.3308，表示“比过去33.08%的时间低”，即实际处于 66.92% 的历史分位
+                        pe_percentile = 1.0 - float(data["data"]["pe_over_history"])
                         return pe, pe_percentile
                     else:
                         print("蛋卷 API 响应格式异常或未包含 PE 数据")
