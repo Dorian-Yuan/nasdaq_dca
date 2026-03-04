@@ -237,7 +237,7 @@ def main():
             
             # 使用 URL 编码的换行符
             body_lines = [
-                f"当前建议: {decision}",
+                f"当前建议: {decision} ({result_data['individual_decisions']['final_weight']}x)",
                 f"QQQ价格: ${result_data['metrics']['qqq_price']}",
                 f"均线乖离: {result_data['metrics']['bias_percent']}%",
                 f"纳指100 PE: {result_data['metrics']['pe']} ({result_data['metrics']['pe_percentile']*100:.1f}%)",
