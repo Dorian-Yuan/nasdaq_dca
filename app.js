@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
         valPePct: document.getElementById('val-pe-pct'),
         valPe: document.getElementById('val-pe'),
         valFgScore: document.getElementById('val-fg-score'),
-        valFgRating: document.getElementById('val-fg-rating')
+        valFgRating: document.getElementById('val-fg-rating'),
+        valFinalWeight: document.getElementById('val-final-weight')
     };
 
     // 重置指示灯状态
@@ -40,19 +41,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resetLights();
 
-        // 设置主策略红绿灯
-        if (data.decision === "暂停定投") {
-            dom.lightRed.classList.add('active-red');
-            dom.decisionText.textContent = "🔴 暂停买入";
-            dom.decisionText.classList.add('decision-red');
-        } else if (data.decision === "加倍定投") {
-            dom.lightGreen.classList.add('active-green');
-            dom.decisionText.textContent = "🟢 加倍定投";
-            dom.decisionText.classList.add('decision-green');
+        const finalWeight = data.individual_decisions ? data.individual_decisions.final_weight : null;
+        if (finalWeight !== null) {
+            dom.valFinalWeight.textContent = finalWeight.toFixed(2);
         } else {
-            dom.lightYellow.classList.add('active-yellow');
-            dom.decisionText.textContent = "🟡 普通定投";
-            dom.decisionText.classList.add('decision-yellow');
+            dom.valFinalWeight.textContent = '--';
+        }
+
+        // 设置主策略红绿灯 (模型二：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞))
+        if (finalWeight !== null) {
+            if (finalWeight <= 0.4) {
+                dom.lightRed.classList.add('active-red');
+                dom.decisionText.textContent = "🔴 暂停买入";
+                dom.decisionText.classList.add('decision-red');
+            } else if (finalWeight > 0.7) {
+                dom.lightGreen.classList.add('active-green');
+                dom.decisionText.textContent = "🟢 加倍定投";
+                dom.decisionText.classList.add('decision-green');
+            } else {
+                dom.lightYellow.classList.add('active-yellow');
+                dom.decisionText.textContent = "🟡 普通定投";
+                dom.decisionText.classList.add('decision-yellow');
+            }
+        } else {
+            // 兼容防错
+            dom.decisionText.textContent = data.decision;
         }
 
         // 渲染理由标签
@@ -83,7 +96,23 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.valFgScore.textContent = m.fear_greed_score !== null ? m.fear_greed_score : '--';
             dom.valFgRating.textContent = m.fear_greed_rating !== null ? m.fear_greed_rating : '--';
             document.getElementById('decision-fg').textContent = ind.fg_decision || '--';
-            document.getElementById('decision-fg').className = `metric-decision ${ind.fg_decision === '加倍定投' ? 'text-green' : ind.fg_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
+
+            // 根据返回的倍数决定文本颜色 (高于1倍为绿，低于1倍为红)
+            const getDecisionClass = (decisionStr) => {
+                if (!decisionStr || decisionStr === '--') return "text-yellow";
+                if (decisionStr.includes('x')) {
+                    const val = parseFloat(decisionStr);
+                    if (val > 1.0) return "text-green";
+                    if (val < 1.0) return "text-red";
+                    return "text-yellow";
+                }
+                // 兼容旧文字
+                return decisionStr === '加倍定投' ? 'text-green' : decisionStr === '暂停定投' ? 'text-red' : 'text-yellow';
+            };
+
+            document.getElementById('decision-bias').className = `metric-decision ${getDecisionClass(ind.bias_decision)}`;
+            document.getElementById('decision-pe').className = `metric-decision ${getDecisionClass(ind.pe_decision)}`;
+            document.getElementById('decision-fg').className = `metric-decision ${getDecisionClass(ind.fg_decision)}`;
         }
     }
 
@@ -111,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errText = '错误';
                 dom.valBias.textContent = errText;
                 dom.valPrice.textContent = '--';
+                dom.valFinalWeight.textContent = '--';
                 document.getElementById('decision-bias').textContent = '--';
 
                 dom.valPePct.textContent = errText;

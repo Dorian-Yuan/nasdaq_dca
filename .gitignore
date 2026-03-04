@@ -5,6 +5,7 @@ __pycache__/
 
 # 本地配置 (不要提交，包含 Token)
 config.js
+changelog.md
 
 # 编辑器
 .vscode/

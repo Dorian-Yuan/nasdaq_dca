@@ -31,6 +31,8 @@
                 <div class="light" id="light-green"></div>
             </div>
             <h2 id="decision-text">评估中</h2>
+            <div style="margin-bottom: 12px; font-weight: 600; color: var(--text-secondary); font-size: 14px;">综合权重得分:
+                <span id="val-final-weight">--</span> 倍</div>
             <div id="reasons-list" class="reasons">
                 <!-- 理由会注入到这里 -->
             </div>
@@ -40,7 +42,9 @@
         <section class="metrics-grid">
             <!-- 乖离率卡片 -->
             <div class="metric-card">
-                <div class="metric-title">200日均线乖离率
+                <div class="metric-title">
+                    <span>200日均线乖离率 <span class="tooltip-icon"
+                            data-tooltip="衡量当前价格偏离过去200天平均成本的百分比。&#xa;偏离过大可能发生均值回归（下跌），跌破太多则可能是超跌反弹（抄底）的信号。">?</span></span>
                     <span id="decision-bias" class="metric-decision">--</span>
                 </div>
                 <div class="metric-value" id="val-bias">--%</div>
@@ -49,7 +53,9 @@
 
             <!-- 估值卡片 -->
             <div class="metric-card">
-                <div class="metric-title">纳指100 PE 百分位
+                <div class="metric-title">
+                    <span>纳指100 PE 百分位 <span class="tooltip-icon"
+                            data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
                     <span id="decision-pe" class="metric-decision">--</span>
                 </div>
                 <div class="metric-value" id="val-pe-pct">--%</div>
@@ -58,7 +64,9 @@
 
             <!-- 情绪卡片 -->
             <div class="metric-card">
-                <div class="metric-title">市场恐慌贪婪指数
+                <div class="metric-title">
+                    <span>市场恐慌贪婪指数 <span class="tooltip-icon"
+                            data-tooltip="CNN 或者 Alternative.me 提供的全市场情绪指标，范围 0-100。&#xa;0代表极度恐慌（可贪婪买入），100代表极度贪婪（应谨慎卖出或暂停买入）。">?</span></span>
                     <span id="decision-fg" class="metric-decision">--</span>
                 </div>
                 <div class="metric-value" id="val-fg-score">--</div>

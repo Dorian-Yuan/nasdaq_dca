@@ -249,3 +249,71 @@ footer {
     font-size: 12px;
     padding-bottom: 20px;
 }
+
+/* Tooltip 样式 */
+.tooltip-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--color-gray);
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: bold;
+    margin-left: 6px;
+    cursor: help;
+    position: relative;
+    vertical-align: text-top;
+}
+
+.tooltip-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 150%;
+    left: 50%;
+    transform: translateX(-50%) scale(0.95);
+    background-color: var(--text-primary);
+    color: var(--bg-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: pre-wrap;
+    width: max-content;
+    max-width: 200px;
+    line-height: 1.4;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+.tooltip-icon::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: var(--text-primary) transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.tooltip-icon:hover::after,
+.tooltip-icon:hover::before,
+.tooltip-icon:active::after,
+.tooltip-icon:active::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) scale(1);
+}

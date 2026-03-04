@@ -7,17 +7,10 @@ import requests
 # 配置参数区
 # ---------------------------------------------------------
 
-# 均线乖离率阈值 (0.05表示5%)
-BIAS_DOUBLE_BUY = -0.05    # 严重超跌，低于均线5%
-BIAS_HALT_BUY = 0.15       # 严重超买，高于均线15%
-
-# PE历史百分位阈值 (0.2表示20%)
-PE_PCT_DOUBLE_BUY = 0.20   # 历史低估
-PE_PCT_HALT_BUY = 0.85     # 历史极度高估
-
-# 恐慌贪婪指数阈值 (0-100)
-FG_DOUBLE_BUY = 25         # 极度恐慌
-FG_HALT_BUY = 75           # 极度贪婪
+# 模型二维度权重配置
+WEIGHT_VALUATION = 0.40  # 估值权重
+WEIGHT_SENTIMENT = 0.30  # 情绪权重
+WEIGHT_TREND = 0.30      # 趋势权重
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -111,66 +104,72 @@ def fetch_fear_and_greed_index():
 
 def evaluate_strategy(bias, pe_percentile, fg_score):
     """
-    根据三维指标，打分决定最终定投策略。
-    暂停定投: -1分  | 普通: 0分 | 加倍: 1分
+    模型二：「估值-情绪-趋势」三维综合打分系统
+    分别计算得分系数，再加权得出最终定投倍数，由倍数决定红绿灯状态。
     """
-    score = 0
     reasons = []
-
-    # 1. 估值维度评估
-    if pe_percentile is not None:
-        if pe_percentile >= PE_PCT_HALT_BUY:
-            score -= 1
-            reasons.append(f"估值过高 (百分位 {pe_percentile*100:.1f}%)")
-        elif pe_percentile <= PE_PCT_DOUBLE_BUY:
-            score += 1
-            reasons.append(f"处于低估区 (百分位 {pe_percentile*100:.1f}%)")
     
-    # 2. 均线维度评估
-    if bias is not None:
-        if bias >= BIAS_HALT_BUY:
-            score -= 1
-            reasons.append(f"严重超买离均线过远 (乖离率 {bias*100:.1f}%)")
-        elif bias <= BIAS_DOUBLE_BUY:
-            score += 1
-            reasons.append(f"跌破均线超跌 (乖离率 {bias*100:.1f}%)")
-            
-    # 3. 情绪维度评估
-    if fg_score is not None:
-        if fg_score >= FG_HALT_BUY:
-            score -= 1
-            reasons.append(f"市场极度贪婪 (FG指数 {fg_score})")
-        elif fg_score <= FG_DOUBLE_BUY:
-            score += 1
-            reasons.append(f"市场极度恐慌 (FG指数 {fg_score})")
+    # 1. 估值因子 (Weight: 40%)
+    # PE百分位越低，得分越高。公式： 2.0 - PE百分位 (以小数计, 如 0.20 -> 1.8)
+    if pe_percentile is not None:
+        val_score = 2.0 - pe_percentile
+        reasons.append(f"估值因子得分: {val_score:.2f} (PE分位 {pe_percentile*100:.1f}%)")
+    else:
+        val_score = 1.0
+        reasons.append("估值数据缺失，由于防御性给予默认得分 1.0")
 
-    # 最终裁定
-    decision = "普通定投"
-    if score >= 1:
-        decision = "加倍定投"
-    elif score <= -1:
+    # 2. 情绪因子 (Weight: 30%)
+    # 恐慌贪婪指数越低 (越恐慌)，得分越高。公式：(100 - FG) / 50
+    if fg_score is not None:
+        sentiment_score = (100 - fg_score) / 50.0
+        reasons.append(f"情绪因子得分: {sentiment_score:.2f} (FG指数 {fg_score})")
+    else:
+        sentiment_score = 1.0
+        reasons.append("情绪数据缺失，给予默认得分 1.0")
+
+    # 3. 趋势因子 (Weight: 30%)
+    if bias is not None:
+        if bias > 0.15:
+            # 严重超买，存在均值回归风险，趋势分大减
+            trend_score = 0.5
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (严重超买，乖离率 {bias*100:.1f}%)")
+        elif bias > 0:
+            # 均线之上，顺势增强
+            trend_score = 1.2
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (多头排列，乖离率 {bias*100:.1f}%)")
+        else:
+            # 均线之下，熊市防守
+            trend_score = 0.8
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (空头排列，乖离率 {bias*100:.1f}%)")
+    else:
+        trend_score = 1.0
+        reasons.append("均线数据缺失，给予默认得分 1.0")
+
+    # 计算综合加权系数
+    final_weight = (val_score * WEIGHT_VALUATION) + (sentiment_score * WEIGHT_SENTIMENT) + (trend_score * WEIGHT_TREND)
+    
+    # 限制极值边界
+    final_weight = max(0.0, min(3.0, final_weight))
+    
+    # 根据用户定义：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞)
+    if final_weight <= 0.4:
         decision = "暂停定投"
+    elif final_weight <= 0.7:
+        decision = "普通定投"
+    else:
+        decision = "加倍定投"
         
-    if len(reasons) == 0:
-        reasons.append("各项指标均处于正常波动区间")
-        
-    # 保存单个指标的判断结果，供前端展示
+    # 保存单个指标的判断结果，供前端展示倍数
     individual_decisions = {
-        "bias_decision": "普通定投",
-        "pe_decision": "普通定投",
-        "fg_decision": "普通定投"
+        "bias_decision": f"{trend_score:.2f}x",
+        "pe_decision": f"{val_score:.2f}x",
+        "fg_decision": f"{sentiment_score:.2f}x",
+        "final_weight": round(final_weight, 2)
     }
     
-    if bias is not None:
-        if bias >= BIAS_HALT_BUY: individual_decisions["bias_decision"] = "暂停定投"
-        elif bias <= BIAS_DOUBLE_BUY: individual_decisions["bias_decision"] = "加倍定投"
-    if pe_percentile is not None:
-        if pe_percentile >= PE_PCT_HALT_BUY: individual_decisions["pe_decision"] = "暂停定投"
-        elif pe_percentile <= PE_PCT_DOUBLE_BUY: individual_decisions["pe_decision"] = "加倍定投"
-    if fg_score is not None:
-        if fg_score >= FG_HALT_BUY: individual_decisions["fg_decision"] = "暂停定投"
-        elif fg_score <= FG_DOUBLE_BUY: individual_decisions["fg_decision"] = "加倍定投"
-        
+    # 调整总体的 reasons 加入一条总结
+    reasons.append(f"综合计算权重: {final_weight:.2f}倍")
+    
     return decision, reasons, individual_decisions
 
 def main():
