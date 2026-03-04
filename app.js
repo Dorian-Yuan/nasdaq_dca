@@ -124,90 +124,99 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 自动刷新逻辑 (GitHub Webhook 触发)
-    // 这里的配置从本地的 config.js 读取 (避免上传到公开仓库)
-    let GITHUB_TOKEN = '';
-    let REPO_OWNER = '';
-    let REPO_NAME = '';
+    let GITHUB_TOKEN = localStorage.getItem('GITHUB_TOKEN') || '';
+    let REPO_OWNER = localStorage.getItem('REPO_OWNER') || 'Dorian-Yuan';
+    let REPO_NAME = localStorage.getItem('REPO_NAME') || 'nasdaq_dca';
 
     if (typeof window.CONFIG !== 'undefined') {
-        GITHUB_TOKEN = window.CONFIG.GITHUB_TOKEN || '';
-        REPO_OWNER = window.CONFIG.GITHUB_USERNAME || '';
-        REPO_NAME = window.CONFIG.GITHUB_REPO_NAME || '';
+        if (window.CONFIG.GITHUB_TOKEN) GITHUB_TOKEN = window.CONFIG.GITHUB_TOKEN;
+        if (window.CONFIG.GITHUB_USERNAME) REPO_OWNER = window.CONFIG.GITHUB_USERNAME;
+        if (window.CONFIG.GITHUB_REPO_NAME) REPO_NAME = window.CONFIG.GITHUB_REPO_NAME;
     }
 
     const WORKFLOW_ID = 'daily_update.yml'; // 与 workflows 目录下的文件名一致
-
     const refreshBtn = document.getElementById('refresh-btn');
-    if (GITHUB_TOKEN && REPO_OWNER && REPO_NAME) {
-        refreshBtn.style.display = 'inline-block';
-        refreshBtn.addEventListener('click', () => {
-            if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 20-30 秒。')) return;
 
-            refreshBtn.disabled = true;
-            refreshBtn.textContent = '触发中...';
+    // 始终显示刷新按钮
+    refreshBtn.style.display = 'inline-block';
+    refreshBtn.addEventListener('click', () => {
+        if (!GITHUB_TOKEN) {
+            const token = prompt("检测到您是首次在新环境使用刷新功能。\n由于安全原因，GitHub Token 没有公开上传。\n\n请输入您的 GitHub Personal Access Token (以 ghp_ 开头):");
+            if (token && token.trim() !== "") {
+                GITHUB_TOKEN = token.trim();
+                localStorage.setItem('GITHUB_TOKEN', GITHUB_TOKEN);
+            } else {
+                alert("未输入 Token，无法触发远程刷新。");
+                return;
+            }
+        }
 
-            // 记录触发前的时间
-            const currentUpdateTime = dom.updateTime.textContent;
+        if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 20-30 秒。')) return;
 
-            fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `token ${GITHUB_TOKEN}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                body: JSON.stringify({
-                    ref: 'main' // 或 master
-                })
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '触发中...';
+
+        // 记录触发前的时间
+        const currentUpdateTime = dom.updateTime.textContent;
+
+        fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify({
+                ref: 'main' // 或 master
             })
-                .then(res => {
-                    if (res.ok) {
-                        refreshBtn.textContent = '服务器运算中... 请勿关闭页面 (预计需要30秒)';
+        })
+            .then(res => {
+                if (res.ok) {
+                    refreshBtn.textContent = '服务器运算中... 请勿关闭页面 (预计需要30秒)';
 
-                        // 开始轮询检查更新
-                        let pollCount = 0;
-                        const maxPolls = 15; // 最多轮询 15 次 (大概 75 秒)
+                    // 开始轮询检查更新
+                    let pollCount = 0;
+                    const maxPolls = 15; // 最多轮询 15 次 (大概 75 秒)
 
-                        const pollInterval = setInterval(() => {
-                            pollCount++;
-                            const fetchUrl = `./data.json?t=${new Date().getTime()}`;
-                            fetch(fetchUrl)
-                                .then(r => r.json())
-                                .then(newData => {
-                                    const newTimeStr = `更新时间 (北京时间): ${newData.update_time}`;
-                                    // 检查时间戳是否发生变化或者已经变成新的时间
-                                    if (newTimeStr !== currentUpdateTime && newData.update_time) {
-                                        clearInterval(pollInterval);
-                                        renderData(newData);
-                                        refreshBtn.disabled = false;
-                                        refreshBtn.textContent = '✅ 更新成功！';
-                                        setTimeout(() => {
-                                            refreshBtn.textContent = '强制刷新策略数据';
-                                        }, 3000);
-                                    } else if (pollCount >= maxPolls) {
-                                        clearInterval(pollInterval);
-                                        refreshBtn.disabled = false;
-                                        refreshBtn.textContent = '⚠️ 等待超时，您可以手动刷新页面试试';
-                                        setTimeout(() => {
-                                            refreshBtn.textContent = '强制刷新策略数据';
-                                        }, 5000);
-                                    }
-                                })
-                                .catch(err => console.error("轮询获取JSON失败:", err));
-                        }, 5000); // 每 5 秒请求一次
+                    const pollInterval = setInterval(() => {
+                        pollCount++;
+                        const fetchUrl = `./data.json?t=${new Date().getTime()}`;
+                        fetch(fetchUrl)
+                            .then(r => r.json())
+                            .then(newData => {
+                                const newTimeStr = `更新时间 (北京时间): ${newData.update_time}`;
+                                // 检查时间戳是否发生变化或者已经变成新的时间
+                                if (newTimeStr !== currentUpdateTime && newData.update_time) {
+                                    clearInterval(pollInterval);
+                                    renderData(newData);
+                                    refreshBtn.disabled = false;
+                                    refreshBtn.textContent = '✅ 更新成功！';
+                                    setTimeout(() => {
+                                        refreshBtn.textContent = '强制刷新策略数据';
+                                    }, 3000);
+                                } else if (pollCount >= maxPolls) {
+                                    clearInterval(pollInterval);
+                                    refreshBtn.disabled = false;
+                                    refreshBtn.textContent = '⚠️ 等待超时，您可以手动刷新页面试试';
+                                    setTimeout(() => {
+                                        refreshBtn.textContent = '强制刷新策略数据';
+                                    }, 5000);
+                                }
+                            })
+                            .catch(err => console.error("轮询获取JSON失败:", err));
+                    }, 5000); // 每 5 秒请求一次
 
-                    } else {
-                        alert(`触发失败：${res.status} ${res.statusText}`);
-                        refreshBtn.disabled = false;
-                        refreshBtn.textContent = '强制刷新策略数据';
-                    }
-                })
-                .catch(err => {
-                    alert('网络错误: ' + err);
+                } else {
+                    alert(`触发失败：${res.status} ${res.statusText}`);
                     refreshBtn.disabled = false;
                     refreshBtn.textContent = '强制刷新策略数据';
-                });
-        });
-    }
+                }
+            })
+            .catch(err => {
+                alert('网络错误: ' + err);
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '强制刷新策略数据';
+            });
+    });
 
     // 初始化加载
     loadData();
