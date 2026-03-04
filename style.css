@@ -266,6 +266,8 @@ footer {
     cursor: help;
     position: relative;
     vertical-align: text-top;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .tooltip-icon::after {
@@ -312,7 +314,9 @@ footer {
 .tooltip-icon:hover::after,
 .tooltip-icon:hover::before,
 .tooltip-icon:active::after,
-.tooltip-icon:active::before {
+.tooltip-icon:active::before,
+.tooltip-icon:focus::after,
+.tooltip-icon:focus::before {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) scale(1);

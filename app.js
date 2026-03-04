@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
         lightYellow: document.getElementById('light-yellow'),
         lightGreen: document.getElementById('light-green'),
         decisionText: document.getElementById('decision-text'),
-        reasonsList: document.getElementById('reasons-list'),
         valBias: document.getElementById('val-bias'),
         valPrice: document.getElementById('val-price'),
         valPePct: document.getElementById('val-pe-pct'),
@@ -67,15 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // 兼容防错
             dom.decisionText.textContent = data.decision;
         }
-
-        // 渲染理由标签
-        dom.reasonsList.innerHTML = '';
-        data.reasons.forEach(reason => {
-            const span = document.createElement('span');
-            span.className = 'reason-tag';
-            span.textContent = reason;
-            dom.reasonsList.appendChild(span);
-        });
 
         // 渲染详细指标数据 (处理可能为空的情况)
         if (data.metrics) {
@@ -134,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.updateTime.textContent = '数据加载失败，请检查网络或点击刷新按钮重试。';
                 dom.decisionText.textContent = '读取失败';
                 dom.decisionText.className = 'text-red';
-                dom.reasonsList.innerHTML = `<li style="color:var(--color-red);">错误详情: ${error.message}</li>`;
 
                 // 将所有指标设置为错误状态
                 const errText = '错误';
