@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 渲染 UI 数据
     function renderData(data) {
-        dom.updateTime.textContent = `更新时间: ${data.update_time}`;
+        dom.updateTime.textContent = `更新时间 (北京时间): ${data.update_time}`;
 
         resetLights();
 
@@ -141,10 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (GITHUB_TOKEN && REPO_OWNER && REPO_NAME) {
         refreshBtn.style.display = 'inline-block';
         refreshBtn.addEventListener('click', () => {
-            if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 10-20 秒。')) return;
+            if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 20-30 秒。')) return;
 
             refreshBtn.disabled = true;
             refreshBtn.textContent = '触发中...';
+
+            // 记录触发前的时间
+            const currentUpdateTime = dom.updateTime.textContent;
 
             fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
                 method: 'POST',
@@ -158,15 +161,50 @@ document.addEventListener('DOMContentLoaded', () => {
             })
                 .then(res => {
                     if (res.ok) {
-                        alert('触发成功！请等待约 30 秒后刷新本页面查看最新数据。');
+                        refreshBtn.textContent = '服务器运算中... 请勿关闭页面 (预计需要30秒)';
+
+                        // 开始轮询检查更新
+                        let pollCount = 0;
+                        const maxPolls = 15; // 最多轮询 15 次 (大概 75 秒)
+
+                        const pollInterval = setInterval(() => {
+                            pollCount++;
+                            const fetchUrl = `./data.json?t=${new Date().getTime()}`;
+                            fetch(fetchUrl)
+                                .then(r => r.json())
+                                .then(newData => {
+                                    const newTimeStr = `更新时间 (北京时间): ${newData.update_time}`;
+                                    // 检查时间戳是否发生变化或者已经变成新的时间
+                                    if (newTimeStr !== currentUpdateTime && newData.update_time) {
+                                        clearInterval(pollInterval);
+                                        renderData(newData);
+                                        refreshBtn.disabled = false;
+                                        refreshBtn.textContent = '✅ 更新成功！';
+                                        setTimeout(() => {
+                                            refreshBtn.textContent = '强制刷新策略数据';
+                                        }, 3000);
+                                    } else if (pollCount >= maxPolls) {
+                                        clearInterval(pollInterval);
+                                        refreshBtn.disabled = false;
+                                        refreshBtn.textContent = '⚠️ 等待超时，您可以手动刷新页面试试';
+                                        setTimeout(() => {
+                                            refreshBtn.textContent = '强制刷新策略数据';
+                                        }, 5000);
+                                    }
+                                })
+                                .catch(err => console.error("轮询获取JSON失败:", err));
+                        }, 5000); // 每 5 秒请求一次
+
                     } else {
                         alert(`触发失败：${res.status} ${res.statusText}`);
+                        refreshBtn.disabled = false;
+                        refreshBtn.textContent = '强制刷新策略数据';
                     }
                 })
-                .catch(err => alert('网络错误: ' + err))
-                .finally(() => {
+                .catch(err => {
+                    alert('网络错误: ' + err);
                     refreshBtn.disabled = false;
-                    refreshBtn.textContent = '强制刷新策略数据 (调用 GitHub Actions)';
+                    refreshBtn.textContent = '强制刷新策略数据';
                 });
         });
     }
