@@ -1,22 +1,22 @@
 {
-  "update_time": "2026-03-05 01:41:30",
+  "update_time": "2026-03-05 05:55:44",
   "decision": "加倍定投",
   "reasons": [
-    "估值因子得分: 1.36 (PE分位 64.2%)",
+    "估值因子得分: 0.72 (PE分位 64.2%)",
     "情绪因子得分: 1.80 (FG指数 10)",
-    "趋势因子得分: 1.20 (多头排列，乖离率 4.0%)",
-    "综合计算权重: 1.44倍"
+    "趋势因子得分: 1.20 (多头排列，乖离率 3.9%)",
+    "综合计算权重: 1.19倍"
   ],
   "individual_decisions": {
     "bias_decision": "1.20x",
-    "pe_decision": "1.36x",
+    "pe_decision": "0.72x",
     "fg_decision": "1.80x",
-    "final_weight": 1.44
+    "final_weight": 1.19
   },
   "metrics": {
-    "qqq_price": 611.64,
-    "ma200": 588.0,
-    "bias_percent": 4.02,
+    "qqq_price": 610.75,
+    "ma200": 587.99,
+    "bias_percent": 3.87,
     "pe": 33.5801,
     "pe_percentile": 0.6416,
     "fear_greed_score": 10,
