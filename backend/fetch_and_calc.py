@@ -76,33 +76,33 @@ def fetch_ndx_pe_from_danjuan():
         print(f"获取纳指 PE 失败: {e}")
         return None, None
 
-def fetch_fear_and_greed_index():
+def fetch_vxn():
     """
-    获取恐慌与贪婪指数 (0-100)
-    由于 CNN 的 API 限制严格（容易返回403），这里使用 alternative.me 的 Crypto 恐慌指数作为平替，
-    虽然是加密市场的，但通常与纳斯达克的宏观情绪高度正相关。
+    使用 Yahoo Finance 获取 CBOE NASDAQ 100 Volatility Index (^VXN)
     """
     try:
-        url = "https://api.alternative.me/fng/?limit=1"
-        response = requests.get(url, timeout=10)
+        url = "https://query2.finance.yahoo.com/v8/finance/chart/%5EVXN?metrics=high?&interval=1d&range=5d"
+        response = requests.get(url, headers=HEADERS, timeout=10)
         data = response.json()
         
-        if data and "data" in data and len(data["data"]) > 0:
-            score = int(data["data"][0]["value"])
-            rating = data["data"][0]["value_classification"]
-            return score, rating
-        else:
-            return None, "未知"
+        close_prices = data['chart']['result'][0]['indicators']['quote'][0]['close']
+        valid_prices = [p for p in close_prices if p is not None]
+        
+        if not valid_prices:
+            print("警告：获取到的 VXN 价格数据为空")
+            return None
             
+        current_vxn = valid_prices[-1]
+        return current_vxn
     except Exception as e:
-        print(f"获取恐慌与贪婪指数失败: {e}")
-        return None, "未知"
+        print(f"获取 VXN 失败: {e}")
+        return None
 
 # ---------------------------------------------------------
 # 评估逻辑与主函数
 # ---------------------------------------------------------
 
-def evaluate_strategy(bias, pe_percentile, fg_score):
+def evaluate_strategy(bias, pe_percentile, vxn_score):
     """
     模型二：「估值-情绪-趋势」三维综合打分系统
     分别计算得分系数，再加权得出最终定投倍数，由倍数决定红绿灯状态。
@@ -119,28 +119,33 @@ def evaluate_strategy(bias, pe_percentile, fg_score):
         reasons.append("估值数据缺失，由于防御性给予默认得分 1.0")
 
     # 2. 情绪因子 (Weight: 30%)
-    # 恐慌贪婪指数越低 (越恐慌)，得分越高。公式：(100 - FG) / 50
-    if fg_score is not None:
-        sentiment_score = (100 - fg_score) / 50.0
-        reasons.append(f"情绪因子得分: {sentiment_score:.2f} (FG指数 {fg_score})")
+    # VXN 越低(贪婪)得分越低，越高(恐慌)得分越高。公式：VXN / 20.0，限制在 [0.5, 2.0] 区间
+    if vxn_score is not None:
+        sentiment_score = vxn_score / 20.0
+        sentiment_score = max(0.5, min(2.0, sentiment_score))
+        reasons.append(f"情绪因子得分: {sentiment_score:.2f} (VXN {vxn_score:.2f})")
     else:
         sentiment_score = 1.0
         reasons.append("情绪数据缺失，给予默认得分 1.0")
 
     # 3. 趋势因子 (Weight: 30%)
+    # 连续五段分段插值法
     if bias is not None:
-        if bias > 0.15:
-            # 严重超买，存在均值回归风险，趋势分大减
-            trend_score = 0.5
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (严重超买，乖离率 {bias*100:.1f}%)")
-        elif bias > 0:
-            # 均线之上，顺势增强
-            trend_score = 1.2
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (多头排列，乖离率 {bias*100:.1f}%)")
-        else:
-            # 均线之下，熊市防守
+        if bias <= 0:
             trend_score = 0.8
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (空头排列，乖离率 {bias*100:.1f}%)")
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (防守区，乖离率 {bias*100:.1f}%)")
+        elif bias <= 0.05:
+            trend_score = 0.8 + (bias / 0.05) * 0.4
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (上攻过渡区，乖离率 {bias*100:.1f}%)")
+        elif bias <= 0.10:
+            trend_score = 1.2
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (多头甜点区，乖离率 {bias*100:.1f}%)")
+        elif bias <= 0.20:
+            trend_score = 1.2 - ((bias - 0.10) / 0.10) * 1.2
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (超买滑坡区，乖离率 {bias*100:.1f}%)")
+        else:
+            trend_score = 0.0
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (极度泡沫区，乖离率 {bias*100:.1f}%)")
     else:
         trend_score = 1.0
         reasons.append("均线数据缺失，给予默认得分 1.0")
@@ -163,7 +168,7 @@ def evaluate_strategy(bias, pe_percentile, fg_score):
     individual_decisions = {
         "bias_decision": f"{trend_score:.2f}x",
         "pe_decision": f"{val_score:.2f}x",
-        "fg_decision": f"{sentiment_score:.2f}x",
+        "vxn_decision": f"{sentiment_score:.2f}x",
         "final_weight": round(final_weight, 2)
     }
     
@@ -183,12 +188,12 @@ def main():
     pe, pe_percentile = fetch_ndx_pe_from_danjuan()
     print(f"-> 纳指100 PE: {pe}, 历史百分位: {pe_percentile}")
     
-    # 3. 获取恐慌与贪婪指数
-    fg_score, fg_rating = fetch_fear_and_greed_index()
-    print(f"-> 市场情緖: {fg_score} ({fg_rating})")
+    # 3. 获取 VXN
+    vxn_score = fetch_vxn()
+    print(f"-> 市场情緖: VXN = {vxn_score}")
     
     # 评估策略
-    decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, fg_score)
+    decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vxn_score)
     print(f"\n=> 最终建议: {decision}")
     print(f"=> 理由: {', '.join(reasons)}")
     
@@ -208,8 +213,7 @@ def main():
             "bias_percent": round(bias * 100, 2) if bias else None,
             "pe": pe,
             "pe_percentile": pe_percentile,
-            "fear_greed_score": fg_score,
-            "fear_greed_rating": fg_rating
+            "vxn": round(vxn_score, 2) if vxn_score else None
         }
     }
     
@@ -241,7 +245,7 @@ def main():
                 f"QQQ价格: ${result_data['metrics']['qqq_price']}",
                 f"均线乖离: {result_data['metrics']['bias_percent']}%",
                 f"纳指100 PE: {result_data['metrics']['pe']} ({result_data['metrics']['pe_percentile']*100:.1f}%)",
-                f"市场情绪: {result_data['metrics']['fear_greed_score']} ({result_data['metrics']['fear_greed_rating']})"
+                f"期权波动率 (VXN): {result_data['metrics']['vxn']}"
             ]
             body = "\n".join(body_lines)
             

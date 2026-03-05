@@ -63,12 +63,12 @@
             <!-- 情绪卡片 -->
             <div class="metric-card">
                 <div class="metric-title">
-                    <span>市场恐慌贪婪指数 <span class="tooltip-icon" tabindex="0" onclick=""
-                            data-tooltip="CNN 或者 Alternative.me 提供的全市场情绪指标，范围 0-100。&#xa;0代表极度恐慌（可贪婪买入），100代表极度贪婪（应谨慎卖出或暂停买入）。">?</span></span>
-                    <span id="decision-fg" class="metric-decision">--</span>
+                    <span>期权波动率 (^VXN) <span class="tooltip-icon" tabindex="0" onclick=""
+                            data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。">?</span></span>
+                    <span id="decision-vxn" class="metric-decision">--</span>
                 </div>
-                <div class="metric-value" id="val-fg-score">--</div>
-                <div class="metric-sub">状态: <span id="val-fg-rating">--</span></div>
+                <div class="metric-value" id="val-vxn">--</div>
+                <div class="metric-sub" style="visibility: hidden;">--</div>
             </div>
         </section>
 

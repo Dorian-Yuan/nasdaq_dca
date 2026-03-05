@@ -21,8 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         valPrice: document.getElementById('val-price'),
         valPePct: document.getElementById('val-pe-pct'),
         valPe: document.getElementById('val-pe'),
-        valFgScore: document.getElementById('val-fg-score'),
-        valFgRating: document.getElementById('val-fg-rating'),
+        valVxn: document.getElementById('val-vxn'),
         valFinalWeight: document.getElementById('val-final-weight')
     };
 
@@ -82,10 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('decision-pe').textContent = ind.pe_decision || '--';
             document.getElementById('decision-pe').className = `metric-decision ${ind.pe_decision === '加倍定投' ? 'text-green' : ind.pe_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
 
-
-            dom.valFgScore.textContent = m.fear_greed_score !== null ? m.fear_greed_score : '--';
-            dom.valFgRating.textContent = m.fear_greed_rating !== null ? m.fear_greed_rating : '--';
-            document.getElementById('decision-fg').textContent = ind.fg_decision || '--';
+            dom.valVxn.textContent = m.vxn !== null ? m.vxn : '--';
+            document.getElementById('decision-vxn').textContent = ind.vxn_decision || '--';
 
             // 根据返回的倍数决定文本颜色 (高于1倍为绿，低于1倍为红)
             const getDecisionClass = (decisionStr) => {
@@ -102,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('decision-bias').className = `metric-decision ${getDecisionClass(ind.bias_decision)}`;
             document.getElementById('decision-pe').className = `metric-decision ${getDecisionClass(ind.pe_decision)}`;
-            document.getElementById('decision-fg').className = `metric-decision ${getDecisionClass(ind.fg_decision)}`;
+            document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(ind.vxn_decision)}`;
         }
     }
 
@@ -136,9 +133,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.valPe.textContent = '--';
                 document.getElementById('decision-pe').textContent = '--';
 
-                dom.valFgScore.textContent = errText;
-                dom.valFgRating.textContent = '--';
-                document.getElementById('decision-fg').textContent = '--';
+                dom.valVxn.textContent = errText;
+                document.getElementById('decision-vxn').textContent = '--';
             });
     }
 
@@ -239,4 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 初始化加载
     loadData();
+
+    // 修复移动端强制关闭 tooltip
+    // 当点击非 tooltip 图标的地方时，清除页面上所有 tooltip 图标的焦点
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.tooltip-icon')) {
+            document.querySelectorAll('.tooltip-icon').forEach(el => el.blur());
+        }
+    });
 });
