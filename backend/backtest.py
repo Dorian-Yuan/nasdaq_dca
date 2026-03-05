@@ -59,7 +59,7 @@ def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
         
     return decision, final_weight
 
-def fetch_yahoo_history(ticker, period="5y"):
+def fetch_yahoo_history(ticker, period="10y"):
     url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range={period}"
     res = requests.get(url, headers=HEADERS)
     data = res.json()
@@ -74,7 +74,7 @@ def fetch_yahoo_history(ticker, period="5y"):
     df = df.dropna().drop_duplicates(subset=['Date']).sort_values('Date').set_index('Date')
     return df
 
-def fetch_danjuan_pe_history(index_code, period="5y"):
+def fetch_danjuan_pe_history(index_code, period="all"):
     url = f"https://danjuanapp.com/djapi/index_eva/pe_history/{index_code}?day={period}"
     res = requests.get(url, headers=HEADERS)
     data = res.json()['data']['index_eva_pe_growths']
@@ -95,16 +95,21 @@ def align_and_calculate_factors(price_df, pe_df, vol_df):
     df['MA200'] = df['Close'].rolling(window=200, min_periods=200).mean()
     df['Bias'] = (df['Close'] - df['MA200']) / df['MA200']
     
-    # Join PE and calculate rolling historical percentile (5-year rolling window = roughly 1250 trading days)
-    # The Danjuan API only gives us 5 years of PE. To get a historical percentile for any given day,
-    # we simulate an expanding or rolling window of past PE values.
-    # To have enough data for a meaningful percentile, we evaluate from year 2 onwards.
+    # Join PE and calculate rolling historical percentile (10-year rolling window = roughly 2500 trading days)
+    # Using 'all' from Danjuan to get maximum historical data
     pe_reindexed = pe_df.reindex(df.index, method='ffill')
     df['PE'] = pe_reindexed['PE']
     # Expanding percentile: for dot i, what percentage of values from 0 to i are lower than pe[i]?
     def expanding_percentile(s):
         if len(s) < 100: return None # need at least 100 days of PE history to rank
-        return (s < s.iloc[-1]).mean()
+        
+        # Calculate exactly how Danjuan does it: 1 - percentage of historical days below current day
+        # Actually our Python code evaluates pe_percentile as: 0 == expensive, 1.0 == cheap
+        # wait! Danjuan returns "pe_over_history" which is "higher than X% of history".
+        # In fetch_and_calc: 1.0 - pe_over_history.
+        # So we need the percentage of historical PEs that are HIGHER than the current PE.
+        # Which is exactly: (s >= s.iloc[-1]).mean()
+        return (s >= s.iloc[-1]).mean()
     
     df['PE_Percentile'] = df['PE'].expanding(min_periods=100).apply(expanding_percentile, raw=False)
     
@@ -140,13 +145,8 @@ def run_backtest(df, initial_weekly_investment=1000):
         total_invested_naive += initial_weekly_investment
         shares_naive += initial_weekly_investment / price
         
-        # Dynamic DCA: Modulate based on decision light
-        if decision == "🟢":
-            invest_amount = initial_weekly_investment * 2.0
-        elif decision == "🟡":
-            invest_amount = initial_weekly_investment * 1.0
-        else: # 🔴
-            invest_amount = 0.0
+        # Dynamic DCA: Modulate based on continuous weight strictly
+        invest_amount = initial_weekly_investment * weight
             
         total_invested_dynamic += invest_amount
         if invest_amount > 0:
@@ -155,8 +155,13 @@ def run_backtest(df, initial_weekly_investment=1000):
         history_log.append({
             'Date': date.strftime('%Y-%m-%d'),
             'Price': round(price, 2),
+            'PE': round(row['PE'], 2) if not pd.isna(row['PE']) else None,
+            'PE_Percentile': round(pe_pct*100, 2) if pe_pct is not None else None,
+            'Bias_Percent': round(bias*100, 2) if not pd.isna(bias) else None,
+            'Volatility': round(vol, 2) if not pd.isna(vol) else None,
             'Decision': decision,
-            'Weight': round(weight, 2)
+            'Weight': round(weight, 2),
+            'Invested_This_Week': round(invest_amount, 2)
         })
 
     final_price = df['Close'].iloc[-1]
@@ -168,6 +173,10 @@ def run_backtest(df, initial_weekly_investment=1000):
     dynamic_return = ((dynamic_value - total_invested_dynamic) / total_invested_dynamic) * 100 if total_invested_dynamic > 0 else 0
     
     stats = {
+        'Total Weeks': len(df_weekly),
+        'Data Start': df.index[0].strftime('%Y-%m-%d'),
+        'Backtest Start': df_weekly.index[0].strftime('%Y-%m-%d'),
+        'Backtest End': df_weekly.index[-1].strftime('%Y-%m-%d'),
         'Final Price': final_price,
         'Naive Total Invested': total_invested_naive,
         'Naive Final Value': naive_value,
@@ -185,7 +194,7 @@ def run_backtest(df, initial_weekly_investment=1000):
     return stats, pd.DataFrame(history_log)
 
 def main():
-    print("Initializing Multi-Index 5-Year Backtest...")
+    print("Initializing Multi-Index 10-Year Backtest...")
     
     configs = {
         "NDX": {"price": "^NDX", "pe": "NDX", "vol": "^VXN"},
@@ -197,9 +206,9 @@ def main():
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         fs = {}
         for name, cfg in configs.items():
-            fs[f"{name}_price"] = executor.submit(fetch_yahoo_history, cfg['price'], '6y') # Fetch 6y to allow 1yr MA200 warmup
-            fs[f"{name}_pe"] = executor.submit(fetch_danjuan_pe_history, cfg['pe'], '5y')
-            fs[f"{name}_vol"] = executor.submit(fetch_yahoo_history, cfg['vol'], '6y')
+            fs[f"{name}_price"] = executor.submit(fetch_yahoo_history, cfg['price'], '10y') # Fetch 10y exactly
+            fs[f"{name}_pe"] = executor.submit(fetch_danjuan_pe_history, cfg['pe'], 'all')
+            fs[f"{name}_vol"] = executor.submit(fetch_yahoo_history, cfg['vol'], '10y')
             
         print("Data fetching in progress...")
         
@@ -220,13 +229,14 @@ def main():
             
     # Generate Markdown Report
     report_lines = [
-        "# NASDAQ DCA Strategy: 4-Year Backtest Report",
+        "# NASDAQ DCA Strategy: 5-Year High-Fidelity Backtest Report",
         f"> Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
         "",
         "## Methodology",
-        "- **Capital Rules**: Weekly injection of $1000.",
-        "- **Naive DCA**: Invests $1000 every Monday unconditionally.",
-        "- **Dynamic Strategy**: Invests $2000 on Green 🟢, $1000 on Yellow 🟡, and $0 on Red 🔴.",
+        "- **Capital Rules**: Base weekly injection of $1000.",
+        "- **Naive DCA**: Invests exactly $1000 every Monday unconditionally.",
+        "- **Dynamic Strategy**: Invests strictly based on the continuous model multiplier ($1000 * Weight).",
+        "- **Historical Data Scope**: 10 Years fetched to provide perfectly aligned 5-year rolling percentiles. Testing on latest 5 years.",
         "- **Cost Basis**: Slippage & taxes are excluded.",
         ""
     ]
@@ -234,6 +244,7 @@ def main():
     for name, stats in results.items():
         report_lines.extend([
             f"## {name} Performance Summary",
+            f"- **Backtest Horizon**: {stats['Backtest Start']} to {stats['Backtest End']} ({stats['Total Weeks']} weeks)",
             f"- **Final Market Price**: {stats['Final Price']:.2f}",
             "",
             "### Naive Constant DCA",
