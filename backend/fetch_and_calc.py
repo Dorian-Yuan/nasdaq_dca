@@ -119,10 +119,13 @@ def evaluate_strategy(bias, pe_percentile, vxn_score):
         reasons.append("估值数据缺失，由于防御性给予默认得分 1.0")
 
     # 2. 情绪因子 (Weight: 30%)
-    # VXN 越低(贪婪)得分越低，越高(恐慌)得分越高。公式：VXN / 20.0，限制在 [0.5, 2.0] 区间
+    # VXN < 20时：(VXN-10)/10.0，限制最小为0
+    # VXN >= 20时：min(VXN/20.0, 2.0)
     if vxn_score is not None:
-        sentiment_score = vxn_score / 20.0
-        sentiment_score = max(0.5, min(2.0, sentiment_score))
+        if vxn_score < 20:
+            sentiment_score = max(0.0, (vxn_score - 10.0) / 10.0)
+        else:
+            sentiment_score = min(vxn_score / 20.0, 2.0)
         reasons.append(f"情绪因子得分: {sentiment_score:.2f} (VXN {vxn_score:.2f})")
     else:
         sentiment_score = 1.0
