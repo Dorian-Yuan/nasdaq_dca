@@ -1,7 +1,7 @@
 {
-  "QQQ": {
+  "NDX": {
     "latest": {
-      "update_time": "2026-03-05 12:15:56",
+      "update_time": "2026-03-05 14:00:14",
       "decision": "🟢",
       "reasons": [
         "估值因子得分: 0.66 (PE分位 67.2%)",
@@ -16,10 +16,10 @@
         "final_weight": 0.97
       },
       "metrics": {
-        "price": 610.75,
-        "ma200": 587.99,
-        "bias_percent": 3.87,
-        "daily_return_percent": 1.52,
+        "price": 25093.68,
+        "ma200": 24160.97,
+        "bias_percent": 3.86,
+        "daily_return_percent": 1.51,
         "pe": 33.9261,
         "pe_percentile": 0.6716,
         "volatility": 24.87,
@@ -31,16 +31,16 @@
         "date": "2026-03-05",
         "decision": "🟢",
         "weight": 0.97,
-        "price": 610.75,
+        "price": 25093.68,
         "pe_percentile": 0.6716,
-        "bias_percent": 3.87,
+        "bias_percent": 3.86,
         "volatility": 24.87
       }
     ]
   },
-  "SPY": {
+  "SP500": {
     "latest": {
-      "update_time": "2026-03-05 12:15:56",
+      "update_time": "2026-03-05 14:00:14",
       "decision": "🟡",
       "reasons": [
         "估值因子得分: 0.00 (PE分位 82.6%)",
@@ -55,10 +55,10 @@
         "final_weight": 0.67
       },
       "metrics": {
-        "price": 685.13,
-        "ma200": 655.62,
-        "bias_percent": 4.5,
-        "daily_return_percent": 0.71,
+        "price": 6869.5,
+        "ma200": 6574.28,
+        "bias_percent": 4.49,
+        "daily_return_percent": 0.78,
         "pe": 28.5026,
         "pe_percentile": 0.8260000000000001,
         "volatility": 21.15,
@@ -70,9 +70,9 @@
         "date": "2026-03-05",
         "decision": "🟡",
         "weight": 0.67,
-        "price": 685.13,
+        "price": 6869.5,
         "pe_percentile": 0.8260000000000001,
-        "bias_percent": 4.5,
+        "bias_percent": 4.49,
         "volatility": 21.15
       }
     ]

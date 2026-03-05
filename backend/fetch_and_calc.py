@@ -20,46 +20,61 @@ HEADERS = {
 # 数据获取函数
 # ---------------------------------------------------------
 
-def fetch_price_and_bias(ticker):
+def fetch_price_and_bias(price_ticker, tencent_ticker):
     """
-    使用 Yahoo Finance 价格历史和腾讯行情 API 获取精确价格、"预先计算好"的涨跌幅及 200 日均线乖离率
+    使用 Yahoo Finance 价格历史和腾讯行情 API 获取精确价格及 200 日均线乖离率
+    优先使用 Yahoo Finance 数据计算当日涨跌幅 (当前价/昨日收盘价 - 1)
+    如果 Yahoo 无法返回涨跌数据，备选使用腾讯官方接口
     """
     try:
-        # 第一步：直接调用权威行情接口获取『官方已经计算好』的涨跌百分比数据，绝不自己进行加减乘除算术
-        # usQQQ / usSPY
-        tencent_url = f"http://qt.gtimg.cn/q=us{ticker}"
+        # 第一步：从腾讯调用权威行情接口作为备选
+        tencent_url = f"http://qt.gtimg.cn/q={tencent_ticker}"
         tencent_res = requests.get(tencent_url, headers=HEADERS, timeout=10)
-        # 腾讯接口返回格式以 ~ 分割，第32位为精确的百分比涨跌幅字符串
         daily_return_str = None
         if tencent_res.status_code == 200 and "~" in tencent_res.text:
             parts = tencent_res.text.split("~")
             if len(parts) > 32:
                 daily_return_str = parts[32]
-        
-        # 将字符串转为小数方便统一后续 JSON 格式 (例如 "1.52" -> 0.0152)
-        daily_return = float(daily_return_str) / 100.0 if daily_return_str else None
+        daily_return_tencent = float(daily_return_str) / 100.0 if daily_return_str else None
 
         # 第二步：获取过去 1 年的历史折线以计算 MA200 和 乖离率
-        url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range=1y"
+        url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{price_ticker}?metrics=high?&interval=1d&range=1y"
         res_1y = requests.get(url_1y, headers=HEADERS, timeout=10)
         data_1y = res_1y.json()
         
+        meta = data_1y['chart']['result'][0]['meta']
         close_prices = data_1y['chart']['result'][0]['indicators']['quote'][0]['close']
         valid_prices = [p for p in close_prices if p is not None]
         
+        daily_return = None
+        current_price = valid_prices[-1] if valid_prices else None
+        
+        if 'regularMarketPrice' in meta and 'regularMarketPreviousClose' in meta:
+            mrkt_price = meta['regularMarketPrice']
+            prev_close = meta['regularMarketPreviousClose']
+            if prev_close and prev_close > 0:
+                daily_return = (mrkt_price - prev_close) / prev_close
+                current_price = mrkt_price
+        elif len(valid_prices) >= 2:
+            prev_close = valid_prices[-2]
+            if prev_close and prev_close > 0:
+                daily_return = (current_price - prev_close) / prev_close
+        
+        if daily_return is None:
+            daily_return = daily_return_tencent
+        
         if not valid_prices or len(valid_prices) < 200:
-            print(f"警告：获取到的 {ticker} 价格历史不足 200 天，无法准确计算 MA200")
-            return valid_prices[-1] if valid_prices else None, None, None, daily_return
+            print(f"警告：获取到的 {price_ticker} 价格历史不足 200 天，无法准确计算 MA200")
+            return current_price, None, None, daily_return
             
         ma200_prices = valid_prices[-200:]
         ma200 = sum(ma200_prices) / len(ma200_prices)
         
-        calc_price = valid_prices[-1]
-        bias = (calc_price - ma200) / ma200 if calc_price and ma200 else None
+        bias = (current_price - ma200) / ma200 if current_price and ma200 else None
         
-        return calc_price, ma200, bias, daily_return
+        return current_price, ma200, bias, daily_return
     except Exception as e:
-        print(f"获取 {ticker} 官方行情数据失败: {e}")
+        print(f"获取 {price_ticker} 官方行情数据失败: {e}")
         return None, None, None, None
 
 
@@ -207,14 +222,16 @@ def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
 
 def main():
     INDICES = {
-        "QQQ": {
-            "price_ticker": "QQQ",
+        "NDX": {
+            "price_ticker": "%5ENDX",
+            "tencent_ticker": "us.NDX",
             "pe_code": "NDX",
             "vol_ticker": "%5EVXN",
             "vol_name": "VXN"
         },
-        "SPY": {
-            "price_ticker": "SPY",
+        "SP500": {
+            "price_ticker": "%5EGSPC",
+            "tencent_ticker": "us.INX",
             "pe_code": "SP500",
             "vol_ticker": "%5EVIX",
             "vol_name": "VIX"
@@ -227,20 +244,23 @@ def main():
     
     # 1. 初始化多标的数据结构并尝试读取旧数据
     result_data = {
-        "QQQ": {"latest": {}, "history": []},
-        "SPY": {"latest": {}, "history": []}
+        "NDX": {"latest": {}, "history": []},
+        "SP500": {"latest": {}, "history": []}
     }
     if os.path.exists(json_path):
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 old_data = json.load(f)
                 # 兼容性检查：如果是新版本结构则直接继承
-                if "QQQ" in old_data and isinstance(old_data["QQQ"], dict) and "latest" in old_data["QQQ"]:
-                    # 保留原有的历史数据
-                    if "history" in old_data["QQQ"]:
-                        result_data["QQQ"]["history"] = old_data["QQQ"]["history"]
-                    if "SPY" in old_data and "history" in old_data["SPY"]:
-                        result_data["SPY"]["history"] = old_data["SPY"]["history"]
+                if "NDX" in old_data and "history" in old_data["NDX"]:
+                    result_data["NDX"]["history"] = old_data["NDX"]["history"]
+                elif "QQQ" in old_data and "history" in old_data["QQQ"]:
+                    result_data["NDX"]["history"] = old_data["QQQ"]["history"]
+                    
+                if "SP500" in old_data and "history" in old_data["SP500"]:
+                    result_data["SP500"]["history"] = old_data["SP500"]["history"]
+                elif "SPY" in old_data and "history" in old_data["SPY"]:
+                    result_data["SP500"]["history"] = old_data["SPY"]["history"]
         except Exception as e:
             print(f"读取旧版 data.json 失败，将重新生成: {e}")
 
@@ -258,7 +278,7 @@ def main():
         print(f"开始获取核心指标: {name}")
         print(f"=========================================")
         
-        current_price, ma200, bias, daily_return = fetch_price_and_bias(config["price_ticker"])
+        current_price, ma200, bias, daily_return = fetch_price_and_bias(config["price_ticker"], config["tencent_ticker"])
         print(f"-> {name} 价格: {current_price}, MA200: {ma200}, 乖离率: {bias}, 相对涨跌幅: {daily_return}")
         
         pe, pe_percentile = fetch_pe_from_danjuan(config["pe_code"])
@@ -314,7 +334,7 @@ def main():
             result_data[name]["history"] = history[-365:]
             
         # 整理推送信息
-        cn_name = {"QQQ": "纳斯达克", "SPY": "标普500"}.get(name, name)
+        cn_name = {"NDX": "纳斯达克100", "SP500": "标普500"}.get(name, name)
         if metrics['price'] and metrics['pe_percentile'] is not None:
             bark_messages.append(f"{cn_name}：{decision} {individual_decisions['final_weight']}× | PE {metrics['pe_percentile']*100:.1f}％ | 乖离 {metrics['bias_percent']}％ | {config['vol_name']} {metrics['volatility']}；")
 

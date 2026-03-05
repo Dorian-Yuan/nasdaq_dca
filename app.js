@@ -33,19 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.decisionText.className = '';
     }
 
-    let currentTab = 'QQQ';
+    let currentTab = 'NDX';
     let cachedData = null;
 
     // 根据当前 Tab 动态替换文案
     function updateLabelsForTab() {
-        if (currentTab === 'QQQ') {
-            document.getElementById('main-title').textContent = '纳斯达克 (QQQ) 定投评估';
-            document.getElementById('label-price-title').textContent = 'QQQ 价格';
+        if (currentTab === 'NDX') {
+            document.getElementById('main-title').textContent = '纳斯达克100 (NDX) 定投评估';
+            document.getElementById('label-price-title').textContent = 'NDX 指数';
             document.getElementById('label-vol-title').textContent = '^VXN';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 纳斯达克 100 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
-        } else if (currentTab === 'SPY') {
-            document.getElementById('main-title').textContent = '标普500 (SPY) 定投评估';
-            document.getElementById('label-price-title').textContent = 'SPY 价格';
+        } else if (currentTab === 'SP500') {
+            document.getElementById('main-title').textContent = '标普500 (SP500) 定投评估';
+            document.getElementById('label-price-title').textContent = 'SP500 指数';
             document.getElementById('label-vol-title').textContent = '^VIX';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 标普500 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
         }
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const ind = data.individual_decisions || {};
 
             dom.valBias.textContent = m.bias_percent !== null ? `${m.bias_percent}%` : '--%';
-            dom.valPrice.textContent = m.price !== null ? `$${m.price}` : '--';
+            dom.valPrice.textContent = m.price !== null ? m.price.toLocaleString() : '--';
             document.getElementById('decision-bias').textContent = ind.bias_decision || '--';
             document.getElementById('decision-bias').className = `metric-decision ${ind.bias_decision === '加倍定投' ? 'text-green' : ind.bias_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
 
