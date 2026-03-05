@@ -230,10 +230,6 @@ h1 {
     margin-bottom: 20px;
 }
 
-.metric-card:nth-child(3) {
-    grid-column: span 2;
-}
-
 @media (min-width: 480px) {
     .metrics-grid {
         gap: 16px;

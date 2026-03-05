@@ -21,7 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
         valPrice: document.getElementById('val-price'),
         valPePct: document.getElementById('val-pe-pct'),
         valPe: document.getElementById('val-pe'),
-        valVxn: document.getElementById('val-vxn')
+        valVxn: document.getElementById('val-vxn'),
+        valDailyReturn: document.getElementById('val-daily-return')
     };
 
     // 重置指示灯状态
@@ -35,15 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTab = 'QQQ';
     let cachedData = null;
 
-    // 渲染 UI 数据
-    function renderData(allData) {
-        cachedData = allData;
-        const tabData = allData[currentTab];
-        if (!tabData || !tabData.latest) return;
-
-        const data = tabData.latest;
-
-        // 根据当前 Tab 动态替换文案
+    // 根据当前 Tab 动态替换文案
+    function updateLabelsForTab() {
         if (currentTab === 'QQQ') {
             document.getElementById('main-title').textContent = '纳斯达克 (QQQ) 定投评估';
             document.getElementById('label-price-title').textContent = 'QQQ 价格';
@@ -55,6 +49,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('label-vol-title').textContent = '^VIX';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 标普500 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
         }
+    }
+
+    // 渲染 UI 数据
+    function renderData(allData) {
+        cachedData = allData;
+        updateLabelsForTab();
+
+        const tabData = allData[currentTab];
+        if (!tabData || !tabData.latest) return;
+
+        const data = tabData.latest;
 
         dom.updateTime.textContent = `更新时间 (北京时间): ${data.update_time}`;
 
@@ -88,9 +93,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const ind = data.individual_decisions || {};
 
             dom.valBias.textContent = m.bias_percent !== null ? `${m.bias_percent}%` : '--%';
-            dom.valPrice.textContent = m.qqq_price !== null ? `$${m.qqq_price}` : '--';
+            dom.valPrice.textContent = m.price !== null ? `$${m.price}` : '--';
             document.getElementById('decision-bias').textContent = ind.bias_decision || '--';
             document.getElementById('decision-bias').className = `metric-decision ${ind.bias_decision === '加倍定投' ? 'text-green' : ind.bias_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
+
+            if (m.daily_return_percent !== null && m.daily_return_percent !== undefined) {
+                const sign = m.daily_return_percent > 0 ? '+' : '';
+                dom.valDailyReturn.textContent = `${sign}${m.daily_return_percent}%`;
+                dom.valDailyReturn.className = `metric-value ${m.daily_return_percent > 0 ? 'text-red' : m.daily_return_percent < 0 ? 'text-green' : ''}`;
+            } else {
+                dom.valDailyReturn.textContent = '--%';
+                dom.valDailyReturn.className = 'metric-value';
+            }
 
             dom.valPePct.textContent = m.pe_percentile !== null ? `${(m.pe_percentile * 100).toFixed(1)}%` : '--%';
             dom.valPe.textContent = m.pe !== null ? m.pe : '--';
@@ -143,6 +157,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 dom.valBias.textContent = errText;
                 dom.valPrice.textContent = '--';
                 document.getElementById('decision-bias').textContent = '--';
+
+                dom.valDailyReturn.textContent = errText;
+                dom.valDailyReturn.className = 'metric-value';
 
                 dom.valPePct.textContent = errText;
                 dom.valPe.textContent = '--';
@@ -254,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
             currentTab = e.target.getAttribute('data-tab');
+            updateLabelsForTab();
             if (cachedData) {
                 renderData(cachedData);
             }

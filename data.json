@@ -1,7 +1,7 @@
 {
   "QQQ": {
     "latest": {
-      "update_time": "2026-03-05 11:08:41",
+      "update_time": "2026-03-05 11:19:20",
       "decision": "🟢",
       "reasons": [
         "估值因子得分: 0.66 (PE分位 67.2%)",
@@ -19,6 +19,7 @@
         "price": 610.75,
         "ma200": 587.99,
         "bias_percent": 3.87,
+        "daily_return_percent": 1.52,
         "pe": 33.9261,
         "pe_percentile": 0.6716,
         "volatility": 24.87,
@@ -39,7 +40,7 @@
   },
   "SPY": {
     "latest": {
-      "update_time": "2026-03-05 11:08:41",
+      "update_time": "2026-03-05 11:19:20",
       "decision": "🟡",
       "reasons": [
         "估值因子得分: 0.00 (PE分位 82.6%)",
@@ -57,6 +58,7 @@
         "price": 685.13,
         "ma200": 655.62,
         "bias_percent": 4.5,
+        "daily_return_percent": 0.71,
         "pe": 28.5026,
         "pe_percentile": 0.8260000000000001,
         "volatility": 21.15,

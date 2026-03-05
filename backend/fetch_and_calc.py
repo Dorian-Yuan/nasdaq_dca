@@ -34,17 +34,20 @@ def fetch_price_and_bias(ticker):
         
         if not valid_prices or len(valid_prices) < 200:
             print(f"警告：获取到的 {ticker} 价格数据不足 200 天，无法准确计算 MA200")
-            return None, None, None
+            return None, None, None, None
             
         current_price = valid_prices[-1]
+        previous_price = valid_prices[-2] if len(valid_prices) > 1 else current_price
+        daily_return = (current_price - previous_price) / previous_price 
+        
         ma200_prices = valid_prices[-200:]
         ma200 = sum(ma200_prices) / len(ma200_prices)
         bias = (current_price - ma200) / ma200
         
-        return current_price, ma200, bias
+        return current_price, ma200, bias, daily_return
     except Exception as e:
         print(f"获取 {ticker} 价格及 MA200 失败: {e}")
-        return None, None, None
+        return None, None, None, None
 
 
 def fetch_pe_from_danjuan(index_code):
@@ -242,8 +245,8 @@ def main():
         print(f"开始获取核心指标: {name}")
         print(f"=========================================")
         
-        current_price, ma200, bias = fetch_price_and_bias(config["price_ticker"])
-        print(f"-> {name} 价格: {current_price}, MA200: {ma200}, 乖离率: {bias}")
+        current_price, ma200, bias, daily_return = fetch_price_and_bias(config["price_ticker"])
+        print(f"-> {name} 价格: {current_price}, MA200: {ma200}, 乖离率: {bias}, 相对涨跌幅: {daily_return}")
         
         pe, pe_percentile = fetch_pe_from_danjuan(config["pe_code"])
         print(f"-> {config['pe_code']} PE: {pe}, 历史百分位: {pe_percentile}")
@@ -258,6 +261,7 @@ def main():
             "price": round(current_price, 2) if current_price else None,
             "ma200": round(ma200, 2) if ma200 else None,
             "bias_percent": round(bias * 100, 2) if bias else None,
+            "daily_return_percent": round(daily_return * 100, 2) if daily_return is not None else None,
             "pe": pe,
             "pe_percentile": pe_percentile,
             "volatility": round(vol_score, 2) if vol_score else None,

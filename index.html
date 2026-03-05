@@ -74,6 +74,17 @@
                 <div class="metric-value" id="val-pe-pct">--%</div>
                 <div class="metric-sub">相对估值: <span id="val-pe">--</span></div>
             </div>
+
+            <!-- 今日涨跌卡片 -->
+            <div class="metric-card">
+                <div class="metric-title">
+                    <span>今日涨跌 <span class="tooltip-icon" tabindex="0" onclick=""
+                            data-tooltip="相比上一个交易日收盘价的涨跌百分比。美股实行完全的绿跌红涨体系。">?</span></span>
+                    <span id="decision-return" class="metric-decision" style="visibility: hidden;">--</span>
+                </div>
+                <div class="metric-value" id="val-daily-return">--%</div>
+                <div class="metric-sub"><span id="label-daily-return-title">相比昨日收盘</span></div>
+            </div>
         </section>
 
         <!-- 刷新按钮区 -->
