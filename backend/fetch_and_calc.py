@@ -143,52 +143,47 @@ def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
     reasons = []
     
     # 1. 估值因子 (Weight: 40%)
-    # PE分位 < 70%：2.0 * (1.0 - pe_percentile)
-    # PE分位 70%~80%：6.0 * (0.8 - pe_percentile)，加速平滑滑落至0
-    # PE分位 > 80%：0.0 提前彻底剥夺加权
+    # Asymmetric Accumulation: 防现金拖累。即便极端高估，也给 0.5x 底仓定投。
     if pe_percentile is not None:
-        if pe_percentile < 0.7:
-            val_score = 2.0 * (1.0 - pe_percentile)
-        elif pe_percentile <= 0.8:
-            val_score = 6.0 * (0.8 - pe_percentile)
+        if pe_percentile > 0.7:
+             val_score = 1.0 + ((pe_percentile - 0.7) / 0.3) * 1.0
+        elif pe_percentile >= 0.3:
+             val_score = 1.0
         else:
-            val_score = 0.0
+             val_score = 0.5 + (pe_percentile / 0.3) * 0.5
         reasons.append(f"估值因子得分: {val_score:.2f} (PE分位 {pe_percentile*100:.1f}%)")
     else:
         val_score = 1.0
         reasons.append("估值数据缺失，由于防御性给予默认得分 1.0")
 
     # 2. 情绪因子 (Weight: 30%)
-    # vol < 20时：(vol-10)/10.0，限制最小为0
-    # vol >= 20时：min(vol/20.0, 2.0)
     if vol_score is not None:
-        if vol_score < 20:
-            sentiment_score = max(0.0, (vol_score - 10.0) / 10.0)
+        if vol_score < 14:
+            sentiment_score = 0.8
+        elif vol_score <= 20:
+            sentiment_score = 1.0
+        elif vol_score <= 30:
+            sentiment_score = 1.0 + ((vol_score - 20) / 10.0) * 0.8
         else:
-            sentiment_score = min(vol_score / 20.0, 2.0)
+            sentiment_score = min(2.5, 1.8 + (vol_score - 30) / 10.0)
         reasons.append(f"情绪因子得分: {sentiment_score:.2f} ({vol_name} {vol_score:.2f})")
     else:
         sentiment_score = 1.0
         reasons.append("情绪数据缺失，给予默认得分 1.0")
 
     # 3. 趋势因子 (Weight: 30%)
-    # 连续五段分段插值法
     if bias is not None:
-        if bias <= 0:
-            trend_score = 0.8
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (防守区，乖离率 {bias*100:.1f}%)")
-        elif bias <= 0.05:
-            trend_score = 0.8 + (bias / 0.05) * 0.4
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (上攻过渡区，乖离率 {bias*100:.1f}%)")
+        if bias < -0.10:
+            trend_score = 2.0
+        elif bias < 0:
+            trend_score = 1.0 + (abs(bias) / 0.10) * 1.0
         elif bias <= 0.10:
-            trend_score = 1.2
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (多头甜点区，乖离率 {bias*100:.1f}%)")
+            trend_score = 1.0
         elif bias <= 0.20:
-            trend_score = 1.2 - ((bias - 0.10) / 0.10) * 1.2
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (超买滑坡区，乖离率 {bias*100:.1f}%)")
+            trend_score = 1.0 - ((bias - 0.10) / 0.10) * 0.5
         else:
-            trend_score = 0.0
-            reasons.append(f"趋势因子得分: {trend_score:.2f} (极度泡沫区，乖离率 {bias*100:.1f}%)")
+            trend_score = 0.5
+        reasons.append(f"趋势因子得分: {trend_score:.2f} (乖离率 {bias*100:.1f}%)")
     else:
         trend_score = 1.0
         reasons.append("均线数据缺失，给予默认得分 1.0")
