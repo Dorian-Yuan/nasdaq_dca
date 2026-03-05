@@ -22,31 +22,41 @@ HEADERS = {
 
 def fetch_price_and_bias(ticker):
     """
-    使用 Yahoo Finance Chart API 获取指期货/ETF当前价格及 200 日均线乖离率
+    使用 Yahoo Finance Chart API 获取指数官方准确当前价格、日内涨跌幅及 200 日均线乖离率
     """
     try:
-        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range=1y"
-        response = requests.get(url, headers=HEADERS, timeout=10)
-        data = response.json()
+        # 第一步：获取精确的今日官方价格和昨日官方收盘价来直接计算“现成”的真实涨跌幅
+        url_1d = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
+        res_1d = requests.get(url_1d, headers=HEADERS, timeout=10)
+        data_1d = res_1d.json()
+        meta = data_1d['chart']['result'][0]['meta']
         
-        close_prices = data['chart']['result'][0]['indicators']['quote'][0]['close']
+        current_price = meta.get('regularMarketPrice')
+        previous_close = meta.get('chartPreviousClose')
+        daily_return = (current_price - previous_close) / previous_close if current_price and previous_close else None
+
+        # 第二步：获取过去 1 年的历史折线以计算 MA200 和 乖离率
+        url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range=1y"
+        res_1y = requests.get(url_1y, headers=HEADERS, timeout=10)
+        data_1y = res_1y.json()
+        
+        close_prices = data_1y['chart']['result'][0]['indicators']['quote'][0]['close']
         valid_prices = [p for p in close_prices if p is not None]
         
         if not valid_prices or len(valid_prices) < 200:
-            print(f"警告：获取到的 {ticker} 价格数据不足 200 天，无法准确计算 MA200")
-            return None, None, None, None
+            print(f"警告：获取到的 {ticker} 价格历史不足 200 天，无法准确计算 MA200")
+            return current_price, None, None, daily_return
             
-        current_price = valid_prices[-1]
-        previous_price = valid_prices[-2] if len(valid_prices) > 1 else current_price
-        daily_return = (current_price - previous_price) / previous_price 
-        
         ma200_prices = valid_prices[-200:]
         ma200 = sum(ma200_prices) / len(ma200_prices)
-        bias = (current_price - ma200) / ma200
         
-        return current_price, ma200, bias, daily_return
+        # 乖离率的最新基准也采用实时 meta 价格
+        calc_price = current_price if current_price else valid_prices[-1]
+        bias = (calc_price - ma200) / ma200 if calc_price and ma200 else None
+        
+        return calc_price, ma200, bias, daily_return
     except Exception as e:
-        print(f"获取 {ticker} 价格及 MA200 失败: {e}")
+        print(f"获取 {ticker} 官方行情数据失败: {e}")
         return None, None, None, None
 
 
