@@ -22,18 +22,22 @@ HEADERS = {
 
 def fetch_price_and_bias(ticker):
     """
-    使用 Yahoo Finance Chart API 获取指数官方准确当前价格、日内涨跌幅及 200 日均线乖离率
+    使用 Yahoo Finance 价格历史和腾讯行情 API 获取精确价格、"预先计算好"的涨跌幅及 200 日均线乖离率
     """
     try:
-        # 第一步：获取精确的今日官方价格和昨日官方收盘价来直接计算“现成”的真实涨跌幅
-        url_1d = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
-        res_1d = requests.get(url_1d, headers=HEADERS, timeout=10)
-        data_1d = res_1d.json()
-        meta = data_1d['chart']['result'][0]['meta']
+        # 第一步：直接调用权威行情接口获取『官方已经计算好』的涨跌百分比数据，绝不自己进行加减乘除算术
+        # usQQQ / usSPY
+        tencent_url = f"http://qt.gtimg.cn/q=us{ticker}"
+        tencent_res = requests.get(tencent_url, headers=HEADERS, timeout=10)
+        # 腾讯接口返回格式以 ~ 分割，第32位为精确的百分比涨跌幅字符串
+        daily_return_str = None
+        if tencent_res.status_code == 200 and "~" in tencent_res.text:
+            parts = tencent_res.text.split("~")
+            if len(parts) > 32:
+                daily_return_str = parts[32]
         
-        current_price = meta.get('regularMarketPrice')
-        previous_close = meta.get('chartPreviousClose')
-        daily_return = (current_price - previous_close) / previous_close if current_price and previous_close else None
+        # 将字符串转为小数方便统一后续 JSON 格式 (例如 "1.52" -> 0.0152)
+        daily_return = float(daily_return_str) / 100.0 if daily_return_str else None
 
         # 第二步：获取过去 1 年的历史折线以计算 MA200 和 乖离率
         url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range=1y"
@@ -45,13 +49,12 @@ def fetch_price_and_bias(ticker):
         
         if not valid_prices or len(valid_prices) < 200:
             print(f"警告：获取到的 {ticker} 价格历史不足 200 天，无法准确计算 MA200")
-            return current_price, None, None, daily_return
+            return valid_prices[-1] if valid_prices else None, None, None, daily_return
             
         ma200_prices = valid_prices[-200:]
         ma200 = sum(ma200_prices) / len(ma200_prices)
         
-        # 乖离率的最新基准也采用实时 meta 价格
-        calc_price = current_price if current_price else valid_prices[-1]
+        calc_price = valid_prices[-1]
         bias = (calc_price - ma200) / ma200 if calc_price and ma200 else None
         
         return calc_price, ma200, bias, daily_return
