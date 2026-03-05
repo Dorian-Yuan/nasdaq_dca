@@ -169,11 +169,11 @@ def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
     
     # 根据用户定义：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞)
     if final_weight <= 0.4:
-        decision = "暂停定投"
+        decision = "🔴"
     elif final_weight <= 0.7:
-        decision = "普通定投"
+        decision = "🟡"
     else:
-        decision = "加倍定投"
+        decision = "🟢"
         
     # 保存单个指标的判断结果，供前端展示倍数
     individual_decisions = {
@@ -297,8 +297,9 @@ def main():
             result_data[name]["history"] = history[-365:]
             
         # 整理推送信息
+        cn_name = {"QQQ": "纳斯达克", "SPY": "标普500"}.get(name, name)
         if metrics['price'] and metrics['pe_percentile'] is not None:
-            bark_messages.append(f"【{name}】 {decision} ({individual_decisions['final_weight']}x)\n价格: ${metrics['price']} | PE分位: {metrics['pe_percentile']*100:.1f}% | {config['vol_name']}: {metrics['volatility']}")
+            bark_messages.append(f"{cn_name}：{decision} {individual_decisions['final_weight']}× | PE {metrics['pe_percentile']*100:.1f}％ | 乖离 {metrics['bias_percent']}％ | {config['vol_name']} {metrics['volatility']}；")
 
     # 3. 写入跨标的数据 JSON 文件
     try:
@@ -313,8 +314,8 @@ def main():
     if bark_key:
         print("\n检测到 BARK_KEY，正在发送合并推送...")
         try:
-            title = "美股定投策略更新"
-            body = "\n---\n".join(bark_messages)
+            title = "指数定投评估"
+            body = "\n".join(bark_messages)
             
             bark_url = f"https://api.day.app/{bark_key}/"
             payload = {
@@ -324,10 +325,10 @@ def main():
                 "group": "US_INDEX",
                 "sound": "minuet"
             }
-            # 如果任何一个标的出现加倍，就用高音
-            if "加倍定投" in body:
+            # 如果任何一个标的出现绿灯，就用高音
+            if "🟢" in body:
                 payload["sound"] = "alarm"
-            elif "暂停" in body:
+            elif "🔴" in body:
                 payload["sound"] = "fail"
                 
             response = requests.post(bark_url, json=payload, timeout=10)

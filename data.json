@@ -1,8 +1,8 @@
 {
   "QQQ": {
     "latest": {
-      "update_time": "2026-03-05 10:33:16",
-      "decision": "加倍定投",
+      "update_time": "2026-03-05 11:05:50",
+      "decision": "🟢",
       "reasons": [
         "估值因子得分: 0.66 (PE分位 67.2%)",
         "情绪因子得分: 1.24 (VXN 24.87)",
@@ -28,7 +28,7 @@
     "history": [
       {
         "date": "2026-03-05",
-        "decision": "加倍定投",
+        "decision": "🟢",
         "weight": 0.97,
         "price": 610.75,
         "pe_percentile": 0.6716,
@@ -39,8 +39,8 @@
   },
   "SPY": {
     "latest": {
-      "update_time": "2026-03-05 10:33:16",
-      "decision": "普通定投",
+      "update_time": "2026-03-05 11:05:50",
+      "decision": "🟡",
       "reasons": [
         "估值因子得分: 0.00 (PE分位 82.6%)",
         "情绪因子得分: 1.06 (VIX 21.15)",
@@ -66,7 +66,7 @@
     "history": [
       {
         "date": "2026-03-05",
-        "decision": "普通定投",
+        "decision": "🟡",
         "weight": 0.67,
         "price": 685.13,
         "pe_percentile": 0.8260000000000001,

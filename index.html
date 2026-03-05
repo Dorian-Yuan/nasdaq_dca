@@ -37,9 +37,6 @@
                 <div class="light" id="light-green"></div>
             </div>
             <h2 id="decision-text">评估中</h2>
-            <div style="margin-bottom: 12px; font-weight: 600; color: var(--text-secondary); font-size: 14px;">综合权重得分:
-                <span id="val-final-weight">--</span> 倍
-            </div>
         </section>
 
         <!-- 详细指标区 -->
@@ -47,7 +44,7 @@
             <!-- 乖离率卡片 -->
             <div class="metric-card">
                 <div class="metric-title">
-                    <span>200日均线乖离率 <span class="tooltip-icon" tabindex="0" onclick=""
+                    <span>均线乖离率 <span class="tooltip-icon" tabindex="0" onclick=""
                             data-tooltip="衡量当前价格偏离过去200天平均成本的百分比。&#xa;偏离过大可能发生均值回归（下跌），跌破太多则可能是超跌反弹（抄底）的信号。">?</span></span>
                     <span id="decision-bias" class="metric-decision">--</span>
                 </div>
@@ -55,28 +52,27 @@
                 <div class="metric-sub"><span id="label-price-title">QQQ 价格</span>: <span id="val-price">--</span></div>
             </div>
 
-            <!-- 估值卡片 -->
-            <div class="metric-card">
-                <div class="metric-title">
-                    <span><span id="label-pe-title">纳指100 PE 百分位</span> <span class="tooltip-icon" tabindex="0"
-                            onclick=""
-                            data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
-                    <span id="decision-pe" class="metric-decision">--</span>
-                </div>
-                <div class="metric-value" id="val-pe-pct">--%</div>
-                <div class="metric-sub">相对估值: <span id="val-pe">--</span></div>
-            </div>
-
             <!-- 情绪卡片 -->
             <div class="metric-card">
                 <div class="metric-title">
-                    <span><span id="label-vol-title">期权波动率 (^VXN)</span> <span class="tooltip-icon" tabindex="0"
-                            onclick="" data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。"
+                    <span><span id="label-vol-title">^VXN</span> <span class="tooltip-icon" tabindex="0" onclick=""
+                            data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。"
                             id="tooltip-vol">?</span></span>
                     <span id="decision-vxn" class="metric-decision">--</span>
                 </div>
                 <div class="metric-value" id="val-vxn">--</div>
                 <div class="metric-sub" style="visibility: hidden;">--</div>
+            </div>
+
+            <!-- 估值卡片 -->
+            <div class="metric-card">
+                <div class="metric-title">
+                    <span>PE百分位 <span class="tooltip-icon" tabindex="0" onclick=""
+                            data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
+                    <span id="decision-pe" class="metric-decision">--</span>
+                </div>
+                <div class="metric-value" id="val-pe-pct">--%</div>
+                <div class="metric-sub">相对估值: <span id="val-pe">--</span></div>
             </div>
         </section>
 

@@ -21,8 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         valPrice: document.getElementById('val-price'),
         valPePct: document.getElementById('val-pe-pct'),
         valPe: document.getElementById('val-pe'),
-        valVxn: document.getElementById('val-vxn'),
-        valFinalWeight: document.getElementById('val-final-weight')
+        valVxn: document.getElementById('val-vxn')
     };
 
     // 重置指示灯状态
@@ -48,14 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentTab === 'QQQ') {
             document.getElementById('main-title').textContent = '纳斯达克 (QQQ) 定投评估';
             document.getElementById('label-price-title').textContent = 'QQQ 价格';
-            document.getElementById('label-pe-title').textContent = '纳指100 PE 百分位';
-            document.getElementById('label-vol-title').textContent = '期权波动率 (^VXN)';
+            document.getElementById('label-vol-title').textContent = '^VXN';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 纳斯达克 100 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
         } else if (currentTab === 'SPY') {
             document.getElementById('main-title').textContent = '标普500 (SPY) 定投评估';
             document.getElementById('label-price-title').textContent = 'SPY 价格';
-            document.getElementById('label-pe-title').textContent = '标普500 PE 百分位';
-            document.getElementById('label-vol-title').textContent = '期权波动率 (^VIX)';
+            document.getElementById('label-vol-title').textContent = '^VIX';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 标普500 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
         }
 
@@ -64,25 +61,20 @@ document.addEventListener('DOMContentLoaded', () => {
         resetLights();
 
         const finalWeight = data.individual_decisions ? data.individual_decisions.final_weight : null;
-        if (finalWeight !== null) {
-            dom.valFinalWeight.textContent = finalWeight.toFixed(2);
-        } else {
-            dom.valFinalWeight.textContent = '--';
-        }
 
-        // 设置主策略红绿灯 (模型二：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞))
+        // 设置主策略红绿灯及权重得分显示 (模型二：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞))
         if (finalWeight !== null) {
             if (finalWeight <= 0.4) {
                 dom.lightRed.classList.add('active-red');
-                dom.decisionText.textContent = "🔴 暂停买入";
+                dom.decisionText.textContent = `🔴 综合权重得分: ${finalWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-red');
             } else if (finalWeight > 0.7) {
                 dom.lightGreen.classList.add('active-green');
-                dom.decisionText.textContent = "🟢 加倍定投";
+                dom.decisionText.textContent = `🟢 综合权重得分: ${finalWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-green');
             } else {
                 dom.lightYellow.classList.add('active-yellow');
-                dom.decisionText.textContent = "🟡 普通定投";
+                dom.decisionText.textContent = `🟡 综合权重得分: ${finalWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-yellow');
             }
         } else {
@@ -150,7 +142,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const errText = '错误';
                 dom.valBias.textContent = errText;
                 dom.valPrice.textContent = '--';
-                dom.valFinalWeight.textContent = '--';
                 document.getElementById('decision-bias').textContent = '--';
 
                 dom.valPePct.textContent = errText;
