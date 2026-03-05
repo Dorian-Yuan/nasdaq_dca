@@ -110,9 +110,16 @@ def evaluate_strategy(bias, pe_percentile, vxn_score):
     reasons = []
     
     # 1. 估值因子 (Weight: 40%)
-    # PE百分位越低，得分越高。公式： 2.0 * (1.0 - PE百分位)。(如百分位数 1.0 -> 0.0, 0.0 -> 2.0)
+    # PE分位 < 70%：2.0 * (1.0 - pe_percentile)
+    # PE分位 70%~80%：6.0 * (0.8 - pe_percentile)，加速平滑滑落至0
+    # PE分位 > 80%：0.0 提前彻底剥夺加权
     if pe_percentile is not None:
-        val_score = 2.0 * (1.0 - pe_percentile)
+        if pe_percentile < 0.7:
+            val_score = 2.0 * (1.0 - pe_percentile)
+        elif pe_percentile <= 0.8:
+            val_score = 6.0 * (0.8 - pe_percentile)
+        else:
+            val_score = 0.0
         reasons.append(f"估值因子得分: {val_score:.2f} (PE分位 {pe_percentile*100:.1f}%)")
     else:
         val_score = 1.0
