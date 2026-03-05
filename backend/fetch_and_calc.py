@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime, timezone, timedelta
 import requests
+import concurrent.futures
 
 # ---------------------------------------------------------
 # 配置参数区
@@ -278,13 +279,19 @@ def main():
         print(f"开始获取核心指标: {name}")
         print(f"=========================================")
         
-        current_price, ma200, bias, daily_return = fetch_price_and_bias(config["price_ticker"], config["tencent_ticker"])
+        # 使用并发执行 API 请求以降低耗时
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            future_price = executor.submit(fetch_price_and_bias, config["price_ticker"], config["tencent_ticker"])
+            future_pe = executor.submit(fetch_pe_from_danjuan, config["pe_code"])
+            future_vol = executor.submit(fetch_volatility, config["vol_ticker"])
+            
+            # 收集结果
+            current_price, ma200, bias, daily_return = future_price.result()
+            pe, pe_percentile = future_pe.result()
+            vol_score = future_vol.result()
+            
         print(f"-> {name} 价格: {current_price}, MA200: {ma200}, 乖离率: {bias}, 相对涨跌幅: {daily_return}")
-        
-        pe, pe_percentile = fetch_pe_from_danjuan(config["pe_code"])
         print(f"-> {config['pe_code']} PE: {pe}, 历史百分位: {pe_percentile}")
-        
-        vol_score = fetch_volatility(config["vol_ticker"])
         print(f"-> 市场情緖: {config['vol_name']} = {vol_score}")
         
         decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vol_score, config["vol_name"])
