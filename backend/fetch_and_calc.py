@@ -8,10 +8,11 @@ import concurrent.futures
 # 配置参数区
 # ---------------------------------------------------------
 
-# 模型二维度权重配置
-WEIGHT_VALUATION = 0.40  # 估值权重
-WEIGHT_SENTIMENT = 0.30  # 情绪权重
-WEIGHT_TREND = 0.30      # 趋势权重
+# ---------------------------------------------------------
+# 配置参数区
+# ---------------------------------------------------------
+
+# 请注意：因子权重已改为每个指数独立配置（Style-Tilted Weighting），见 INDICES。
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -136,9 +137,10 @@ def fetch_volatility(ticker):
 # 评估逻辑与主函数
 # ---------------------------------------------------------
 
-def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
+def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率", w_val=0.33, w_sent=0.33, w_trend=0.34):
     """
     模型二：「估值-情绪-趋势」三维综合打分系统
+    支持传入专属权重配置 (Style-Tilted Weighting)
     """
     reasons = []
     
@@ -189,7 +191,9 @@ def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
         reasons.append("均线数据缺失，给予默认得分 1.0")
 
     # 计算综合加权系数
-    final_weight = (val_score * WEIGHT_VALUATION) + (sentiment_score * WEIGHT_SENTIMENT) + (trend_score * WEIGHT_TREND)
+    # 权重归一化防出错
+    total_w = w_val + w_sent + w_trend
+    final_weight = (val_score * w_val + sentiment_score * w_sent + trend_score * w_trend) / total_w
     
     # 限制极值边界
     final_weight = max(0.0, min(3.0, final_weight))
@@ -223,14 +227,16 @@ def main():
             "tencent_ticker": "us.NDX",
             "pe_code": "NDX",
             "vol_ticker": "%5EVXN",
-            "vol_name": "VXN"
+            "vol_name": "VXN",
+            "weights": {"val": 3.0, "sent": 3.0, "trend": 4.0} # 偏向趋势跟踪
         },
         "SP500": {
             "price_ticker": "%5EGSPC",
             "tencent_ticker": "us.INX",
             "pe_code": "SP500",
             "vol_ticker": "%5EVIX",
-            "vol_name": "VIX"
+            "vol_name": "VIX",
+            "weights": {"val": 4.0, "sent": 3.0, "trend": 3.0} # 偏向价值估值
         }
     }
     
@@ -289,7 +295,11 @@ def main():
         print(f"-> {config['pe_code']} PE: {pe}, 历史百分位: {pe_percentile}")
         print(f"-> 市场情緖: {config['vol_name']} = {vol_score}")
         
-        decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vol_score, config["vol_name"])
+        w_val = config["weights"]["val"]
+        w_sent = config["weights"]["sent"]
+        w_trend = config["weights"]["trend"]
+        
+        decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vol_score, config["vol_name"], w_val, w_sent, w_trend)
         print(f"\n=> 最终建议: {decision}")
         
         metrics = {
