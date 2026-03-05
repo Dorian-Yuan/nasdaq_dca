@@ -20,12 +20,12 @@ HEADERS = {
 # 数据获取函数
 # ---------------------------------------------------------
 
-def fetch_qqq_price_and_bias():
+def fetch_price_and_bias(ticker):
     """
-    使用 Yahoo Finance Chart API 获取 QQQ 当前价格及 200 日均线乖离率
+    使用 Yahoo Finance Chart API 获取指期货/ETF当前价格及 200 日均线乖离率
     """
     try:
-        url = "https://query2.finance.yahoo.com/v8/finance/chart/QQQ?metrics=high?&interval=1d&range=1y"
+        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range=1y"
         response = requests.get(url, headers=HEADERS, timeout=10)
         data = response.json()
         
@@ -33,7 +33,7 @@ def fetch_qqq_price_and_bias():
         valid_prices = [p for p in close_prices if p is not None]
         
         if not valid_prices or len(valid_prices) < 200:
-            print("警告：获取到的 QQQ 价格数据不足 200 天，无法准确计算 MA200")
+            print(f"警告：获取到的 {ticker} 价格数据不足 200 天，无法准确计算 MA200")
             return None, None, None
             
         current_price = valid_prices[-1]
@@ -43,16 +43,16 @@ def fetch_qqq_price_and_bias():
         
         return current_price, ma200, bias
     except Exception as e:
-        print(f"获取 QQQ 价格及 MA200 失败: {e}")
+        print(f"获取 {ticker} 价格及 MA200 失败: {e}")
         return None, None, None
 
 
-def fetch_ndx_pe_from_danjuan():
+def fetch_pe_from_danjuan(index_code):
     """
-    从雪球/蛋卷基金 API 获取纳指100的实时估值（PE 及百分位）
+    从雪球/蛋卷基金 API 获取对应指数的实时估值（PE 及百分位）
     """
     try:
-        url = "https://danjuanapp.com/djapi/index_eva/detail/NDX"
+        url = f"https://danjuanapp.com/djapi/index_eva/detail/{index_code}"
         # 增加重试机制和更长的超时时间
         for attempt in range(3):
             try:
@@ -65,7 +65,7 @@ def fetch_ndx_pe_from_danjuan():
                         pe_percentile = 1.0 - float(data["data"]["pe_over_history"])
                         return pe, pe_percentile
                     else:
-                        print("蛋卷 API 响应格式异常或未包含 PE 数据")
+                        print(f"蛋卷 API 响应格式异常或未包含 {index_code} PE 数据")
                         return None, None
                 else:
                     print(f"尝试 {attempt+1}: 请求失败，状态码 {response.status_code}")
@@ -73,15 +73,16 @@ def fetch_ndx_pe_from_danjuan():
                 print(f"尝试 {attempt+1}: 请求异常 {e}")
         return None, None
     except Exception as e:
-        print(f"获取纳指 PE 失败: {e}")
+        print(f"获取 {index_code} PE 失败: {e}")
         return None, None
 
-def fetch_vxn():
+
+def fetch_volatility(ticker):
     """
-    使用 Yahoo Finance 获取 CBOE NASDAQ 100 Volatility Index (^VXN)
+    使用 Yahoo Finance 获取波动率指数 (如 ^VXN 或 ^VIX)
     """
     try:
-        url = "https://query2.finance.yahoo.com/v8/finance/chart/%5EVXN?metrics=high?&interval=1d&range=5d"
+        url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range=5d"
         response = requests.get(url, headers=HEADERS, timeout=10)
         data = response.json()
         
@@ -89,23 +90,23 @@ def fetch_vxn():
         valid_prices = [p for p in close_prices if p is not None]
         
         if not valid_prices:
-            print("警告：获取到的 VXN 价格数据为空")
+            print(f"警告：获取到的 {ticker} 价格数据为空")
             return None
             
-        current_vxn = valid_prices[-1]
-        return current_vxn
+        current_vol = valid_prices[-1]
+        return current_vol
     except Exception as e:
-        print(f"获取 VXN 失败: {e}")
+        print(f"获取 {ticker} 失败: {e}")
         return None
+
 
 # ---------------------------------------------------------
 # 评估逻辑与主函数
 # ---------------------------------------------------------
 
-def evaluate_strategy(bias, pe_percentile, vxn_score):
+def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
     """
     模型二：「估值-情绪-趋势」三维综合打分系统
-    分别计算得分系数，再加权得出最终定投倍数，由倍数决定红绿灯状态。
     """
     reasons = []
     
@@ -126,14 +127,14 @@ def evaluate_strategy(bias, pe_percentile, vxn_score):
         reasons.append("估值数据缺失，由于防御性给予默认得分 1.0")
 
     # 2. 情绪因子 (Weight: 30%)
-    # VXN < 20时：(VXN-10)/10.0，限制最小为0
-    # VXN >= 20时：min(VXN/20.0, 2.0)
-    if vxn_score is not None:
-        if vxn_score < 20:
-            sentiment_score = max(0.0, (vxn_score - 10.0) / 10.0)
+    # vol < 20时：(vol-10)/10.0，限制最小为0
+    # vol >= 20时：min(vol/20.0, 2.0)
+    if vol_score is not None:
+        if vol_score < 20:
+            sentiment_score = max(0.0, (vol_score - 10.0) / 10.0)
         else:
-            sentiment_score = min(vxn_score / 20.0, 2.0)
-        reasons.append(f"情绪因子得分: {sentiment_score:.2f} (VXN {vxn_score:.2f})")
+            sentiment_score = min(vol_score / 20.0, 2.0)
+        reasons.append(f"情绪因子得分: {sentiment_score:.2f} ({vol_name} {vol_score:.2f})")
     else:
         sentiment_score = 1.0
         reasons.append("情绪数据缺失，给予默认得分 1.0")
@@ -178,7 +179,7 @@ def evaluate_strategy(bias, pe_percentile, vxn_score):
     individual_decisions = {
         "bias_decision": f"{trend_score:.2f}x",
         "pe_decision": f"{val_score:.2f}x",
-        "vxn_decision": f"{sentiment_score:.2f}x",
+        "vol_decision": f"{sentiment_score:.2f}x",
         "final_weight": round(final_weight, 2)
     }
     
@@ -187,103 +188,158 @@ def evaluate_strategy(bias, pe_percentile, vxn_score):
     
     return decision, reasons, individual_decisions
 
-def main():
-    print("开始获取核心指标...")
-    
-    # 1. 获取 QQQ 价格与均线
-    current_price, ma200, bias = fetch_qqq_price_and_bias()
-    print(f"-> QQQ 价格: {current_price}, MA200: {ma200}, 乖离率: {bias}")
-    
-    # 2. 获取纳指 PE 与历史百分位
-    pe, pe_percentile = fetch_ndx_pe_from_danjuan()
-    print(f"-> 纳指100 PE: {pe}, 历史百分位: {pe_percentile}")
-    
-    # 3. 获取 VXN
-    vxn_score = fetch_vxn()
-    print(f"-> 市场情緖: VXN = {vxn_score}")
-    
-    # 评估策略
-    decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vxn_score)
-    print(f"\n=> 最终建议: {decision}")
-    print(f"=> 理由: {', '.join(reasons)}")
-    
-    # 获取北京时间
-    beijing_tz = timezone(timedelta(hours=8))
-    bj_time = datetime.now(beijing_tz).strftime("%Y-%m-%d %H:%M:%S")
 
-    # 拼装最终要写入 JSON 的数据
-    result_data = {
-        "update_time": bj_time,
-        "decision": decision,
-        "reasons": reasons,
-        "individual_decisions": individual_decisions,
-        "metrics": {
-            "qqq_price": round(current_price, 2) if current_price else None,
-            "ma200": round(ma200, 2) if ma200 else None,
-            "bias_percent": round(bias * 100, 2) if bias else None,
-            "pe": pe,
-            "pe_percentile": pe_percentile,
-            "vxn": round(vxn_score, 2) if vxn_score else None
+def main():
+    INDICES = {
+        "QQQ": {
+            "price_ticker": "QQQ",
+            "pe_code": "NDX",
+            "vol_ticker": "%5EVXN",
+            "vol_name": "VXN"
+        },
+        "SPY": {
+            "price_ticker": "SPY",
+            "pe_code": "SP500",
+            "vol_ticker": "%5EVIX",
+            "vol_name": "VIX"
         }
     }
     
-    # 确定输出路径 (放置在项目根目录，方便 Github Pages 的 index.html 读取)
-    # 当前脚本在 backend/ 下，所以写入上一级目录即根目录
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     json_path = os.path.join(project_root, "data.json")
     
-    # 将字典转换为 JSON 并写入文件
+    # 1. 初始化多标的数据结构并尝试读取旧数据
+    result_data = {
+        "QQQ": {"latest": {}, "history": []},
+        "SPY": {"latest": {}, "history": []}
+    }
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                old_data = json.load(f)
+                # 兼容性检查：如果是新版本结构则直接继承
+                if "QQQ" in old_data and isinstance(old_data["QQQ"], dict) and "latest" in old_data["QQQ"]:
+                    # 保留原有的历史数据
+                    if "history" in old_data["QQQ"]:
+                        result_data["QQQ"]["history"] = old_data["QQQ"]["history"]
+                    if "SPY" in old_data and "history" in old_data["SPY"]:
+                        result_data["SPY"]["history"] = old_data["SPY"]["history"]
+        except Exception as e:
+            print(f"读取旧版 data.json 失败，将重新生成: {e}")
+
+    # 获取北京时间作为时间戳
+    beijing_tz = timezone(timedelta(hours=8))
+    now = datetime.now(beijing_tz)
+    bj_time_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    date_str = now.strftime("%Y-%m-%d")
+
+    bark_messages = []
+
+    # 2. 遍历两大宽基指数进行计算
+    for name, config in INDICES.items():
+        print(f"\n=========================================")
+        print(f"开始获取核心指标: {name}")
+        print(f"=========================================")
+        
+        current_price, ma200, bias = fetch_price_and_bias(config["price_ticker"])
+        print(f"-> {name} 价格: {current_price}, MA200: {ma200}, 乖离率: {bias}")
+        
+        pe, pe_percentile = fetch_pe_from_danjuan(config["pe_code"])
+        print(f"-> {config['pe_code']} PE: {pe}, 历史百分位: {pe_percentile}")
+        
+        vol_score = fetch_volatility(config["vol_ticker"])
+        print(f"-> 市场情緖: {config['vol_name']} = {vol_score}")
+        
+        decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vol_score, config["vol_name"])
+        print(f"\n=> 最终建议: {decision}")
+        
+        metrics = {
+            "price": round(current_price, 2) if current_price else None,
+            "ma200": round(ma200, 2) if ma200 else None,
+            "bias_percent": round(bias * 100, 2) if bias else None,
+            "pe": pe,
+            "pe_percentile": pe_percentile,
+            "volatility": round(vol_score, 2) if vol_score else None,
+            "vol_name": config["vol_name"]
+        }
+        
+        latest_obj = {
+            "update_time": bj_time_str,
+            "decision": decision,
+            "reasons": reasons,
+            "individual_decisions": individual_decisions,
+            "metrics": metrics
+        }
+        
+        # 更新 latest 字段
+        result_data[name]["latest"] = latest_obj
+        
+        # 组装 history entry并追加 (如果同一天重复执行则覆盖当天数据)
+        new_hist_entry = {
+            "date": date_str,
+            "decision": decision,
+            "weight": individual_decisions.get("final_weight", 0),
+            "price": metrics["price"],
+            "pe_percentile": metrics["pe_percentile"],
+            "bias_percent": metrics["bias_percent"],
+            "volatility": metrics["volatility"]
+        }
+        
+        history = result_data[name]["history"]
+        if len(history) > 0 and history[-1]["date"] == date_str:
+            history[-1] = new_hist_entry
+        else:
+            history.append(new_hist_entry)
+            
+        # 限制历史天数防膨胀 (保留过去365天)
+        if len(history) > 365:
+            result_data[name]["history"] = history[-365:]
+            
+        # 整理推送信息
+        if metrics['price'] and metrics['pe_percentile'] is not None:
+            bark_messages.append(f"【{name}】 {decision} ({individual_decisions['final_weight']}x)\n价格: ${metrics['price']} | PE分位: {metrics['pe_percentile']*100:.1f}% | {config['vol_name']}: {metrics['volatility']}")
+
+    # 3. 写入跨标的数据 JSON 文件
     try:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(result_data, f, ensure_ascii=False, indent=2)
-        print(f"\n成功生成行情评估文件: {json_path}")
+        print(f"\n成功生成多标的行情评估文件: {json_path}")
     except Exception as e:
         print(f"写入文件失败: {e}")
 
-    # 发送 Bark 推送 (如果配置了 BARK_KEY 环境变量)
+    # 4. 发送 Bark 推送 (如果有多个标的则发送聚合消息)
     bark_key = os.environ.get("BARK_KEY")
     if bark_key:
-        print("\n检测到 BARK_KEY，正在发送由推送...")
+        print("\n检测到 BARK_KEY，正在发送合并推送...")
         try:
-            # 构建消息标题和内容
-            title = f"纳指定投评估 - {decision}"
+            title = "美股定投策略更新"
+            body = "\n---\n".join(bark_messages)
             
-            # 使用 URL 编码的换行符
-            body_lines = [
-                f"当前建议: {decision} ({result_data['individual_decisions']['final_weight']}x)",
-                f"QQQ价格: ${result_data['metrics']['qqq_price']}",
-                f"均线乖离: {result_data['metrics']['bias_percent']}%",
-                f"纳指100 PE: {result_data['metrics']['pe']} ({result_data['metrics']['pe_percentile']*100:.1f}%)",
-                f"期权波动率 (VXN): {result_data['metrics']['vxn']}"
-            ]
-            body = "\n".join(body_lines)
-            
-            # 发送 POST 请求到 Bark API
             bark_url = f"https://api.day.app/{bark_key}/"
             payload = {
                 "title": title,
                 "body": body,
                 "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/icon.png",
-                "group": "NASDAQ",
+                "group": "US_INDEX",
                 "sound": "minuet"
             }
-            
-            # 如果是加倍买入，使用更响亮的提示音
-            if decision == "加倍定投":
+            # 如果任何一个标的出现加倍，就用高音
+            if "加倍定投" in body:
                 payload["sound"] = "alarm"
-            elif decision == "暂停定投":
+            elif "暂停" in body:
                 payload["sound"] = "fail"
                 
             response = requests.post(bark_url, json=payload, timeout=10)
             if response.status_code == 200:
                 print("Bark 推送成功！")
             else:
-                print(f"Bark 推送失败，状态码: {response.status_code}, 返回数据: {response.text}")
+                print(f"Bark 推送失败: {response.status_code}")
         except Exception as e:
             print(f"发送 Bark 推送异常: {e}")
     else:
         print("\n未配置 BARK_KEY 环境变量，跳过消息推送。")
+
 
 if __name__ == "__main__":
     main()

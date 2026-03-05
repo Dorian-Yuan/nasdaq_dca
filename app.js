@@ -33,8 +33,32 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.decisionText.className = '';
     }
 
+    let currentTab = 'QQQ';
+    let cachedData = null;
+
     // 渲染 UI 数据
-    function renderData(data) {
+    function renderData(allData) {
+        cachedData = allData;
+        const tabData = allData[currentTab];
+        if (!tabData || !tabData.latest) return;
+
+        const data = tabData.latest;
+
+        // 根据当前 Tab 动态替换文案
+        if (currentTab === 'QQQ') {
+            document.getElementById('main-title').textContent = '纳斯达克 (QQQ) 定投评估';
+            document.getElementById('label-price-title').textContent = 'QQQ 价格';
+            document.getElementById('label-pe-title').textContent = '纳指100 PE 百分位';
+            document.getElementById('label-vol-title').textContent = '期权波动率 (^VXN)';
+            document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 纳斯达克 100 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
+        } else if (currentTab === 'SPY') {
+            document.getElementById('main-title').textContent = '标普500 (SPY) 定投评估';
+            document.getElementById('label-price-title').textContent = 'SPY 价格';
+            document.getElementById('label-pe-title').textContent = '标普500 PE 百分位';
+            document.getElementById('label-vol-title').textContent = '期权波动率 (^VIX)';
+            document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 标普500 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
+        }
+
         dom.updateTime.textContent = `更新时间 (北京时间): ${data.update_time}`;
 
         resetLights();
@@ -81,8 +105,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('decision-pe').textContent = ind.pe_decision || '--';
             document.getElementById('decision-pe').className = `metric-decision ${ind.pe_decision === '加倍定投' ? 'text-green' : ind.pe_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
 
-            dom.valVxn.textContent = m.vxn !== null ? m.vxn : '--';
-            document.getElementById('decision-vxn').textContent = ind.vxn_decision || '--';
+            dom.valVxn.textContent = m.volatility !== null ? m.volatility : '--';
+            document.getElementById('decision-vxn').textContent = ind.vol_decision || '--';
 
             // 根据返回的倍数决定文本颜色 (高于1倍为绿，低于1倍为红)
             const getDecisionClass = (decisionStr) => {
@@ -99,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById('decision-bias').className = `metric-decision ${getDecisionClass(ind.bias_decision)}`;
             document.getElementById('decision-pe').className = `metric-decision ${getDecisionClass(ind.pe_decision)}`;
-            document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(ind.vxn_decision)}`;
+            document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(ind.vol_decision)}`;
         }
     }
 
@@ -231,6 +255,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 refreshBtn.disabled = false;
                 refreshBtn.textContent = '强制刷新策略数据';
             });
+    });
+
+    // 监听 Tab 切换
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentTab = e.target.getAttribute('data-tab');
+            if (cachedData) {
+                renderData(cachedData);
+            }
+        });
     });
 
     // 初始化加载

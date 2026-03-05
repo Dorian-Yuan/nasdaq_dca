@@ -19,9 +19,15 @@
 <body>
     <div class="container">
         <header>
-            <h1>纳斯达克 (QQQ) 定投评估</h1>
+            <h1 id="main-title">纳斯达克 (QQQ) 定投评估</h1>
             <p id="update-time" class="subtitle">加载中...</p>
         </header>
+
+        <!-- 标签页切换区 -->
+        <div class="tabs-container">
+            <button class="tab-btn active" data-tab="QQQ">纳斯达克100 (QQQ)</button>
+            <button class="tab-btn" data-tab="SPY">标普500 (SPY)</button>
+        </div>
 
         <!-- 主状态红绿灯区 -->
         <section class="status-card" id="main-status-card">
@@ -46,13 +52,14 @@
                     <span id="decision-bias" class="metric-decision">--</span>
                 </div>
                 <div class="metric-value" id="val-bias">--%</div>
-                <div class="metric-sub">QQQ 价格: <span id="val-price">--</span></div>
+                <div class="metric-sub"><span id="label-price-title">QQQ 价格</span>: <span id="val-price">--</span></div>
             </div>
 
             <!-- 估值卡片 -->
             <div class="metric-card">
                 <div class="metric-title">
-                    <span>纳指100 PE 百分位 <span class="tooltip-icon" tabindex="0" onclick=""
+                    <span><span id="label-pe-title">纳指100 PE 百分位</span> <span class="tooltip-icon" tabindex="0"
+                            onclick=""
                             data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
                     <span id="decision-pe" class="metric-decision">--</span>
                 </div>
@@ -63,8 +70,9 @@
             <!-- 情绪卡片 -->
             <div class="metric-card">
                 <div class="metric-title">
-                    <span>期权波动率 (^VXN) <span class="tooltip-icon" tabindex="0" onclick=""
-                            data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。">?</span></span>
+                    <span><span id="label-vol-title">期权波动率 (^VXN)</span> <span class="tooltip-icon" tabindex="0"
+                            onclick="" data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。"
+                            id="tooltip-vol">?</span></span>
                     <span id="decision-vxn" class="metric-decision">--</span>
                 </div>
                 <div class="metric-value" id="val-vxn">--</div>

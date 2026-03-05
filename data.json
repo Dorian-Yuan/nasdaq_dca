@@ -1,24 +1,78 @@
 {
-  "update_time": "2026-03-05 10:24:21",
-  "decision": "加倍定投",
-  "reasons": [
-    "估值因子得分: 0.66 (PE分位 67.2%)",
-    "情绪因子得分: 1.24 (VXN 24.87)",
-    "趋势因子得分: 1.11 (上攻过渡区，乖离率 3.9%)",
-    "综合计算权重: 0.97倍"
-  ],
-  "individual_decisions": {
-    "bias_decision": "1.11x",
-    "pe_decision": "0.66x",
-    "vxn_decision": "1.24x",
-    "final_weight": 0.97
+  "QQQ": {
+    "latest": {
+      "update_time": "2026-03-05 10:33:16",
+      "decision": "加倍定投",
+      "reasons": [
+        "估值因子得分: 0.66 (PE分位 67.2%)",
+        "情绪因子得分: 1.24 (VXN 24.87)",
+        "趋势因子得分: 1.11 (上攻过渡区，乖离率 3.9%)",
+        "综合计算权重: 0.97倍"
+      ],
+      "individual_decisions": {
+        "bias_decision": "1.11x",
+        "pe_decision": "0.66x",
+        "vol_decision": "1.24x",
+        "final_weight": 0.97
+      },
+      "metrics": {
+        "price": 610.75,
+        "ma200": 587.99,
+        "bias_percent": 3.87,
+        "pe": 33.9261,
+        "pe_percentile": 0.6716,
+        "volatility": 24.87,
+        "vol_name": "VXN"
+      }
+    },
+    "history": [
+      {
+        "date": "2026-03-05",
+        "decision": "加倍定投",
+        "weight": 0.97,
+        "price": 610.75,
+        "pe_percentile": 0.6716,
+        "bias_percent": 3.87,
+        "volatility": 24.87
+      }
+    ]
   },
-  "metrics": {
-    "qqq_price": 610.75,
-    "ma200": 587.99,
-    "bias_percent": 3.87,
-    "pe": 33.9261,
-    "pe_percentile": 0.6716,
-    "vxn": 24.87
+  "SPY": {
+    "latest": {
+      "update_time": "2026-03-05 10:33:16",
+      "decision": "普通定投",
+      "reasons": [
+        "估值因子得分: 0.00 (PE分位 82.6%)",
+        "情绪因子得分: 1.06 (VIX 21.15)",
+        "趋势因子得分: 1.16 (上攻过渡区，乖离率 4.5%)",
+        "综合计算权重: 0.67倍"
+      ],
+      "individual_decisions": {
+        "bias_decision": "1.16x",
+        "pe_decision": "0.00x",
+        "vol_decision": "1.06x",
+        "final_weight": 0.67
+      },
+      "metrics": {
+        "price": 685.13,
+        "ma200": 655.62,
+        "bias_percent": 4.5,
+        "pe": 28.5026,
+        "pe_percentile": 0.8260000000000001,
+        "volatility": 21.15,
+        "vol_name": "VIX"
+      }
+    },
+    "history": [
+      {
+        "date": "2026-03-05",
+        "decision": "普通定投",
+        "weight": 0.67,
+        "price": 685.13,
+        "pe_percentile": 0.8260000000000001,
+        "bias_percent": 4.5,
+        "volatility": 21.15
+      }
+    ]
   }
 }
