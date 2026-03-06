@@ -12,20 +12,6 @@ const STRATEGY_MODELS = {
             "formula_vxn": "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
             "formula_bias": "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
         },
-        "custom_1772778969623": {
-            "id": "custom_1772778969623",
-            "name": "5x²全PE百分1位",
-            "timestamp": 1772778969623,
-            "return_5y": 38.3632165509057,
-            "weights": {
-                "pe": 1,
-                "vxn": 0,
-                "bias": 0
-            },
-            "formula_pe": "return 5*x*x",
-            "formula_vxn": "return 0",
-            "formula_bias": "return 0"
-        },
         "custom_1772785740133": {
             "id": "custom_1772785740133",
             "name": "5x²全PE百分位",
@@ -62,7 +48,7 @@ if (typeof window !== 'undefined') {
     
     // 初始化当前激活的模型库索引
     window.ACTIVE_MODELS = {
-    "NDX": "custom_1772778969623",
+    "NDX": "custom_1772785740133",
     "SP500": "spy_default"
 };
 }
