@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pe_pct = m.pe_percentile !== null ? m.pe_percentile : 0.5;
             const vol = m.volatility !== null ? m.volatility : 20;
 
-            let peScore = peFn(1.0 - pe_pct);
+            let peScore = peFn(pe_pct);
             let vxnScore = vxnFn(vol);
             let biasScore = biasFn(bias_raw);
 
@@ -543,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
             labels = dataArray.map(d => d.date);
             // 将 PE百分位转换为直观的 (1 - 蛋卷原始百分位)
             // 数值越高，代表(1-pe)*100 越大，越便宜。
-            datasetData = dataArray.map(d => (1.0 - d.pe_percentile) * 100);
+            datasetData = dataArray.map(d => d.pe_percentile * 100);
         }
 
         modalTitle.textContent = `${currentTab} ${chartLabel}`;

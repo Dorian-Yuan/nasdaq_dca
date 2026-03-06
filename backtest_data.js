@@ -7709,3 +7709,4 @@ const BACKTEST_DATA = {
     }
   ]
 };
+if (typeof window !== 'undefined') { window.BACKTEST_DATA = BACKTEST_DATA; }
