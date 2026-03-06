@@ -50,9 +50,10 @@ body {
     flex-direction: column;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 1024px) {
     .container {
-        padding: 24px 16px;
+        max-width: 1000px;
+        padding: 32px 20px;
     }
 }
 
@@ -667,4 +668,60 @@ footer {
     justify-content: space-between;
     font-size: 12px;
     color: var(--text-secondary);
+}
+
+/* 统一交互块样式 */
+.interactive-block {
+    background-color: var(--card-bg);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px auto;
+    width: 100%;
+    max-width: 1000px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 56px;
+    box-sizing: border-box;
+    position: relative;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.interactive-block:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.interactive-block:active {
+    transform: scale(0.99);
+}
+
+#refresh-btn.interactive-block {
+    background-color: var(--text-primary);
+    color: var(--bg-color);
+    font-weight: 700;
+    font-size: 15px;
+    border: none;
+    display: flex;
+    box-shadow: var(--shadow-md);
+}
+
+#refresh-btn.interactive-block:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+#refresh-btn.interactive-block:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.toggle-arrow {
+    color: var(--text-secondary);
+    font-size: 12px;
+    transition: transform 0.3s;
+    margin-left: 8px;
 }

@@ -88,18 +88,15 @@
             </div>
         </section>
 
-        <!-- 刷新按钮区 -->
-        <section class="action-section" style="text-align: center; margin: 20px 0;">
-            <button id="refresh-btn" class="btn primary-btn">强制刷新策略数据</button>
+        <section class="action-section">
+            <button id="refresh-btn" class="interactive-block">强制刷新策略数据</button>
         </section>
 
-        <!-- 策略模型库切换舱 (Model Manager) -->
-        <section class="model-selector-section" style="text-align: center; margin: 30px 0 10px 0;">
-            <div class="model-manager-trigger" onclick="toggleModelManager()">
+        <section class="model-selector-section">
+            <div class="model-manager-trigger interactive-block" onclick="toggleModelManager()">
                 <span class="model-selector-label">评估模型：</span>
                 <span id="active-model-name-display" class="active-model-text">默认经典策略</span>
-                <span id="model-manager-icon"
-                    style="color: var(--text-secondary); font-size: 12px; transition: transform 0.3s; margin-left: 8px;">▼</span>
+                <span id="model-manager-icon" class="toggle-arrow">▼</span>
             </div>
 
             <!-- 展开的模型管理器面板 -->
@@ -119,15 +116,15 @@
             </div>
         </section>
 
-        <!-- 全息回测工作台 (Sandbox) -->
         <section class="sandbox-section" id="sandbox-section" style="display: none;">
-            <div class="sandbox-header" onclick="toggleSandboxGrid()"
-                style="cursor: pointer; -webkit-tap-highlight-color: transparent; text-align: center;">
-                <h2 style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 6px;">
-                    全息回测沙盘与公式引擎 <span id="sandbox-toggle-icon"
-                        style="font-size: 14px; color: var(--text-secondary); transition: transform 0.3s;">▼</span>
-                </h2>
-                <p>自定义策略参数与执行阈值，实时推演历史收益 Alpha</p>
+            <div class="sandbox-header interactive-block" onclick="toggleSandboxGrid()">
+                <div style="text-align: center;">
+                    <h2
+                        style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        全息回测沙盘与公式引擎 <span id="sandbox-toggle-icon" class="toggle-arrow">▼</span>
+                    </h2>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">自定义策略参数与执行阈值，实时推演历史收益 Alpha</p>
+                </div>
             </div>
 
             <div class="sandbox-grid" id="sandbox-grid" style="display: none; padding-top: 10px;">
