@@ -3843,15 +3843,6 @@ const BACKTEST_DATA = {
       "pe": 33.8905,
       "pe_percentile": 0.3408,
       "volatility": 27.51
-    },
-    {
-      "date": "2026-03-06",
-      "price": 25020.41,
-      "ma200": 24178.93,
-      "bias": 0.0348,
-      "pe": 33.9261,
-      "pe_percentile": 0.3284,
-      "volatility": 26.0
     }
   ],
   "SP500": [
@@ -7697,15 +7688,6 @@ const BACKTEST_DATA = {
       "pe": 28.5806,
       "pe_percentile": 0.1716,
       "volatility": 23.57
-    },
-    {
-      "date": "2026-03-06",
-      "price": 6830.71,
-      "ma200": 6578.65,
-      "bias": 0.0383,
-      "pe": 28.5026,
-      "pe_percentile": 0.174,
-      "volatility": 23.75
     }
   ]
 };

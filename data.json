@@ -1,10 +1,10 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-06 14:45:14",
+      "update_time": "2026-03-06 15:15:15",
       "decision": "🟢",
       "reasons": [
-        "估值因子得分: 1.00 (PE分位 66.4%)",
+        "估值因子得分: 1.00 (PE分位 33.6%)",
         "情绪因子得分: 1.48 (VXN 26.00)",
         "趋势因子得分: 1.00 (乖离率 3.5%)",
         "综合计算权重: 1.14倍"
@@ -21,27 +21,18 @@
         "bias_percent": 3.48,
         "daily_return_percent": -0.29,
         "pe": 33.8504,
-        "pe_percentile": 0.6636,
+        "pe_percentile": 0.3364,
         "volatility": 26.0,
         "vol_name": "VXN"
       }
     },
     "history": [
       {
-        "date": "2026-03-05",
-        "decision": "🟢",
-        "weight": 1.12,
-        "price": 25086.23,
-        "pe_percentile": 0.6716,
-        "bias_percent": 3.75,
-        "volatility": 25.17
-      },
-      {
         "date": "2026-03-06",
         "decision": "🟢",
         "weight": 1.14,
         "price": 25020.41,
-        "pe_percentile": 0.6636,
+        "pe_percentile": 0.3364,
         "bias_percent": 3.48,
         "volatility": 26.0
       }
@@ -49,19 +40,19 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-06 14:45:14",
+      "update_time": "2026-03-06 15:15:15",
       "decision": "🟢",
       "reasons": [
-        "估值因子得分: 1.39 (PE分位 81.8%)",
+        "估值因子得分: 0.80 (PE分位 18.2%)",
         "情绪因子得分: 1.30 (VIX 23.75)",
         "趋势因子得分: 1.00 (乖离率 3.8%)",
-        "综合计算权重: 1.25倍"
+        "综合计算权重: 1.01倍"
       ],
       "individual_decisions": {
         "bias_decision": "1.00x",
-        "pe_decision": "1.39x",
+        "pe_decision": "0.80x",
         "vol_decision": "1.30x",
-        "final_weight": 1.25
+        "final_weight": 1.01
       },
       "metrics": {
         "price": 6830.71,
@@ -69,27 +60,18 @@
         "bias_percent": 3.83,
         "daily_return_percent": -0.56,
         "pe": 28.3338,
-        "pe_percentile": 0.8184,
+        "pe_percentile": 0.1816,
         "volatility": 23.75,
         "vol_name": "VIX"
       }
     },
     "history": [
       {
-        "date": "2026-03-05",
-        "decision": "🟢",
-        "weight": 1.2,
-        "price": 6843.59,
-        "pe_percentile": 0.8260000000000001,
-        "bias_percent": 4.03,
-        "volatility": 21.54
-      },
-      {
         "date": "2026-03-06",
         "decision": "🟢",
-        "weight": 1.25,
+        "weight": 1.01,
         "price": 6830.71,
-        "pe_percentile": 0.8184,
+        "pe_percentile": 0.1816,
         "bias_percent": 3.83,
         "volatility": 23.75
       }

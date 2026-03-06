@@ -97,7 +97,7 @@ def fetch_pe_from_danjuan(index_code):
                         # 蛋卷的 pe_over_history 若为 0.3308，表示“比过去33.08%的时间低”，即实际处于 66.92% 的历史分位
                         # 蛋卷 pe_over_history: 越大=越低估(便宜), 越小=越高估(昂贵)
                         # 与回测 (historical >= current).mean() 一致, 直接使用
-                        pe_percentile = 1.0 - float(data["data"]["pe_over_history"])
+                        pe_percentile = float(data["data"]["pe_over_history"])
                         return pe, pe_percentile
                     else:
                         print(f"蛋卷 API 响应格式异常或未包含 {index_code} PE 数据")
