@@ -674,7 +674,7 @@ footer {
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
     padding: 16px 20px;
-    margin: 16px auto 0 auto;
+    margin: 16px auto 0 auto !important;
     width: 100%;
     max-width: 1000px;
     display: flex;
