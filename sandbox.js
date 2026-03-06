@@ -4,6 +4,25 @@
 let sandboxChartIns = null;
 let fullDataStore = []; // Store the fully filtered data array for chart rendering
 
+window.loadSandboxFormulas = function () {
+    const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') || 'NDX';
+    if (!window.STRATEGY_MODELS || !window.ACTIVE_MODELS) return;
+
+    const activeId = window.ACTIVE_MODELS[activeTab];
+    const model = window.STRATEGY_MODELS[activeTab]?.[activeId];
+    if (!model) return;
+
+    // 更新权重拉杆
+    document.getElementById('sb-slider-val').value = model.weights.pe;
+    document.getElementById('sb-slider-sent').value = model.weights.vxn;
+    document.getElementById('sb-slider-trend').value = model.weights.bias;
+
+    // 清空现有的编辑器 DOM（强制下次展开时重新使用新模型的公式代码）
+    document.getElementById('builder-val').innerHTML = '';
+    document.getElementById('builder-sent').innerHTML = '';
+    document.getElementById('builder-trend').innerHTML = '';
+};
+
 // 全局暴露的对象，用于绑定 UI 事件
 window.updateSandboxConfigs = function () {
     compileAndRunSandbox();
@@ -45,17 +64,23 @@ window.toggleFormulaBuilder = function (factor) {
         builder.style.display = 'block';
         // Initialize default formula if empty
         if (builder.children.length === 0) {
+            const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') || 'NDX';
+            let activeModel = null;
+            if (window.STRATEGY_MODELS && window.ACTIVE_MODELS) {
+                activeModel = window.STRATEGY_MODELS[activeTab]?.[window.ACTIVE_MODELS[activeTab]];
+            }
+
             let defaultCode = "";
             let varName = "";
             if (factor === 'val') {
                 varName = "PEPct";
-                defaultCode = `// x 是当天的 PE 百分位 (如 0.32)\nlet valScore = 1.0;\nif (x > 0.7) valScore = 1.0 + ((x - 0.7) / 0.3) * 1.0;\nelse if (x >= 0.3) valScore = 1.0;\nelse valScore = 0.5 + (x / 0.3) * 0.5;\nreturn valScore;`;
+                defaultCode = activeModel ? activeModel.formula_pe : `// x 是当天的 PE 百分位\nreturn 1.0;`;
             } else if (factor === 'sent') {
                 varName = "VXN";
-                defaultCode = `// x 是当天的 恐慌波动率 (如 25.4)\nlet sentScore = 1.0;\nif (x < 14) sentScore = 0.8;\nelse if (x <= 20) sentScore = 1.0;\nelse if (x <= 30) sentScore = 1.0 + ((x - 20) / 10.0) * 0.8;\nelse sentScore = Math.min(2.5, 1.8 + (x - 30) / 10.0);\nreturn sentScore;`;
+                defaultCode = activeModel ? activeModel.formula_vxn : `// x 是当天的 恐慌波动率\nreturn 1.0;`;
             } else if (factor === 'trend') {
                 varName = "Bias";
-                defaultCode = `// x 是当天的 乖离率 (如 -0.15)\nlet trendScore = 1.0;\nif (x < -0.10) trendScore = 2.0;\nelse if (x < 0) trendScore = 1.0 + (Math.abs(x) / 0.10) * 1.0;\nelse if (x <= 0.10) trendScore = 1.0;\nelse if (x <= 0.20) trendScore = 1.0 - ((x - 0.10) / 0.10) * 0.5;\nelse trendScore = 0.5;\nreturn trendScore;`;
+                defaultCode = activeModel ? activeModel.formula_bias : `// x 是当天的 乖离率\nreturn 1.0;`;
             }
             builder.innerHTML = `
                 <div class="formula-help">使用 JavaScript 语法返回该因子的动态倍数。提供变量 <code>x</code> 代表当天因子值 (${varName})。</div>
@@ -88,40 +113,60 @@ window.compileAndRunSandbox = function () {
     // 2. 编译手写公式 (动态引擎核心)
     let fnVal, fnSent, fnTrend;
     try {
-        const codeVal = document.getElementById('code-val') ? document.getElementById('code-val').value : "";
-        const codeSent = document.getElementById('code-sent') ? document.getElementById('code-sent').value : "";
-        const codeTrend = document.getElementById('code-trend') ? document.getElementById('code-trend').value : "";
+        const activeMod = (window.STRATEGY_MODELS && window.ACTIVE_MODELS) ? window.STRATEGY_MODELS[activeTab]?.[window.ACTIVE_MODELS[activeTab]] : null;
 
-        fnVal = codeVal ? new Function("x", codeVal) : function (x) {
-            let valScore = 1.0;
-            if (x > 0.7) valScore = 1.0 + ((x - 0.7) / 0.3) * 1.0;
-            else if (x >= 0.3) valScore = 1.0;
-            else valScore = 0.5 + (x / 0.3) * 0.5;
-            return valScore;
-        };
+        const codeVal = document.getElementById('code-val') ? document.getElementById('code-val').value : (activeMod ? activeMod.formula_pe : "");
+        const codeSent = document.getElementById('code-sent') ? document.getElementById('code-sent').value : (activeMod ? activeMod.formula_vxn : "");
+        const codeTrend = document.getElementById('code-trend') ? document.getElementById('code-trend').value : (activeMod ? activeMod.formula_bias : "");
 
-        fnSent = codeSent ? new Function("x", codeSent) : function (x) {
-            let sentScore = 1.0;
-            if (x < 14) sentScore = 0.8;
-            else if (x <= 20) sentScore = 1.0;
-            else if (x <= 30) sentScore = 1.0 + ((x - 20) / 10.0) * 0.8;
-            else sentScore = Math.min(2.5, 1.8 + (x - 30) / 10.0);
-            return sentScore;
-        };
-
-        fnTrend = codeTrend ? new Function("x", codeTrend) : function (x) {
-            let trendScore = 1.0;
-            if (x < -0.10) trendScore = 2.0;
-            else if (x < 0) trendScore = 1.0 + (Math.abs(x) / 0.10) * 1.0;
-            else if (x <= 0.10) trendScore = 1.0;
-            else if (x <= 0.20) trendScore = 1.0 - ((x - 0.10) / 0.10) * 0.5;
-            else trendScore = 0.5;
-            return trendScore;
-        };
+        fnVal = new Function("x", codeVal);
+        fnSent = new Function("x", codeSent);
+        fnTrend = new Function("x", codeTrend);
     } catch (e) {
         alert("语法错误，请检查公式！\n详细信息：" + e.message);
         return;
     }
+
+    window.exportSandboxModel = function () {
+        const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') || 'NDX';
+        const nameInput = document.getElementById('export-model-name').value.trim() || '自定义策略';
+        const id = "custom_" + Date.now();
+
+        let activeModel = null;
+        if (window.STRATEGY_MODELS && window.ACTIVE_MODELS) {
+            activeModel = window.STRATEGY_MODELS[activeTab]?.[window.ACTIVE_MODELS[activeTab]];
+        }
+
+        const codeVal = document.getElementById('code-val') ? document.getElementById('code-val').value : (activeModel ? activeModel.formula_pe : "");
+        const codeSent = document.getElementById('code-sent') ? document.getElementById('code-sent').value : (activeModel ? activeModel.formula_vxn : "");
+        const codeTrend = document.getElementById('code-trend') ? document.getElementById('code-trend').value : (activeModel ? activeModel.formula_bias : "");
+
+        const wVal = parseFloat(document.getElementById('sb-slider-val').value);
+        const wSent = parseFloat(document.getElementById('sb-slider-sent').value);
+        const wTrend = parseFloat(document.getElementById('sb-slider-trend').value);
+
+        const exported = {
+            id: id,
+            name: nameInput,
+            weights: { pe: wVal, vxn: wSent, bias: wTrend },
+            formula_pe: codeVal,
+            formula_vxn: codeSent,
+            formula_bias: codeTrend
+        };
+
+        const jsonStr = JSON.stringify(exported, null, 4);
+        const finalStr = `// 请将以下内容作为一个新的 Key-Value 对，粘贴进 strategy_models.js 的 "${activeTab}" 下面：\n"${id}": ${jsonStr},`;
+
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(finalStr).then(() => {
+                alert("✅ 模型导出成功！\n量化算法代码已复制到剪贴板。\n请打开本地的 strategy_models.js 文件，将其粘贴进去即可完成固化！");
+            }).catch(err => {
+                alert("无法自动复制到剪贴板，请手动复制以下内容：\n\n" + finalStr);
+            });
+        } else {
+            alert("浏览器不支持自动粘贴，请手动复制以下内容：\n\n" + finalStr);
+        }
+    };
 
     // 3. 执行时间切片过滤
     const sdStr = document.getElementById('sandbox-start-date').value;

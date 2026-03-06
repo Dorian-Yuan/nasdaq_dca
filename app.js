@@ -63,23 +63,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dom.updateTime.textContent = `更新时间 (北京时间): ${data.update_time}`;
 
+        populateModelSelector(); // Ensure dropdown is synced with tab
         resetLights();
 
         const finalWeight = data.individual_decisions ? data.individual_decisions.final_weight : null;
 
+        // 核心改动：前端接管动态算力！取代 Python 后端的建议倍数。
+        let dynResults = applyActiveAlgorithm(data.metrics);
+        let displayWeight = dynResults ? dynResults.finalWeight : finalWeight;
+        let displayInd = dynResults ? dynResults : (data.individual_decisions || {});
+
         // 设置主策略红绿灯及权重得分显示 (模型二：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞))
-        if (finalWeight !== null) {
-            if (finalWeight <= 0.4) {
+        if (displayWeight !== null) {
+            if (displayWeight <= 0.4) {
                 dom.lightRed.classList.add('active-red');
-                dom.decisionText.textContent = `🔴 综合权重得分: ${finalWeight.toFixed(2)} 倍`;
+                dom.decisionText.textContent = `🔴 综合权重得分: ${displayWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-red');
-            } else if (finalWeight > 0.7) {
+            } else if (displayWeight > 0.7) {
                 dom.lightGreen.classList.add('active-green');
-                dom.decisionText.textContent = `🟢 综合权重得分: ${finalWeight.toFixed(2)} 倍`;
+                dom.decisionText.textContent = `🟢 综合权重得分: ${displayWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-green');
             } else {
                 dom.lightYellow.classList.add('active-yellow');
-                dom.decisionText.textContent = `🟡 综合权重得分: ${finalWeight.toFixed(2)} 倍`;
+                dom.decisionText.textContent = `🟡 综合权重得分: ${displayWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-yellow');
             }
         } else {
@@ -90,12 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 渲染详细指标数据 (处理可能为空的情况)
         if (data.metrics) {
             const m = data.metrics;
-            const ind = data.individual_decisions || {};
 
             dom.valBias.textContent = m.bias_percent !== null ? `${m.bias_percent}%` : '--%';
             dom.valPrice.textContent = m.price !== null ? m.price.toLocaleString() : '--';
-            document.getElementById('decision-bias').textContent = ind.bias_decision || '--';
-            document.getElementById('decision-bias').className = `metric-decision ${ind.bias_decision === '加倍定投' ? 'text-green' : ind.bias_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
+            document.getElementById('decision-bias').textContent = displayInd.bias_decision || '--';
 
             if (m.daily_return_percent !== null && m.daily_return_percent !== undefined) {
                 const sign = m.daily_return_percent > 0 ? '+' : '';
@@ -108,11 +112,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             dom.valPePct.textContent = m.pe_percentile !== null ? `${(m.pe_percentile * 100).toFixed(1)}%` : '--%';
             dom.valPe.textContent = m.pe !== null ? m.pe : '--';
-            document.getElementById('decision-pe').textContent = ind.pe_decision || '--';
-            document.getElementById('decision-pe').className = `metric-decision ${ind.pe_decision === '加倍定投' ? 'text-green' : ind.pe_decision === '暂停定投' ? 'text-red' : 'text-yellow'}`;
+            document.getElementById('decision-pe').textContent = displayInd.pe_decision || '--';
 
             dom.valVxn.textContent = m.volatility !== null ? m.volatility : '--';
-            document.getElementById('decision-vxn').textContent = ind.vol_decision || '--';
+            document.getElementById('decision-vxn').textContent = displayInd.vol_decision || '--';
 
             // 根据返回的倍数决定文本颜色 (高于1倍为绿，低于1倍为红)
             const getDecisionClass = (decisionStr) => {
@@ -127,9 +130,79 @@ document.addEventListener('DOMContentLoaded', () => {
                 return decisionStr === '加倍定投' ? 'text-green' : decisionStr === '暂停定投' ? 'text-red' : 'text-yellow';
             };
 
-            document.getElementById('decision-bias').className = `metric-decision ${getDecisionClass(ind.bias_decision)}`;
-            document.getElementById('decision-pe').className = `metric-decision ${getDecisionClass(ind.pe_decision)}`;
-            document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(ind.vol_decision)}`;
+            document.getElementById('decision-bias').className = `metric-decision ${getDecisionClass(displayInd.bias_decision)}`;
+            document.getElementById('decision-pe').className = `metric-decision ${getDecisionClass(displayInd.pe_decision)}`;
+            document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(displayInd.vol_decision)}`;
+        }
+    }
+
+    // 前端 JS 模型挂载逻辑
+    function populateModelSelector() {
+        const selector = document.getElementById('algo-model-selector');
+        if (!selector) return;
+        selector.innerHTML = '';
+
+        if (window.STRATEGY_MODELS && window.STRATEGY_MODELS[currentTab]) {
+            const models = window.STRATEGY_MODELS[currentTab];
+            for (const modelId in models) {
+                const opt = document.createElement('option');
+                opt.value = modelId;
+                opt.textContent = models[modelId].name;
+                selector.appendChild(opt);
+            }
+            const activeId = window.ACTIVE_MODELS && window.ACTIVE_MODELS[currentTab];
+            if (activeId && models[activeId]) {
+                selector.value = activeId;
+            }
+        }
+    }
+
+    window.switchAlgorithmModel = function () {
+        const selector = document.getElementById('algo-model-selector');
+        if (selector && window.ACTIVE_MODELS) {
+            window.ACTIVE_MODELS[currentTab] = selector.value;
+            if (cachedData) {
+                renderData(cachedData);
+                // 联动沙盘更新
+                if (typeof window.loadSandboxFormulas === 'function') {
+                    window.loadSandboxFormulas();
+                    window.compileAndRunSandbox();
+                }
+            }
+        }
+    };
+
+    function applyActiveAlgorithm(m) {
+        if (!m || !window.STRATEGY_MODELS || !window.ACTIVE_MODELS) return null;
+        const activeModelId = window.ACTIVE_MODELS[currentTab];
+        const model = window.STRATEGY_MODELS[currentTab][activeModelId];
+        if (!model) return null;
+
+        try {
+            const peFn = new Function('x', model.formula_pe);
+            const vxnFn = new Function('x', model.formula_vxn);
+            const biasFn = new Function('x', model.formula_bias);
+
+            const bias_raw = m.bias_percent !== null ? m.bias_percent / 100.0 : 0;
+            const pe_pct = m.pe_percentile !== null ? m.pe_percentile : 0.5;
+            const vol = m.volatility !== null ? m.volatility : 20;
+
+            let peScore = peFn(1.0 - pe_pct);
+            let vxnScore = vxnFn(vol);
+            let biasScore = biasFn(bias_raw);
+
+            let finalWeight = (peScore * model.weights.pe) + (vxnScore * model.weights.vxn) + (biasScore * model.weights.bias);
+            finalWeight = Math.max(0.0, Math.min(3.0, finalWeight)); // 兜底
+
+            return {
+                finalWeight: finalWeight,
+                pe_decision: peScore.toFixed(2) + 'x',
+                vol_decision: vxnScore.toFixed(2) + 'x',
+                bias_decision: biasScore.toFixed(2) + 'x'
+            };
+        } catch (e) {
+            console.error("动态算法解析失败!", e);
+            return null;
         }
     }
 

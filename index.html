@@ -20,8 +20,17 @@
 <body>
     <div class="container">
         <header>
-            <h1 id="main-title">纳斯达克100 (NDX) 定投评估</h1>
-            <p id="update-time" class="subtitle">加载中...</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1 id="main-title">纳斯达克100 (NDX) 定投评估</h1>
+                    <p id="update-time" class="subtitle">加载中...</p>
+                </div>
+                <div class="model-selector-container">
+                    <select id="algo-model-selector" onchange="switchAlgorithmModel()">
+                        <option value="default">默认经典策略</option>
+                    </select>
+                </div>
+            </div>
         </header>
 
         <!-- 标签页切换区 -->
@@ -158,9 +167,16 @@
                             <div class="formula-builder" id="builder-trend" style="display: none;"></div>
                         </div>
 
-                        <div class="compile-action">
-                            <button id="compile-formula-btn" class="btn sandbox-btn" onclick="compileAndRunSandbox()">⚙️
+                        <div class="compile-action" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button id="compile-formula-btn" class="btn sandbox-btn" style="flex: 1;"
+                                onclick="compileAndRunSandbox()">⚙️
                                 编译公式并回测</button>
+                            <div style="display: flex; gap: 5px; flex: 1; min-width: 200px;">
+                                <input type="text" id="export-model-name" placeholder="为新策略命名..."
+                                    style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text-primary); font-size: 13px;">
+                                <button class="btn secondary-btn" onclick="exportSandboxModel()"
+                                    title="将当前回测配置打包发布为量化模型代码">📦 导出模型</button>
+                            </div>
                         </div>
                     </div>
 
@@ -214,6 +230,7 @@
     <!-- Config for Github Actions. (This file is ignored by git) -->
     <script src="./config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./strategy_models.js"></script>
     <script src="./backtest_data.js"></script>
     <script src="./app.js"></script>
     <script src="./sandbox.js"></script>
