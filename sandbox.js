@@ -166,18 +166,30 @@ window.compileAndRunSandbox = function () {
                 let d_invested = 0;
                 let n_shares = 0;
                 let n_invested = 0;
-                const totalW = wVal + wSent + wTrend || 1;
+                // 与可视沙盘完全一致的归一化逻辑
+                let totalW = wVal + wSent + wTrend;
+                if (totalW === 0) totalW = 1;
+                const nwVal = wVal / totalW;
+                const nwSent = wSent / totalW;
+                const nwTrend = wTrend / totalW;
+                const INV_BASE = 1000;
+
                 for (const row of silentData) {
-                    // 动态算法评估定投
-                    let rawMult = wVal * fnVal(row.pe_percentile) + wSent * fnSent(row.volatility) + wTrend * fnTrend(row.bias);
-                    let mult = rawMult / totalW;
-                    let invest = 100 * mult;
+                    let vScore = 1.0, sScore = 1.0, tScore = 1.0;
+                    try { vScore = fnVal(row.pe_percentile !== null ? row.pe_percentile : 0.5); } catch (e) { }
+                    try { sScore = fnSent(row.volatility !== null ? row.volatility : 20); } catch (e) { }
+                    try { tScore = fnTrend(row.bias !== null ? row.bias : 0); } catch (e) { }
+
+                    let finalWeight = (vScore * nwVal) + (sScore * nwSent) + (tScore * nwTrend);
+                    finalWeight = Math.max(0.0, Math.min(3.0, finalWeight)); // 与可视引擎完全一致的兜底
+
+                    let invest = INV_BASE * finalWeight;
                     d_invested += invest;
                     d_shares += invest / row.price;
 
-                    // 无脑定投评估 (固定全周 100 块)
-                    n_invested += 100;
-                    n_shares += 100 / row.price;
+                    // 无脑定投
+                    n_invested += INV_BASE;
+                    n_shares += INV_BASE / row.price;
                 }
 
                 let finalPrice = silentData[silentData.length - 1].price;

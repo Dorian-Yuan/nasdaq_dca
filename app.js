@@ -361,6 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 renderData(data);
+                if (typeof window.loadSandboxFormulas === 'function') {
+                    window.loadSandboxFormulas();
+                }
             })
             .catch(error => {
                 console.error('获取策略数据失败:', error);
@@ -490,6 +493,9 @@ document.addEventListener('DOMContentLoaded', () => {
             updateLabelsForTab();
             if (cachedData) {
                 renderData(cachedData);
+                if (typeof window.loadSandboxFormulas === 'function') {
+                    window.loadSandboxFormulas();
+                }
             }
             // 自动联动并重置沙盒界面的数据
             if (typeof window.setSandboxRange === 'function') {
