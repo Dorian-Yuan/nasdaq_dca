@@ -525,3 +525,59 @@ footer {
         height: 50vh;
     }
 }
+
+/* --- 策略模型库切换舱 --- */
+.model-selector-section {
+    position: relative;
+    z-index: 10;
+}
+
+.model-selector-wrapper {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--card-bg);
+    padding: 10px 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    transition: all 0.3s ease;
+}
+
+.model-selector-wrapper:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}
+
+.model-selector-label {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-right: 12px;
+    font-weight: 500;
+}
+
+.sleek-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    padding-right: 24px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.sleek-select:hover {
+    color: var(--color-green);
+}
+
+.sleek-select option {
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+}

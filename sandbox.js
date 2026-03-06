@@ -129,7 +129,11 @@ window.compileAndRunSandbox = function () {
 
     window.exportSandboxModel = async function () {
         const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') || 'NDX';
-        const nameInput = document.getElementById('export-model-name').value.trim() || '自定义策略';
+
+        let nameInput = prompt("请输入为您将要保存的量化策略命名：\n（该模型将与选定的标签页如 NDX 绑定）", "自定义策略");
+        if (nameInput === null) return; // 用户取消
+        nameInput = nameInput.trim() || '自定义策略';
+
         const id = "custom_" + Date.now();
 
         let activeModel = null;

@@ -20,17 +20,8 @@
 <body>
     <div class="container">
         <header>
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <h1 id="main-title">纳斯达克100 (NDX) 定投评估</h1>
-                    <p id="update-time" class="subtitle">加载中...</p>
-                </div>
-                <div class="model-selector-container">
-                    <select id="algo-model-selector" onchange="switchAlgorithmModel()">
-                        <option value="default">默认经典策略</option>
-                    </select>
-                </div>
-            </div>
+            <h1 id="main-title">纳斯达克100 (NDX) 定投评估</h1>
+            <p id="update-time" class="subtitle">加载中...</p>
         </header>
 
         <!-- 标签页切换区 -->
@@ -94,6 +85,16 @@
                 </div>
                 <div class="metric-value" id="val-daily-return">--%</div>
                 <div class="metric-sub"><span id="label-daily-return-title">相比昨日收盘</span></div>
+            </div>
+        </section>
+
+        <!-- 策略模型库切换舱 -->
+        <section class="model-selector-section" style="text-align: center; margin: 30px 0 10px 0;">
+            <div class="model-selector-wrapper">
+                <span class="model-selector-label">当前运行模型</span>
+                <select id="algo-model-selector" class="sleek-select" onchange="switchAlgorithmModel()">
+                    <option value="default">默认经典策略</option>
+                </select>
             </div>
         </section>
 
@@ -169,14 +170,9 @@
 
                         <div class="compile-action" style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button id="compile-formula-btn" class="btn sandbox-btn" style="flex: 1;"
-                                onclick="compileAndRunSandbox()">⚙️
-                                编译公式并回测</button>
-                            <div style="display: flex; gap: 5px; flex: 1; min-width: 200px;">
-                                <input type="text" id="export-model-name" placeholder="为新策略命名..."
-                                    style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text-primary); font-size: 13px;">
-                                <button class="btn secondary-btn" onclick="exportSandboxModel()"
-                                    title="将当前回测配置打包发布为量化模型代码">📦 导出模型</button>
-                            </div>
+                                onclick="compileAndRunSandbox()">⚙️ 编译公式并回测</button>
+                            <button class="btn secondary-btn" style="flex: 1;" onclick="exportSandboxModel()"
+                                title="将当前回测配置打包发布为量化模型代码">📦 保存模型</button>
                         </div>
                     </div>
 
