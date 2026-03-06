@@ -331,9 +331,7 @@ h1 {
 
 /* 按钮区 */
 .action-section {
-    margin-top: auto;
     text-align: center;
-    margin-bottom: 12px;
 }
 
 .btn {
@@ -676,7 +674,7 @@ footer {
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
     padding: 16px 20px;
-    margin: 20px auto;
+    margin: 8px auto;
     width: 100%;
     max-width: 1000px;
     display: flex;
