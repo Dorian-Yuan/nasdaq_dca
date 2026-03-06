@@ -14,9 +14,23 @@ const STRATEGY_MODELS = {
         },
         "custom_1772778969623": {
             "id": "custom_1772778969623",
-            "name": "5x²全PE百分位",
+            "name": "5x²全PE百分1位",
             "timestamp": 1772778969623,
             "return_5y": 38.3632165509057,
+            "weights": {
+                "pe": 1,
+                "vxn": 0,
+                "bias": 0
+            },
+            "formula_pe": "return 5*x*x",
+            "formula_vxn": "return 0",
+            "formula_bias": "return 0"
+        },
+        "custom_1772785740133": {
+            "id": "custom_1772785740133",
+            "name": "5x²全PE百分位",
+            "timestamp": 1772785740136,
+            "return_5y": 35.11654521129059,
             "weights": {
                 "pe": 1,
                 "vxn": 0,
