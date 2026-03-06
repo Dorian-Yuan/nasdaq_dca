@@ -127,7 +127,7 @@ window.compileAndRunSandbox = function () {
         return;
     }
 
-    window.exportSandboxModel = async function () {
+    window.exportSandboxModel = function () {
         const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab') || 'NDX';
 
         let nameInput = prompt("请输入为您将要保存的量化策略命名：\n（该模型将与选定的标签页如 NDX 绑定）", "自定义策略");
@@ -149,105 +149,66 @@ window.compileAndRunSandbox = function () {
         const wSent = parseFloat(document.getElementById('sb-slider-sent').value);
         const wTrend = parseFloat(document.getElementById('sb-slider-trend').value);
 
+        // 后台静默推演近 5 年收益率
+        let return5y = 0;
+        try {
+            const fnVal = new Function("x", codeVal);
+            const fnSent = new Function("x", codeSent);
+            const fnTrend = new Function("x", codeTrend);
+
+            let silentData = window.BACKTEST_DATA[activeTab] || [];
+            const fiveYearsAgo = new Date();
+            fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+            silentData = silentData.filter(d => new Date(d.date) >= fiveYearsAgo);
+
+            if (silentData.length > 0) {
+                let d_shares = 0;
+                let d_invested = 0;
+                for (const row of silentData) {
+                    let mult = wVal * fnVal(row.pe_percentile) + wSent * fnSent(row.volatility) + wTrend * fnTrend(row.bias);
+                    let invest = 100 * mult;
+                    d_invested += invest;
+                    d_shares += invest / row.price;
+                }
+                let finalPrice = silentData[silentData.length - 1].price;
+                let d_value = d_shares * finalPrice;
+                if (d_invested > 0) {
+                    return5y = ((d_value - d_invested) / d_invested) * 100;
+                }
+            }
+        } catch (e) {
+            console.error("静默5年预估失败", e);
+            return5y = 0;
+        }
+
         const exported = {
             id: id,
             name: nameInput,
+            timestamp: Date.now(),
+            return_5y: return5y,
             weights: { pe: wVal, vxn: wSent, bias: wTrend },
             formula_pe: codeVal,
             formula_vxn: codeSent,
             formula_bias: codeTrend
         };
 
-        const emitFallback = (exportedJson, activeTabId, errorMsg) => {
-            const jsonStr = JSON.stringify(exportedJson, null, 4);
-            const finalStr = `// 请将以下内容作为一个新的 Key-Value 对，粘贴进 strategy_models.js 的 "${activeTabId}" 下面：\n"${id}": ${jsonStr},`;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(finalStr).then(() => {
-                    let msg = "✅ 模型导出成功！\n量化算法代码已复制到剪贴板。\n请打开本地的 strategy_models.js 文件，将其粘贴进去即可完成固化！";
-                    if (errorMsg) msg = `⚠️ 云端直连失败 (${errorMsg})，已降级为剪贴板模式。\n\n` + msg;
-                    alert(msg);
-                }).catch(err => {
-                    alert("无法自动复制到剪贴板，请手动复制以下内容：\n\n" + finalStr);
-                });
-            } else {
-                alert("浏览器不支持自动粘贴，请手动复制以下内容：\n\n" + finalStr);
-            }
-        };
+        if (!window.STRATEGY_MODELS) window.STRATEGY_MODELS = { "NDX": {}, "SP500": {} };
+        if (!window.STRATEGY_MODELS[activeTab]) window.STRATEGY_MODELS[activeTab] = {};
+        window.STRATEGY_MODELS[activeTab][id] = exported;
 
-        const githubToken = localStorage.getItem('GITHUB_TOKEN');
-        if (!githubToken) {
-            emitFallback(exported, activeTab, null);
-            return;
+        if (typeof window.renderModelManagerList === 'function') {
+            window.renderModelManagerList();
+
+            // 自动打开面板看效果
+            const panel = document.getElementById('model-manager-panel');
+            const icon = document.getElementById('model-manager-icon');
+            if (panel && panel.style.display === 'none') {
+                panel.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            }
         }
 
-        try {
-            const owner = localStorage.getItem('REPO_OWNER') || 'Dorian-Yuan';
-            const repo = localStorage.getItem('REPO_NAME') || 'nasdaq_dca';
-            const path = 'strategy_models.js';
-            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-
-            let getRes = await fetch(url, {
-                headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' }
-            });
-
-            if (!getRes.ok) throw new Error("获取远程文件失败");
-            let fileData = await getRes.json();
-
-            if (!window.STRATEGY_MODELS) window.STRATEGY_MODELS = { "NDX": {}, "SP500": {} };
-            if (!window.STRATEGY_MODELS[activeTab]) window.STRATEGY_MODELS[activeTab] = {};
-            window.STRATEGY_MODELS[activeTab][id] = exported;
-
-            let newFileContent = "const STRATEGY_MODELS = " + JSON.stringify(window.STRATEGY_MODELS, null, 4) + ";\n\n";
-            newFileContent += "if (typeof window !== 'undefined') {\n";
-            newFileContent += "    window.STRATEGY_MODELS = STRATEGY_MODELS;\n";
-            newFileContent += "    \n";
-            newFileContent += "    // 初始化当前激活的模型库索引\n";
-            newFileContent += "    window.ACTIVE_MODELS = {\n";
-            newFileContent += "        \"NDX\": \"ndx_default\",\n";
-            newFileContent += "        \"SP500\": \"spy_default\"\n";
-            newFileContent += "    };\n";
-            newFileContent += "}\n";
-
-            let encodedContent = btoa(unescape(encodeURIComponent(newFileContent)));
-
-            const exportBtn = document.querySelector('button[onclick="exportSandboxModel()"]');
-            const oldText = exportBtn.innerText;
-            exportBtn.innerText = "云端直写中...";
-            exportBtn.disabled = true;
-
-            let putRes = await fetch(url, {
-                method: "PUT",
-                headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
-                body: JSON.stringify({
-                    message: `feat: Add custom strategy [${nameInput}] from Sandbox`,
-                    content: encodedContent,
-                    sha: fileData.sha,
-                    branch: "main"
-                })
-            });
-
-            exportBtn.innerText = oldText;
-            exportBtn.disabled = false;
-
-            if (!putRes.ok) throw new Error("更新远程文件失败 (可能产生了冲突)");
-
-            alert(`🚀 模型直连云端发布成功！\n算法 [${nameInput}] 已免密固化至 Github。\n您可以在网页顶部的模型下拉框中永久调取它了。`);
-
-            // 动态刷新下拉选单
-            if (typeof window.populateModelSelector === 'function') {
-                window.ACTIVE_MODELS[activeTab] = id;
-                window.populateModelSelector();
-            }
-
-        } catch (e) {
-            console.error(e);
-            const exportBtn = document.querySelector('button[onclick="exportSandboxModel()"]');
-            if (exportBtn) {
-                exportBtn.innerText = "📦 导出模型";
-                exportBtn.disabled = false;
-            }
-            emitFallback(exported, activeTab, e.message);
-        }
+        alert(`✅ 模型草稿 [${nameInput}] 已添加到本地管理器！\n\n请注意：目前该策略仅保存在网页内存中，切勿刷新页面引发丢失。\n确认无误后，请点击管理器底部的“🚀 提交保存至 Github”按钮以永久固化所有设置。`);
     };
     // 3. 执行时间切片过滤
     const sdStr = document.getElementById('sandbox-start-date').value;

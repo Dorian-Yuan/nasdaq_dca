@@ -88,13 +88,29 @@
             </div>
         </section>
 
-        <!-- 策略模型库切换舱 -->
+        <!-- 策略模型库切换舱 (Model Manager) -->
         <section class="model-selector-section" style="text-align: center; margin: 30px 0 10px 0;">
-            <div class="model-selector-wrapper">
-                <span class="model-selector-label">当前运行模型</span>
-                <select id="algo-model-selector" class="sleek-select" onchange="switchAlgorithmModel()">
-                    <option value="default">默认经典策略</option>
-                </select>
+            <div class="model-manager-trigger" onclick="toggleModelManager()">
+                <span class="model-selector-label">评估模型：</span>
+                <span id="active-model-name-display" class="active-model-text">默认经典策略</span>
+                <span id="model-manager-icon"
+                    style="color: var(--text-secondary); font-size: 12px; transition: transform 0.3s; margin-left: 8px;">▼</span>
+            </div>
+
+            <!-- 展开的模型管理器面板 -->
+            <div id="model-manager-panel" class="model-manager-panel" style="display: none;">
+                <div class="model-manager-header">
+                    <span style="font-weight: 600; font-size: 15px;">策略草稿池 (Local Strategy Pool)</span>
+                </div>
+                <div id="model-list-container" class="model-list-container">
+                    <!-- 动态注入的模型列表项将在这里渲染 -->
+                </div>
+                <div class="model-manager-footer">
+                    <button id="commit-strats-btn" class="btn primary-btn" onclick="commitModelsToCloud()"
+                        style="width: 100%; max-width: 300px;">🚀 提交保存至 Github</button>
+                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">*
+                        列表中的新增/修改在点击提交前仅作为草稿暂存于网页内存中</p>
+                </div>
             </div>
         </section>
 

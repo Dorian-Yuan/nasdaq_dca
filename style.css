@@ -526,13 +526,13 @@ footer {
     }
 }
 
-/* --- 策略模型库切换舱 --- */
+/* --- 策略模型库切换舱 (Model Manager) --- */
 .model-selector-section {
     position: relative;
-    z-index: 10;
+    z-index: 100;
 }
 
-.model-selector-wrapper {
+.model-manager-trigger {
     display: inline-flex;
     align-items: center;
     background-color: var(--card-bg);
@@ -540,10 +540,11 @@ footer {
     border-radius: 12px;
     box-shadow: var(--shadow-md);
     border: 1px solid rgba(148, 163, 184, 0.2);
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.model-selector-wrapper:hover {
+.model-manager-trigger:hover {
     box-shadow: var(--shadow-lg);
     transform: translateY(-1px);
 }
@@ -551,33 +552,119 @@ footer {
 .model-selector-label {
     color: var(--text-secondary);
     font-size: 0.95rem;
-    margin-right: 12px;
+    margin-right: 8px;
     font-weight: 500;
 }
 
-.sleek-select {
-    appearance: none;
-    -webkit-appearance: none;
-    background-color: transparent;
-    border: none;
-    color: var(--text-primary);
+.active-model-text {
+    color: var(--color-green);
     font-size: 1.05rem;
     font-weight: 600;
-    cursor: pointer;
-    outline: none;
-    padding-right: 24px;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right center;
-    background-size: 16px;
-    transition: color 0.3s ease;
 }
 
-.sleek-select:hover {
-    color: var(--color-green);
-}
-
-.sleek-select option {
+.model-manager-panel {
+    text-align: left;
     background-color: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    margin: 10px auto 0;
+    max-width: 600px;
+    padding: 16px;
+    position: absolute;
+    left: 0;
+    right: 0;
+}
+
+.model-manager-header {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.model-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.model-manager-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(148, 163, 184, 0.15);
+    text-align: center;
+}
+
+.model-item {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-color);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    padding: 12px;
+    transition: border-color 0.2s;
+}
+
+.model-item.active-item {
+    border-color: var(--color-green);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.model-item.deleted-item {
+    opacity: 0.5;
+    text-decoration: line-through;
+    filter: grayscale(1);
+}
+
+.model-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.model-item-title {
+    font-weight: 600;
+    font-size: 15px;
     color: var(--text-primary);
+    background: transparent;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    padding: 2px 4px;
+    width: 65%;
+}
+
+.model-item-title:focus {
+    border-color: var(--color-green);
+    outline: none;
+    background: var(--card-bg);
+}
+
+.model-item-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.icon-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--color-gray);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: var(--color-gray);
+}
+
+.model-item-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
 }

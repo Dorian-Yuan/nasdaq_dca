@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dom.updateTime.textContent = `更新时间 (北京时间): ${data.update_time}`;
 
-        populateModelSelector(); // Ensure dropdown is synced with tab
+        renderModelManagerList(); // Ensure dropdown is synced with tab
         resetLights();
 
         const finalWeight = data.individual_decisions ? data.individual_decisions.final_weight : null;
@@ -136,39 +136,183 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 前端 JS 模型挂载逻辑
-    function populateModelSelector() {
-        const selector = document.getElementById('algo-model-selector');
-        if (!selector) return;
-        selector.innerHTML = '';
-
-        if (window.STRATEGY_MODELS && window.STRATEGY_MODELS[currentTab]) {
-            const models = window.STRATEGY_MODELS[currentTab];
-            for (const modelId in models) {
-                const opt = document.createElement('option');
-                opt.value = modelId;
-                opt.textContent = models[modelId].name;
-                selector.appendChild(opt);
-            }
-            const activeId = window.ACTIVE_MODELS && window.ACTIVE_MODELS[currentTab];
-            if (activeId && models[activeId]) {
-                selector.value = activeId;
-            }
+    // 前端 JS 模型管理器逻辑
+    window.toggleModelManager = function () {
+        const panel = document.getElementById('model-manager-panel');
+        const icon = document.getElementById('model-manager-icon');
+        if (panel.style.display === 'none') {
+            panel.style.display = 'block';
+            if (icon) icon.style.transform = 'rotate(180deg)';
+            renderModelManagerList();
+        } else {
+            panel.style.display = 'none';
+            if (icon) icon.style.transform = 'rotate(0deg)';
         }
     }
 
-    window.switchAlgorithmModel = function () {
-        const selector = document.getElementById('algo-model-selector');
-        if (selector && window.ACTIVE_MODELS) {
-            window.ACTIVE_MODELS[currentTab] = selector.value;
+    window.renderModelManagerList = function () {
+        const container = document.getElementById('model-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (window.STRATEGY_MODELS && window.STRATEGY_MODELS[currentTab]) {
+            const models = window.STRATEGY_MODELS[currentTab];
+            const activeId = window.ACTIVE_MODELS && window.ACTIVE_MODELS[currentTab];
+
+            // 刷新主控制台面板显示的名字
+            const topLabel = document.getElementById('active-model-name-display');
+            if (topLabel && activeId && models[activeId]) {
+                topLabel.textContent = models[activeId].name;
+            }
+
+            for (const modelId in models) {
+                const model = models[modelId];
+                if (model.deleted) continue;
+
+                const isDefault = (modelId === 'ndx_default' || modelId === 'spy_default');
+                const isActive = (modelId === activeId);
+
+                const return5yText = model.return_5y !== undefined ?
+                    `<span style="margin-left:8px; color:${model.return_5y >= 0 ? 'var(--color-green)' : 'var(--color-red)'}">5年预估: ${model.return_5y >= 0 ? '+' : ''}${(model.return_5y).toFixed(1)}%</span>`
+                    : '';
+                const dateText = model.timestamp ? new Date(model.timestamp).toLocaleDateString() : '预设模型';
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = `model-item ${isActive ? 'active-item' : ''}`;
+
+                itemDiv.innerHTML = `
+                    <div class="model-item-header">
+                        <input type="text" class="model-item-title" 
+                            id="input-name-${modelId}" 
+                            value="${model.name}" 
+                            onchange="renameModelLocal('${modelId}', this.value)"
+                            ${isDefault ? 'disabled' : ''}>
+                        <div class="model-item-actions">
+                            ${!isActive ? `<button class="icon-btn" onclick="activateModelLocal('${modelId}')" title="设为当前生效模型">✅ 启用</button>` : `<button class="icon-btn" style="color:var(--color-green);border-color:var(--color-green)" disabled>当前活跃</button>`}
+                            ${!isDefault ? `<button class="icon-btn" onclick="deleteModelLocal('${modelId}')" title="删除该草稿" style="color:var(--color-red)">🗑️ 删除</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="model-item-meta">
+                        <span>🕒 ${dateText}${return5yText}</span>
+                        ${modelId.startsWith('custom_') ? '<span style="color:var(--color-yellow)">[自建草稿]</span>' : '<span>[官方精调]</span>'}
+                    </div>
+                `;
+                container.appendChild(itemDiv);
+            }
+        }
+    };
+
+    window.activateModelLocal = function (id) {
+        if (window.ACTIVE_MODELS && window.STRATEGY_MODELS[currentTab][id]) {
+            window.ACTIVE_MODELS[currentTab] = id;
+            renderModelManagerList();
             if (cachedData) {
                 renderData(cachedData);
-                // 联动沙盘更新
                 if (typeof window.loadSandboxFormulas === 'function') {
                     window.loadSandboxFormulas();
                     window.compileAndRunSandbox();
                 }
             }
+        }
+    };
+
+    window.renameModelLocal = function (id, newName) {
+        if (window.STRATEGY_MODELS[currentTab][id]) {
+            window.STRATEGY_MODELS[currentTab][id].name = newName || "未命名策略";
+            renderModelManagerList();
+        }
+    };
+
+    window.deleteModelLocal = function (id) {
+        if (confirm("确定要在草稿池中标记删除此模型吗？（需点击底部提交才会同步到云端）")) {
+            if (window.STRATEGY_MODELS[currentTab][id]) {
+                window.STRATEGY_MODELS[currentTab][id].deleted = true;
+
+                if (window.ACTIVE_MODELS[currentTab] === id) {
+                    const fallback = currentTab === 'NDX' ? 'ndx_default' : 'spy_default';
+                    window.activateModelLocal(fallback);
+                } else {
+                    renderModelManagerList();
+                }
+            }
+        }
+    };
+
+    window.commitModelsToCloud = async function () {
+        const githubToken = localStorage.getItem('GITHUB_TOKEN');
+        const commitBtn = document.getElementById('commit-strats-btn');
+
+        // 生成纯净的清理版对象
+        const cleanModels = JSON.parse(JSON.stringify(window.STRATEGY_MODELS));
+        for (const tab in cleanModels) {
+            for (const id in cleanModels[tab]) {
+                if (cleanModels[tab][id].deleted) {
+                    delete cleanModels[tab][id];
+                }
+            }
+        }
+
+        let newFileContent = "const STRATEGY_MODELS = " + JSON.stringify(cleanModels, null, 4) + ";\n\n";
+        newFileContent += "if (typeof window !== 'undefined') {\n";
+        newFileContent += "    window.STRATEGY_MODELS = STRATEGY_MODELS;\n";
+        newFileContent += "    \n";
+        newFileContent += "    // 初始化当前激活的模型库索引\n";
+        newFileContent += "    window.ACTIVE_MODELS = " + JSON.stringify(window.ACTIVE_MODELS, null, 4) + ";\n";
+        newFileContent += "}\n";
+
+        if (!githubToken) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(newFileContent).then(() => {
+                    alert("⚠️ 未检测到 Github Token！\n我们已将暂存区里的所有变动代码汇聚并复制到了您的剪贴板。\n请手动将代码覆盖进本地的 strategy_models.js 中以永久生效！");
+                }).catch(err => alert("请手动复制更新后的底层代码！"));
+            } else {
+                alert("未配置 Github Token，且浏览器不支持自动粘贴代码！");
+            }
+            return;
+        }
+
+        try {
+            commitBtn.innerText = "云端聚合提交中...";
+            commitBtn.disabled = true;
+
+            const owner = localStorage.getItem('REPO_OWNER') || 'Dorian-Yuan';
+            const repo = localStorage.getItem('REPO_NAME') || 'nasdaq_dca';
+            const path = 'strategy_models.js';
+            const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+            let getRes = await fetch(url, {
+                headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' }
+            });
+
+            if (!getRes.ok) throw new Error("获取远程文件失败");
+            let fileData = await getRes.json();
+
+            let encodedContent = btoa(unescape(encodeURIComponent(newFileContent)));
+
+            let putRes = await fetch(url, {
+                method: "PUT",
+                headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' },
+                body: JSON.stringify({
+                    message: `feat: Commit Strategy Drafts from Model Manager`,
+                    content: encodedContent,
+                    sha: fileData.sha,
+                    branch: "main"
+                })
+            });
+
+            commitBtn.innerText = "🚀 提交保存至 Github";
+            commitBtn.disabled = false;
+
+            if (!putRes.ok) throw new Error("更新远程文件跨域冲突/权限拦截");
+
+            window.STRATEGY_MODELS = cleanModels;
+            renderModelManagerList();
+            alert(`🎉 聚合发布成功！\n所有的策略增删改草稿已于 1 秒内整体覆盖并固化至 Github。`);
+        } catch (e) {
+            console.error(e);
+            commitBtn.innerText = "🚀 提交保存至 Github";
+            commitBtn.disabled = false;
+            alert("推送云端发生网络或鉴权错误：" + e.message);
         }
     };
 
