@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="./icon.png">
     <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=3">
+    <link rel="stylesheet" href="./style.css?v=4">
     <link rel="stylesheet" href="./sandbox.css?v=7">
 </head>
 
@@ -88,11 +88,10 @@
             </div>
         </section>
 
-        <section class="action-section">
+        <!-- 策略交互控制区 (Unified Controls) -->
+        <section class="controls-group">
             <button id="refresh-btn" class="interactive-block">强制刷新策略数据</button>
-        </section>
 
-        <section class="model-selector-section">
             <div class="model-manager-trigger interactive-block" onclick="toggleModelManager()">
                 <span class="model-selector-label">评估模型：</span>
                 <span id="active-model-name-display" class="active-model-text">默认经典策略</span>
