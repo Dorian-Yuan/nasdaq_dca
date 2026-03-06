@@ -526,6 +526,11 @@ footer {
 }
 
 /* --- 策略模型库切换舱 (Model Manager) --- */
+.controls-group {
+    position: relative;
+    z-index: 110;
+}
+
 .model-selector-section {
     position: relative;
     z-index: 100;
@@ -573,6 +578,7 @@ footer {
     position: absolute;
     left: 0;
     right: 0;
+    z-index: 1000;
 }
 
 .model-manager-header {
