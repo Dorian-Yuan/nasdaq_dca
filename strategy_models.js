@@ -41,6 +41,20 @@ const STRATEGY_MODELS = {
             "formula_pe": "return x",
             "formula_vxn": "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
             "formula_bias": "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
+        },
+        "gemini_balanced": {
+            "id": "gemini_balanced",
+            "name": "Gemini 权衡策略",
+            "timestamp": 1772778969999,
+            "return_5y": 0,
+            "weights": {
+                "pe": 0.4,
+                "vxn": 0.3,
+                "bias": 0.3
+            },
+            "formula_pe": "return 5 * x * x;",
+            "formula_vxn": "var p = Math.max(0, Math.min(1, (x - 12) / 48));\nreturn 0.25 + 4.75 * p * p * p;",
+            "formula_bias": "var p = Math.max(0, Math.min(1, (x + 0.15) / 0.40));\nreturn 5 * (1 - p) * (1 - p);"
         }
     },
     "SP500": {
@@ -61,10 +75,10 @@ const STRATEGY_MODELS = {
 
 if (typeof window !== 'undefined') {
     window.STRATEGY_MODELS = STRATEGY_MODELS;
-    
+
     // 初始化当前激活的模型库索引
     window.ACTIVE_MODELS = {
-    "NDX": "custom_1772778969623",
-    "SP500": "spy_default"
-};
+        "NDX": "custom_1772778969623",
+        "SP500": "spy_default"
+    };
 }
