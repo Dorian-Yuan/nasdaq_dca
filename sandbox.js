@@ -1,0 +1,297 @@
+// sandbox.js
+// 纳斯达克定投评估工具 - 全息回测与动态公式引擎
+
+let sandboxChartIns = null;
+let fullDataStore = []; // Store the fully filtered data array for chart rendering
+
+// 全局暴露的对象，用于绑定 UI 事件
+window.updateSandboxConfigs = function () {
+    compileAndRunSandbox();
+};
+
+window.setSandboxRange = function (years) {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    const endInput = document.getElementById('sandbox-end-date');
+    const startInput = document.getElementById('sandbox-start-date');
+
+    // Default to latest date in data
+    const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab') || 'NDX';
+    if (!BACKTEST_DATA || !BACKTEST_DATA[activeTab]) return;
+
+    const data = BACKTEST_DATA[activeTab];
+    if (data.length === 0) return;
+
+    const latestDateStr = data[data.length - 1].date;
+    endInput.value = latestDateStr;
+
+    if (years === 'ALL') {
+        startInput.value = data[0].date;
+    } else {
+        const endDate = new Date(latestDateStr);
+        endDate.setFullYear(endDate.getFullYear() - years);
+        const yyyy = endDate.getFullYear();
+        const mm = String(endDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(endDate.getDate()).padStart(2, '0');
+        startInput.value = `${yyyy}-${mm}-${dd}`;
+    }
+    compileAndRunSandbox();
+};
+
+window.toggleFormulaBuilder = function (factor) {
+    const builder = document.getElementById(`builder-${factor}`);
+    if (builder.style.display === 'none') {
+        builder.style.display = 'block';
+        // Initialize default formula if empty
+        if (!builder.innerHTML.trim()) {
+            let defaultCode = "";
+            let varName = "";
+            if (factor === 'val') {
+                varName = "PEPct";
+                defaultCode = `// x 是当天的 PE 百分位 (如 0.32)\nlet valScore = 1.0;\nif (x > 0.7) valScore = 1.0 + ((x - 0.7) / 0.3) * 1.0;\nelse if (x >= 0.3) valScore = 1.0;\nelse valScore = 0.5 + (x / 0.3) * 0.5;\nreturn valScore;`;
+            } else if (factor === 'sent') {
+                varName = "VXN";
+                defaultCode = `// x 是当天的 恐慌波动率 (如 25.4)\nlet sentScore = 1.0;\nif (x < 14) sentScore = 0.8;\nelse if (x <= 20) sentScore = 1.0;\nelse if (x <= 30) sentScore = 1.0 + ((x - 20) / 10.0) * 0.8;\nelse sentScore = Math.min(2.5, 1.8 + (x - 30) / 10.0);\nreturn sentScore;`;
+            } else if (factor === 'trend') {
+                varName = "Bias";
+                defaultCode = `// x 是当天的 乖离率 (如 -0.15)\nlet trendScore = 1.0;\nif (x < -0.10) trendScore = 2.0;\nelse if (x < 0) trendScore = 1.0 + (Math.abs(x) / 0.10) * 1.0;\nelse if (x <= 0.10) trendScore = 1.0;\nelse if (x <= 0.20) trendScore = 1.0 - ((x - 0.10) / 0.10) * 0.5;\nelse trendScore = 0.5;\nreturn trendScore;`;
+            }
+            builder.innerHTML = `
+                <div class="formula-help">使用 JavaScript 语法返回该因子的动态倍数。提供变量 <code>x</code> 代表当天因子值 (${varName})。</div>
+                <textarea class="formula-input" id="code-${factor}">${defaultCode}</textarea>
+            `;
+        }
+    } else {
+        builder.style.display = 'none';
+    }
+};
+
+window.compileAndRunSandbox = function () {
+    if (typeof BACKTEST_DATA === 'undefined') {
+        return; // 数据暂未加载
+    }
+
+    const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab') || 'NDX';
+    const dataTable = BACKTEST_DATA[activeTab];
+    if (!dataTable || dataTable.length === 0) return;
+
+    // 1. 读取权重
+    const wVal = parseFloat(document.getElementById('sb-slider-val').value);
+    const wSent = parseFloat(document.getElementById('sb-slider-sent').value);
+    const wTrend = parseFloat(document.getElementById('sb-slider-trend').value);
+
+    document.getElementById('sb-weight-val').innerText = wVal.toFixed(2);
+    document.getElementById('sb-weight-sent').innerText = wSent.toFixed(2);
+    document.getElementById('sb-weight-trend').innerText = wTrend.toFixed(2);
+
+    // 2. 编译手写公式 (动态引擎核心)
+    let fnVal, fnSent, fnTrend;
+    try {
+        const codeVal = document.getElementById('code-val') ? document.getElementById('code-val').value : "";
+        const codeSent = document.getElementById('code-sent') ? document.getElementById('code-sent').value : "";
+        const codeTrend = document.getElementById('code-trend') ? document.getElementById('code-trend').value : "";
+
+        fnVal = codeVal ? new Function("x", codeVal) : function (x) {
+            let valScore = 1.0;
+            if (x > 0.7) valScore = 1.0 + ((x - 0.7) / 0.3) * 1.0;
+            else if (x >= 0.3) valScore = 1.0;
+            else valScore = 0.5 + (x / 0.3) * 0.5;
+            return valScore;
+        };
+
+        fnSent = codeSent ? new Function("x", codeSent) : function (x) {
+            let sentScore = 1.0;
+            if (x < 14) sentScore = 0.8;
+            else if (x <= 20) sentScore = 1.0;
+            else if (x <= 30) sentScore = 1.0 + ((x - 20) / 10.0) * 0.8;
+            else sentScore = Math.min(2.5, 1.8 + (x - 30) / 10.0);
+            return sentScore;
+        };
+
+        fnTrend = codeTrend ? new Function("x", codeTrend) : function (x) {
+            let trendScore = 1.0;
+            if (x < -0.10) trendScore = 2.0;
+            else if (x < 0) trendScore = 1.0 + (Math.abs(x) / 0.10) * 1.0;
+            else if (x <= 0.10) trendScore = 1.0;
+            else if (x <= 0.20) trendScore = 1.0 - ((x - 0.10) / 0.10) * 0.5;
+            else trendScore = 0.5;
+            return trendScore;
+        };
+    } catch (e) {
+        alert("语法错误，请检查公式！\n详细信息：" + e.message);
+        return;
+    }
+
+    // 3. 执行时间切片过滤
+    const sdStr = document.getElementById('sandbox-start-date').value;
+    const edStr = document.getElementById('sandbox-end-date').value;
+
+    const viewData = dataTable.filter(row => {
+        if (sdStr && row.date < sdStr) return false;
+        if (edStr && row.date > edStr) return false;
+        return true;
+    });
+
+    if (viewData.length === 0) {
+        alert("该日期区间内无数据！");
+        return;
+    }
+
+    // 4. 执行千万次矩阵沙盘推演
+    const INV_BASE = 1000;
+    let totalNaiveInvested = 0, naiveShares = 0;
+    let totalDynInvested = 0, dynShares = 0;
+
+    const labels = [];
+    const naiveEquity = [];
+    const dynamicEquity = [];
+
+    // 权重归一化 (防止用户滑块加总不为1)
+    let totalW = wVal + wSent + wTrend;
+    if (totalW === 0) totalW = 1;
+    let nwVal = wVal / totalW;
+    let nwSent = wSent / totalW;
+    let nwTrend = wTrend / totalW;
+
+    for (let i = 0; i < viewData.length; i++) {
+        let row = viewData[i];
+        let price = row.price;
+
+        // 无脑定投
+        totalNaiveInvested += INV_BASE;
+        naiveShares += INV_BASE / price;
+
+        // 动态策略执行
+        let vScore = 1.0, sScore = 1.0, tScore = 1.0;
+        try { vScore = fnVal(row.pe_percentile !== null ? row.pe_percentile : 0.5); } catch (e) { }
+        try { sScore = fnSent(row.volatility !== null ? row.volatility : 20); } catch (e) { }
+        try { tScore = fnTrend(row.bias !== null ? row.bias : 0); } catch (e) { }
+
+        let finalWeight = (vScore * nwVal) + (sScore * nwSent) + (tScore * nwTrend);
+        finalWeight = Math.max(0.0, Math.min(3.0, finalWeight)); // 兜底与封顶保护
+
+        let dynInvest = INV_BASE * finalWeight;
+        totalDynInvested += dynInvest;
+        if (dynInvest > 0) {
+            dynShares += dynInvest / price;
+        }
+
+        labels.push(row.date);
+        naiveEquity.push({ x: row.date, y: naiveShares * price });
+        dynamicEquity.push({ x: row.date, y: dynShares * price });
+    }
+
+    // 5. 渲染终局成绩单
+    const finalPrice = viewData[viewData.length - 1].price;
+    const finalNaiveVal = naiveShares * finalPrice;
+    const finalDynVal = dynShares * finalPrice;
+
+    const retNaive = totalNaiveInvested > 0 ? ((finalNaiveVal - totalNaiveInvested) / totalNaiveInvested) * 100 : 0;
+    const retDyn = totalDynInvested > 0 ? ((finalDynVal - totalDynInvested) / totalDynInvested) * 100 : 0;
+    const alpha = retDyn - retNaive;
+
+    const sn = document.getElementById('sb-stat-naive');
+    sn.innerText = retNaive.toFixed(2) + '%';
+    sn.className = 'stat-value ' + (retNaive >= 0 ? 'value-green' : 'value-red');
+
+    const sd = document.getElementById('sb-stat-dynamic');
+    sd.innerText = retDyn.toFixed(2) + '%';
+    sd.className = 'stat-value ' + (retDyn >= 0 ? 'value-green' : 'value-red');
+
+    const sa = document.getElementById('sb-stat-alpha');
+    sa.innerText = alpha.toFixed(2) + '%';
+    sa.className = 'stat-value ' + (alpha >= 0 ? 'value-green' : 'value-red');
+
+    document.getElementById('sb-cost-naive').innerText = '$' + totalNaiveInvested.toLocaleString(undefined, { maximumFractionDigits: 0 });
+    document.getElementById('sb-cost-dynamic').innerText = '$' + totalDynInvested.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+    // 6. 重绘高速 Canvas 曲线图
+    renderSandboxChart(labels, naiveEquity, dynamicEquity);
+};
+
+function renderSandboxChart(labels, naiveData, dynData) {
+    const ctx = document.getElementById('sandboxChart').getContext('2d');
+    if (sandboxChartIns) {
+        sandboxChartIns.destroy();
+    }
+
+    sandboxChartIns = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '动态公式沙盘净值',
+                    data: dynData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    pointRadius: 0,
+                    pointHitRadius: 10,
+                },
+                {
+                    label: '无脑定投对照组',
+                    data: naiveData,
+                    borderColor: '#94a3b8',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: false,
+                    pointRadius: 0,
+                    pointHitRadius: 10,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: { labels: { color: '#f8fafc' } },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            let label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#94a3b8', maxTicksLimit: 12 }
+                },
+                y: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: {
+                        color: '#94a3b8',
+                        callback: function (value) { return '$' + (value / 1000) + 'k'; }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 首次触发引导：等待 1 秒等主循环数据组装完毕后执行
+setTimeout(() => {
+    const section = document.getElementById('sandbox-section');
+    if (section && typeof BACKTEST_DATA !== 'undefined') {
+        section.style.display = 'block'; // 显示沙盒
+
+        // 挂载自动适配当前选项卡的逻辑（借助 MutationObserver 监听 Tab 变化最解耦）
+        const tabContainer = document.querySelector('.tabs') || document.body;
+
+        // Setup initial dates to "All"
+        setSandboxRange('ALL');
+    }
+}, 1500);

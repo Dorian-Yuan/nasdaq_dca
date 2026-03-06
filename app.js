@@ -275,6 +275,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cachedData) {
                 renderData(cachedData);
             }
+            // 自动联动并重置沙盒界面的数据
+            if (typeof window.setSandboxRange === 'function') {
+                window.setSandboxRange('ALL');
+            }
         });
     });
 
