@@ -59,7 +59,7 @@
 
 @media (min-width: 768px) {
     .sandbox-controls {
-        max-width: 400px;
+        max-width: 100%;
     }
 }
 
