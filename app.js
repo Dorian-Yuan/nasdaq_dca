@@ -288,4 +288,118 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.tooltip-icon').forEach(el => el.blur());
         }
     });
+
+    // --- Model 4.4 历史图表 Modal 交互逻辑 ---
+    const modal = document.getElementById('chartModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const modalTitle = document.getElementById('modalTitle');
+    let historyChartInstance = null;
+
+    function openModalAndDrawChart(metricType) {
+        if (typeof BACKTEST_DATA === 'undefined' || !BACKTEST_DATA[currentTab]) {
+            alert("正在加载历史数据库，请稍后重试。");
+            return;
+        }
+
+        const dataArray = BACKTEST_DATA[currentTab];
+        let labels = [];
+        let datasetData = [];
+        let chartLabel = "";
+        let color = "#3b82f6";
+
+        if (metricType === 'bias') {
+            chartLabel = "均线乖离率走势 (%)";
+            color = "#f59e0b";
+            labels = dataArray.map(d => d.date);
+            datasetData = dataArray.map(d => d.bias * 100);
+        } else if (metricType === 'vol') {
+            chartLabel = "波动率走势 (市场恐慌指数)";
+            color = "#ef4444";
+            labels = dataArray.map(d => d.date);
+            datasetData = dataArray.map(d => d.volatility);
+        } else if (metricType === 'pe') {
+            chartLabel = "PE 估值投资吸引力 (1 - 历史百分位)";
+            color = "#10b981";
+            labels = dataArray.map(d => d.date);
+            // 将 PE百分位转换为直观的 (1 - 蛋卷原始百分位)
+            // 数值越高，代表(1-pe)*100 越大，越便宜。
+            datasetData = dataArray.map(d => (1.0 - d.pe_percentile) * 100);
+        }
+
+        modalTitle.textContent = `${currentTab} ${chartLabel}`;
+        modal.classList.add('show');
+
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        if (historyChartInstance) {
+            historyChartInstance.destroy();
+        }
+
+        historyChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: chartLabel,
+                    data: datasetData,
+                    borderColor: color,
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    fill: {
+                        target: 'origin',
+                        above: color + '20' // 20% 透明度背景
+                    },
+                    tension: 0.2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                scales: {
+                    x: {
+                        grid: { display: false, color: "rgba(255,255,255,0.05)" },
+                        ticks: { color: "#94a3b8", maxTicksLimit: 12 }
+                    },
+                    y: {
+                        grid: { color: "rgba(255,255,255,0.05)" },
+                        ticks: { color: "#94a3b8" }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 绑定点击事件到三个卡片
+    const cardBias = document.getElementById('card-bias');
+    const cardVol = document.getElementById('card-vol');
+    const cardPe = document.getElementById('card-pe');
+
+    if (cardBias) cardBias.addEventListener('click', () => openModalAndDrawChart('bias'));
+    if (cardVol) cardVol.addEventListener('click', () => openModalAndDrawChart('vol'));
+    if (cardPe) cardPe.addEventListener('click', () => openModalAndDrawChart('pe'));
+
+    // 关闭 Modal
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => modal.classList.remove('show'));
+    }
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+        }
+    });
+
 });

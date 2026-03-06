@@ -42,7 +42,7 @@
         <!-- 详细指标区 -->
         <section class="metrics-grid">
             <!-- 乖离率卡片 -->
-            <div class="metric-card">
+            <div class="metric-card clickable" id="card-bias">
                 <div class="metric-title">
                     <span>均线乖离率 <span class="tooltip-icon" tabindex="0" onclick=""
                             data-tooltip="衡量当前价格偏离过去200天平均成本的百分比。&#xa;偏离过大可能发生均值回归（下跌），跌破太多则可能是超跌反弹（抄底）的信号。">?</span></span>
@@ -53,7 +53,7 @@
             </div>
 
             <!-- 情绪卡片 -->
-            <div class="metric-card">
+            <div class="metric-card clickable" id="card-vol">
                 <div class="metric-title">
                     <span><span id="label-vol-title">^VXN</span> <span class="tooltip-icon" tabindex="0" onclick=""
                             data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。"
@@ -65,7 +65,7 @@
             </div>
 
             <!-- 估值卡片 -->
-            <div class="metric-card">
+            <div class="metric-card clickable" id="card-pe">
                 <div class="metric-title">
                     <span>PE百分位 <span class="tooltip-icon" tabindex="0" onclick=""
                             data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
@@ -97,8 +97,21 @@
         </footer>
     </div>
 
+    <!-- 历史走势弹窗 (Modal) -->
+    <div id="chartModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h3 id="modalTitle">指标历史走势</h3>
+            <div class="chart-container">
+                <canvas id="historyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- Config for Github Actions. (This file is ignored by git) -->
     <script src="./config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./backtest_data.js"></script>
     <script src="./app.js"></script>
 </body>
 
