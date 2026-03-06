@@ -1,10 +1,10 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-06 05:57:02",
+      "update_time": "2026-03-06 14:45:14",
       "decision": "🟢",
       "reasons": [
-        "估值因子得分: 1.00 (PE分位 32.8%)",
+        "估值因子得分: 1.00 (PE分位 66.4%)",
         "情绪因子得分: 1.48 (VXN 26.00)",
         "趋势因子得分: 1.00 (乖离率 3.5%)",
         "综合计算权重: 1.14倍"
@@ -20,8 +20,8 @@
         "ma200": 24178.93,
         "bias_percent": 3.48,
         "daily_return_percent": -0.29,
-        "pe": 33.9261,
-        "pe_percentile": 0.3284,
+        "pe": 33.8504,
+        "pe_percentile": 0.6636,
         "volatility": 26.0,
         "vol_name": "VXN"
       }
@@ -41,7 +41,7 @@
         "decision": "🟢",
         "weight": 1.14,
         "price": 25020.41,
-        "pe_percentile": 0.3284,
+        "pe_percentile": 0.6636,
         "bias_percent": 3.48,
         "volatility": 26.0
       }
@@ -49,27 +49,27 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-06 05:57:02",
+      "update_time": "2026-03-06 14:45:14",
       "decision": "🟢",
       "reasons": [
-        "估值因子得分: 0.79 (PE分位 17.4%)",
+        "估值因子得分: 1.39 (PE分位 81.8%)",
         "情绪因子得分: 1.30 (VIX 23.75)",
         "趋势因子得分: 1.00 (乖离率 3.8%)",
-        "综合计算权重: 1.01倍"
+        "综合计算权重: 1.25倍"
       ],
       "individual_decisions": {
         "bias_decision": "1.00x",
-        "pe_decision": "0.79x",
+        "pe_decision": "1.39x",
         "vol_decision": "1.30x",
-        "final_weight": 1.01
+        "final_weight": 1.25
       },
       "metrics": {
         "price": 6830.71,
         "ma200": 6578.65,
         "bias_percent": 3.83,
         "daily_return_percent": -0.56,
-        "pe": 28.5026,
-        "pe_percentile": 0.174,
+        "pe": 28.3338,
+        "pe_percentile": 0.8184,
         "volatility": 23.75,
         "vol_name": "VIX"
       }
@@ -87,9 +87,9 @@
       {
         "date": "2026-03-06",
         "decision": "🟢",
-        "weight": 1.01,
+        "weight": 1.25,
         "price": 6830.71,
-        "pe_percentile": 0.174,
+        "pe_percentile": 0.8184,
         "bias_percent": 3.83,
         "volatility": 23.75
       }
