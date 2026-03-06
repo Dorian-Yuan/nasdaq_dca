@@ -60,10 +60,11 @@
 }
 
 .control-card {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
+    background-color: var(--card-bg);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
 }
 
 .control-card h3 {
@@ -110,24 +111,28 @@
 .date-presets {
     display: flex;
     gap: 8px;
+    background-color: var(--color-gray);
+    padding: 4px;
+    border-radius: 8px;
 }
 
 .preset-btn {
     flex: 1;
-    background: transparent;
-    border: 1px solid var(--border);
+    background-color: transparent;
+    border: none;
     color: var(--text-secondary);
     padding: 6px 0;
     font-size: 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .preset-btn.active {
-    background: rgba(59, 130, 246, 0.2);
-    color: var(--accent);
-    border-color: var(--accent);
+    background-color: var(--card-bg);
+    color: var(--text-primary);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
 }
 
 /* 因子与公式沙盘 */
@@ -296,10 +301,11 @@ textarea.formula-input:focus {
 .sandbox-chart-container {
     flex: 2;
     min-width: 320px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
+    background-color: var(--card-bg);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
     position: relative;
     min-height: 400px;
 }
