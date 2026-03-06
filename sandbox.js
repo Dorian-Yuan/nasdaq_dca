@@ -383,6 +383,14 @@ window.compileAndRunSandbox = function () {
         pd.className = 'stat-value small ' + (profitDyn >= 0 ? 'value-green' : 'value-red');
     }
 
+    // 总收益差异 (Profit Diff)
+    const profitDiff = profitDyn - profitNaive;
+    const spd = document.getElementById('sb-stat-profit-diff');
+    if (spd) {
+        spd.innerText = formatSignedCurrency(profitDiff);
+        spd.className = 'stat-value ' + (profitDiff >= 0 ? 'value-green' : 'value-red');
+    }
+
     // 6. 重绘高速 Canvas 曲线图
     renderSandboxChart(labels, naiveEquity, dynamicEquity);
 };

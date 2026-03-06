@@ -212,9 +212,17 @@
                             <div class="stat-label">动态策略回报率</div>
                             <div class="stat-value" id="sb-stat-dynamic">0.00%</div>
                         </div>
-                        <div class="stat-item highlight">
-                            <div class="stat-label">策略模型 Alpha (超额收益)</div>
-                            <div class="stat-value" id="sb-stat-alpha">0.00%</div>
+                        <div class="stat-item highlight"
+                            style="display: flex; justify-content: space-around; align-items: center; gap: 20px;">
+                            <div style="text-align: center; flex: 1;">
+                                <div class="stat-label">超额收益率 (Alpha)</div>
+                                <div class="stat-value" id="sb-stat-alpha">0.00%</div>
+                            </div>
+                            <div style="width: 1px; height: 36px; background: rgba(148, 163, 184, 0.2);"></div>
+                            <div style="text-align: center; flex: 1;">
+                                <div class="stat-label">总收益差异 (Profit Diff)</div>
+                                <div class="stat-value" id="sb-stat-profit-diff">$0</div>
+                            </div>
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">无脑总投入</div>
@@ -263,7 +271,7 @@
     <script src="./strategy_models.js?v=6"></script>
     <script src="./backtest_data.js?v=6"></script>
     <script src="./app.js?v=6"></script>
-    <script src="./sandbox.js?v=7"></script>
+    <script src="./sandbox.js?v=8"></script>
 </body>
 
 </html>
