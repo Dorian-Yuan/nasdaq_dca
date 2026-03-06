@@ -21,8 +21,8 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
-# 回测数据起始日期
-BACKTEST_START = '2018-01-01'
+# 回测数据起始日期 (与蛋卷 PE 历史数据起始日对齐)
+BACKTEST_START = '2016-03-07'
 
 
 def fetch_yahoo_history(ticker, period="10y"):
@@ -181,15 +181,12 @@ def main():
 
             clean_df = align_and_calculate_factors(price_df, pe_df, vol_df)
 
-            # 从 BACKTEST_START 开始截取
+            # 从 BACKTEST_START 开始截取 (日度数据，不做周度重采样)
             backtest_start_date = pd.to_datetime(BACKTEST_START)
             sim_df = clean_df[clean_df.index >= backtest_start_date].copy()
 
-            # 按周一重采样，减小 JS 文件尺寸
-            df_weekly = sim_df.resample('W-MON').first().dropna()
-
-            results[name] = df_weekly
-            print(f"  输出: {len(df_weekly)} 周数据\n")
+            results[name] = sim_df
+            print(f"  输出: {len(sim_df)} 天数据\n")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
