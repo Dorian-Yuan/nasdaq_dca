@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             labels = dataArray.map(d => d.date);
             datasetData = dataArray.map(d => d.volatility);
         } else if (metricType === 'pe') {
-            chartLabel = "估值投资吸引力";
+            chartLabel = "PE估值历史百分位";
             color = "#10b981";
             labels = dataArray.map(d => d.date);
             // 将 PE百分位转换为直观的 (1 - 蛋卷原始百分位)

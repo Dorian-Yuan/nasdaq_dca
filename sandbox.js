@@ -244,6 +244,7 @@ function renderSandboxChart(labels, naiveData, dynData) {
             ]
         },
         options: {
+
             responsive: true,
             maintainAspectRatio: false,
             interaction: {
@@ -251,7 +252,7 @@ function renderSandboxChart(labels, naiveData, dynData) {
                 intersect: false,
             },
             plugins: {
-                legend: { labels: { color: '#f8fafc' } },
+                legend: { labels: { color: '#475569', font: { weight: 'bold' } } },
                 tooltip: {
                     callbacks: {
                         label: function (context) {
@@ -267,13 +268,13 @@ function renderSandboxChart(labels, naiveData, dynData) {
             },
             scales: {
                 x: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: '#94a3b8', maxTicksLimit: 12 }
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: { color: '#64748b', maxTicksLimit: 12 }
                 },
                 y: {
-                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    grid: { color: 'rgba(0,0,0,0.05)' },
                     ticks: {
-                        color: '#94a3b8',
+                        color: '#64748b',
                         callback: function (value) { return '$' + (value / 1000) + 'k'; }
                     }
                 }
