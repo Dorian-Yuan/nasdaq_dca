@@ -86,116 +86,117 @@
                 <div class="metric-value" id="val-daily-return">--%</div>
                 <div class="metric-sub"><span id="label-daily-return-title">相比昨日收盘</span></div>
             </div>
-        </section>
+            <!-- 刷新按钮区 -->
+            <section class="action-section">
+                <button id="refresh-btn" class="btn primary-btn">强制刷新策略数据</button>
+            </section>
 
-        <!-- 全息回测工作台 (Sandbox) -->
-        <section class="sandbox-section" id="sandbox-section" style="display: none;">
-            <div class="sandbox-header">
-                <h2>全息回测沙盘与公式引擎</h2>
-                <p>自定义策略参数与执行阈值，实时推演历史收益 Alpha</p>
-            </div>
-
-            <div class="sandbox-grid">
-                <div class="sandbox-controls">
-                    <!-- 时间切片过滤器 -->
-                    <div class="control-card">
-                        <h3>时间切片 (Time Range)</h3>
-                        <div class="date-filters">
-                            <input type="date" id="sandbox-start-date">
-                            <span>至</span>
-                            <input type="date" id="sandbox-end-date">
-                        </div>
-                        <div class="date-presets">
-                            <button class="preset-btn" onclick="setSandboxRange(1)">近1年</button>
-                            <button class="preset-btn" onclick="setSandboxRange(3)">近3年</button>
-                            <button class="preset-btn" onclick="setSandboxRange(5)">近5年</button>
-                            <button class="preset-btn active" onclick="setSandboxRange('ALL')">全部历史</button>
-                        </div>
-                    </div>
-
-                    <!-- 动态公式沙盘与权重 -->
-                    <div class="control-card">
-                        <h3>动态因子与公式引擎 <small>(点击展开编辑公式)</small></h3>
-
-                        <div class="factor-group" id="group-val">
-                            <div class="factor-header" onclick="toggleFormulaBuilder('val')">
-                                <span>估值因子 (PE) 权重</span>
-                                <span class="factor-val" id="sb-weight-val">0.30</span>
-                            </div>
-                            <input type="range" id="sb-slider-val" min="0" max="1" step="0.05" value="0.30"
-                                oninput="updateSandboxConfigs()">
-                            <div class="formula-builder" id="builder-val" style="display: none;">
-                                <!-- Formula editor injected dynamically -->
-                            </div>
-                        </div>
-
-                        <div class="factor-group" id="group-sent">
-                            <div class="factor-header" onclick="toggleFormulaBuilder('sent')">
-                                <span>情绪因子 (VXN) 权重</span>
-                                <span class="factor-val" id="sb-weight-sent">0.30</span>
-                            </div>
-                            <input type="range" id="sb-slider-sent" min="0" max="1" step="0.05" value="0.30"
-                                oninput="updateSandboxConfigs()">
-                            <div class="formula-builder" id="builder-sent" style="display: none;">
-                            </div>
-                        </div>
-
-                        <div class="factor-group" id="group-trend">
-                            <div class="factor-header" onclick="toggleFormulaBuilder('trend')">
-                                <span>趋势因子 (Bias) 权重</span>
-                                <span class="factor-val" id="sb-weight-trend">0.40</span>
-                            </div>
-                            <input type="range" id="sb-slider-trend" min="0" max="1" step="0.05" value="0.40"
-                                oninput="updateSandboxConfigs()">
-                            <div class="formula-builder" id="builder-trend" style="display: none;">
-                            </div>
-                        </div>
-
-                        <div class="compile-action">
-                            <button id="compile-formula-btn" class="btn sandbox-btn" onclick="compileAndRunSandbox()">⚙️
-                                编译公式并回测</button>
-                        </div>
-                    </div>
-
-                    <!-- 统计数据 -->
-                    <div class="control-card stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">无脑定投回报率</div>
-                            <div class="stat-value" id="sb-stat-naive">0.00%</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">动态策略回报率</div>
-                            <div class="stat-value" id="sb-stat-dynamic">0.00%</div>
-                        </div>
-                        <div class="stat-item highlight">
-                            <div class="stat-label">策略模型 Alpha (超额收益)</div>
-                            <div class="stat-value" id="sb-stat-alpha">0.00%</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">无脑总投入</div>
-                            <div class="stat-value small" id="sb-cost-naive">$0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">动态总投入</div>
-                            <div class="stat-value small" id="sb-cost-dynamic">$0</div>
-                        </div>
-                    </div>
+            <!-- 全息回测工作台 (Sandbox) -->
+            <section class="sandbox-section" id="sandbox-section" style="display: none;">
+                <div class="sandbox-header" onclick="toggleSandboxGrid()"
+                    style="cursor: pointer; -webkit-tap-highlight-color: transparent;">
+                    <h2 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        全息回测沙盘与公式引擎 <span id="sandbox-toggle-icon"
+                            style="font-size: 14px; color: var(--text-secondary); transition: transform 0.3s;">▼</span>
+                    </h2>
+                    <p>自定义策略参数与执行阈值，实时推演历史收益 Alpha</p>
                 </div>
 
-                <div class="sandbox-chart-container">
-                    <canvas id="sandboxChart"></canvas>
+                <div class="sandbox-grid" id="sandbox-grid" style="display: none; padding-top: 10px;">
+                    <div class="sandbox-controls">
+                        <!-- 时间切片过滤器 -->
+                        <div class="control-card">
+                            <h3>时间切片 (Time Range)</h3>
+                            <div class="date-filters">
+                                <input type="date" id="sandbox-start-date">
+                                <span>至</span>
+                                <input type="date" id="sandbox-end-date">
+                            </div>
+                            <div class="date-presets">
+                                <button class="preset-btn" onclick="setSandboxRange(1)">近1年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(2)">近2年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(3)">近3年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(4)">近4年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(5)">近5年</button>
+                                <button class="preset-btn active" onclick="setSandboxRange('ALL')">全部</button>
+                            </div>
+                        </div>
+
+                        <!-- 动态公式沙盘与权重 -->
+                        <div class="control-card">
+                            <h3>动态因子与公式引擎 <small>(点击展开编辑公式)</small></h3>
+
+                            <div class="factor-group" id="group-val">
+                                <div class="factor-header" onclick="toggleFormulaBuilder('val')">
+                                    <span>估值因子 (PE) 权重</span>
+                                    <span class="factor-val" id="sb-weight-val">0.30</span>
+                                </div>
+                                <input type="range" id="sb-slider-val" min="0" max="1" step="0.05" value="0.30"
+                                    oninput="updateSandboxConfigs()">
+                                <div class="formula-builder" id="builder-val" style="display: none;"></div>
+                            </div>
+
+                            <div class="factor-group" id="group-sent">
+                                <div class="factor-header" onclick="toggleFormulaBuilder('sent')">
+                                    <span>情绪因子 (VXN) 权重</span>
+                                    <span class="factor-val" id="sb-weight-sent">0.30</span>
+                                </div>
+                                <input type="range" id="sb-slider-sent" min="0" max="1" step="0.05" value="0.30"
+                                    oninput="updateSandboxConfigs()">
+                                <div class="formula-builder" id="builder-sent" style="display: none;"></div>
+                            </div>
+
+                            <div class="factor-group" id="group-trend">
+                                <div class="factor-header" onclick="toggleFormulaBuilder('trend')">
+                                    <span>趋势因子 (Bias) 权重</span>
+                                    <span class="factor-val" id="sb-weight-trend">0.40</span>
+                                </div>
+                                <input type="range" id="sb-slider-trend" min="0" max="1" step="0.05" value="0.40"
+                                    oninput="updateSandboxConfigs()">
+                                <div class="formula-builder" id="builder-trend" style="display: none;"></div>
+                            </div>
+
+                            <div class="compile-action">
+                                <button id="compile-formula-btn" class="btn sandbox-btn"
+                                    onclick="compileAndRunSandbox()">⚙️
+                                    编译公式并回测</button>
+                            </div>
+                        </div>
+
+                        <!-- 统计数据 -->
+                        <div class="control-card stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">无脑定投回报率</div>
+                                <div class="stat-value" id="sb-stat-naive">0.00%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">动态策略回报率</div>
+                                <div class="stat-value" id="sb-stat-dynamic">0.00%</div>
+                            </div>
+                            <div class="stat-item highlight">
+                                <div class="stat-label">策略模型 Alpha (超额收益)</div>
+                                <div class="stat-value" id="sb-stat-alpha">0.00%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">无脑总投入</div>
+                                <div class="stat-value small" id="sb-cost-naive">$0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">动态总投入</div>
+                                <div class="stat-value small" id="sb-cost-dynamic">$0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-chart-container">
+                        <canvas id="sandboxChart"></canvas>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- 刷新按钮区 -->
-        <section class="action-section">
-            <button id="refresh-btn" class="btn primary-btn">强制刷新策略数据</button>
-        </section>
-
-        <footer>
-            <p>数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
-        </footer>
+            <footer>
+                <p>数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
+            </footer>
     </div>
 
     <!-- 历史走势弹窗 (Modal) -->

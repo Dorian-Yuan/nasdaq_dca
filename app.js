@@ -322,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             labels = dataArray.map(d => d.date);
             datasetData = dataArray.map(d => d.volatility);
         } else if (metricType === 'pe') {
-            chartLabel = "PE 估值投资吸引力 (1 - 历史百分位)";
+            chartLabel = "估值投资吸引力";
             color = "#10b981";
             labels = dataArray.map(d => d.date);
             // 将 PE百分位转换为直观的 (1 - 蛋卷原始百分位)
@@ -392,9 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardVol = document.getElementById('card-vol');
     const cardPe = document.getElementById('card-pe');
 
-    if (cardBias) cardBias.addEventListener('click', () => openModalAndDrawChart('bias'));
-    if (cardVol) cardVol.addEventListener('click', () => openModalAndDrawChart('vol'));
-    if (cardPe) cardPe.addEventListener('click', () => openModalAndDrawChart('pe'));
+    if (cardBias) cardBias.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('bias'); });
+    if (cardVol) cardVol.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('vol'); });
+    if (cardPe) cardPe.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('pe'); });
 
     // 关闭 Modal
     if (closeBtn) {

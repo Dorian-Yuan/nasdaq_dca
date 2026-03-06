@@ -44,7 +44,7 @@ window.toggleFormulaBuilder = function (factor) {
     if (builder.style.display === 'none') {
         builder.style.display = 'block';
         // Initialize default formula if empty
-        if (!builder.innerHTML.trim()) {
+        if (builder.children.length === 0) {
             let defaultCode = "";
             let varName = "";
             if (factor === 'val') {
@@ -282,16 +282,32 @@ function renderSandboxChart(labels, naiveData, dynData) {
     });
 }
 
+// 沙盘折叠逻辑
+window.toggleSandboxGrid = function () {
+    const grid = document.getElementById('sandbox-grid');
+    const icon = document.getElementById('sandbox-toggle-icon');
+    if (!grid) return;
+
+    if (grid.style.display === 'none') {
+        grid.style.display = 'flex';
+        icon.style.transform = 'rotate(180deg)';
+        compileAndRunSandbox(); // Render chart fully when expanded
+    } else {
+        grid.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+};
+
 // 首次触发引导：等待 1 秒等主循环数据组装完毕后执行
 setTimeout(() => {
     const section = document.getElementById('sandbox-section');
     if (section && typeof BACKTEST_DATA !== 'undefined') {
-        section.style.display = 'block'; // 显示沙盒
+        section.style.display = 'block'; // 显示沙盒大框架 (默认折叠内部)
 
         // 挂载自动适配当前选项卡的逻辑（借助 MutationObserver 监听 Tab 变化最解耦）
         const tabContainer = document.querySelector('.tabs') || document.body;
 
-        // Setup initial dates to "All"
+        // Setup initial dates to "All" to prep stats
         setSandboxRange('ALL');
     }
 }, 1500);
