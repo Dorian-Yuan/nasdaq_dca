@@ -92,6 +92,37 @@ window.toggleFormulaBuilder = function (factor) {
     }
 };
 
+// 定投频率切换逻辑
+window.onDcaFreqChange = function () {
+    const freq = document.getElementById('dca-freq').value;
+    const daySelect = document.getElementById('dca-day');
+    daySelect.innerHTML = '';
+
+    if (freq === 'daily') {
+        const opt = document.createElement('option');
+        opt.value = '0';
+        opt.textContent = '每日';
+        daySelect.appendChild(opt);
+    } else if (freq === 'weekly') {
+        const days = ['周一', '周二', '周三', '周四', '周五'];
+        days.forEach((d, i) => {
+            const opt = document.createElement('option');
+            opt.value = String(i + 1);
+            opt.textContent = d;
+            if (i + 1 === 3) opt.selected = true; // 默认周三
+            daySelect.appendChild(opt);
+        });
+    } else if (freq === 'monthly') {
+        for (let i = 1; i <= 28; i++) {
+            const opt = document.createElement('option');
+            opt.value = String(i);
+            opt.textContent = `每月${i}号`;
+            if (i === 1) opt.selected = true;
+            daySelect.appendChild(opt);
+        }
+    }
+};
+
 window.compileAndRunSandbox = function () {
     if (typeof BACKTEST_DATA === 'undefined') {
         return; // 数据暂未加载
@@ -243,10 +274,23 @@ window.compileAndRunSandbox = function () {
     const sdStr = document.getElementById('sandbox-start-date').value;
     const edStr = document.getElementById('sandbox-end-date').value;
 
-    const viewData = dataTable.filter(row => {
+    const viewDataRaw = dataTable.filter(row => {
         if (sdStr && row.date < sdStr) return false;
         if (edStr && row.date > edStr) return false;
         return true;
+    });
+
+    // 3b. 定投频率过滤
+    const dcaFreq = document.getElementById('dca-freq').value;
+    const dcaDay = parseInt(document.getElementById('dca-day').value);
+    const viewData = viewDataRaw.filter(row => {
+        const d = new Date(row.date);
+        if (dcaFreq === 'weekly') {
+            return d.getDay() === dcaDay; // 0=Sun, 1=Mon, ..., 5=Fri
+        } else if (dcaFreq === 'monthly') {
+            return d.getDate() === dcaDay;
+        }
+        return true; // daily: all data
     });
 
     if (viewData.length === 0) {

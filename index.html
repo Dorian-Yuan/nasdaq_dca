@@ -14,7 +14,7 @@
     <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
-    <link rel="stylesheet" href="./sandbox.css?v=3">
+    <link rel="stylesheet" href="./sandbox.css?v=4">
 </head>
 
 <body>
@@ -148,6 +148,20 @@
                             <button class="preset-btn" onclick="setSandboxRange(5)">近5年</button>
                             <button class="preset-btn active" onclick="setSandboxRange('ALL')">全部</button>
                         </div>
+                        <div class="freq-selector" style="margin-top: 10px; display: flex; gap: 8px;">
+                            <select id="dca-freq" class="freq-select" onchange="onDcaFreqChange()">
+                                <option value="daily">按天定投</option>
+                                <option value="weekly" selected>按周定投</option>
+                                <option value="monthly">按月定投</option>
+                            </select>
+                            <select id="dca-day" class="freq-select">
+                                <option value="1">周一</option>
+                                <option value="2">周二</option>
+                                <option value="3" selected>周三</option>
+                                <option value="4">周四</option>
+                                <option value="5">周五</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- 动态公式沙盘与权重 -->
@@ -253,7 +267,7 @@
     <script src="./strategy_models.js?v=6"></script>
     <script src="./backtest_data.js?v=6"></script>
     <script src="./app.js?v=6"></script>
-    <script src="./sandbox.js?v=6"></script>
+    <script src="./sandbox.js?v=7"></script>
 </body>
 
 </html>
