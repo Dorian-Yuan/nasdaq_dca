@@ -322,11 +322,11 @@ textarea.formula-input:focus {
 }
 
 .value-green {
-    color: var(--green);
+    color: var(--color-green);
 }
 
 .value-red {
-    color: var(--red);
+    color: var(--color-red);
 }
 
 /* 图表容器 */
