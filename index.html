@@ -88,6 +88,11 @@
             </div>
         </section>
 
+        <!-- 刷新按钮区 -->
+        <section class="action-section" style="text-align: center; margin: 20px 0;">
+            <button id="refresh-btn" class="btn primary-btn">强制刷新策略数据</button>
+        </section>
+
         <!-- 策略模型库切换舱 (Model Manager) -->
         <section class="model-selector-section" style="text-align: center; margin: 30px 0 10px 0;">
             <div class="model-manager-trigger" onclick="toggleModelManager()">
@@ -112,11 +117,6 @@
                         列表中的新增/修改在点击提交前仅作为草稿暂存于网页内存中</p>
                 </div>
             </div>
-        </section>
-
-        <!-- 刷新按钮区 -->
-        <section class="action-section" style="text-align: center; margin: 20px 0;">
-            <button id="refresh-btn" class="btn primary-btn">强制刷新策略数据</button>
         </section>
 
         <!-- 全息回测工作台 (Sandbox) -->
@@ -186,7 +186,7 @@
 
                         <div class="compile-action" style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <button id="compile-formula-btn" class="btn sandbox-btn" style="flex: 1;"
-                                onclick="compileAndRunSandbox()">⚙️ 编译公式并回测</button>
+                                onclick="compileAndRunSandbox()">⚙️ 编译并回测</button>
                             <button class="btn secondary-btn" style="flex: 1;" onclick="exportSandboxModel()"
                                 title="将当前回测配置打包发布为量化模型代码">📦 保存模型</button>
                         </div>
@@ -248,12 +248,12 @@
     </div>
 
     <!-- Config for Github Actions. (This file is ignored by git) -->
-    <script src="./config.js"></script>
+    <script src="./config.js?v=3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="./strategy_models.js"></script>
-    <script src="./backtest_data.js"></script>
-    <script src="./app.js"></script>
-    <script src="./sandbox.js"></script>
+    <script src="./strategy_models.js?v=3"></script>
+    <script src="./backtest_data.js?v=3"></script>
+    <script src="./app.js?v=3"></script>
+    <script src="./sandbox.js?v=3"></script>
 </body>
 
 </html>

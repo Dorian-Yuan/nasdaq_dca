@@ -3,20 +3,20 @@ const STRATEGY_MODELS = {
         "ndx_default": {
             id: "ndx_default",
             name: "默认经典策略",
-            weights: { pe: 0.30, vxn: 0.30, bias: 0.40 },
-            formula_pe: "if (x < 0.2) return 1.5;\nif (x < 0.4) return 1.2;\nif (x < 0.6) return 1.0;\nif (x < 0.8) return 0.8;\nreturn 0.5;",
-            formula_vxn: "if (x > 30) return 1.5;\nif (x > 25) return 1.2;\nif (x > 20) return 1.0;\nif (x > 15) return 0.8;\nreturn 0.5;",
-            formula_bias: "if (x < -0.05) return 1.5;\nif (x < 0) return 1.2;\nif (x < 0.05) return 1.0;\nif (x < 0.1) return 0.8;\nreturn 0.5;"
+            weights: { pe: 0.40, vxn: 0.30, bias: 0.30 },
+            formula_pe: "if (x > 0.7) return 1.0 + ((x - 0.7) / 0.3) * 1.0;\nif (x >= 0.3) return 1.0;\nreturn 0.5 + (x / 0.3) * 0.5;",
+            formula_vxn: "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
+            formula_bias: "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
         }
     },
     "SP500": {
         "spy_default": {
             id: "spy_default",
             name: "默认经典策略",
-            weights: { pe: 0.30, vxn: 0.30, bias: 0.40 },
-            formula_pe: "if (x < 0.2) return 1.5;\nif (x < 0.4) return 1.2;\nif (x < 0.6) return 1.0;\nif (x < 0.8) return 0.8;\nreturn 0.5;",
-            formula_vxn: "if (x > 30) return 1.5;\nif (x > 25) return 1.2;\nif (x > 20) return 1.0;\nif (x > 15) return 0.8;\nreturn 0.5;",
-            formula_bias: "if (x < -0.05) return 1.5;\nif (x < 0) return 1.2;\nif (x < 0.05) return 1.0;\nif (x < 0.1) return 0.8;\nreturn 0.5;"
+            weights: { pe: 0.40, vxn: 0.30, bias: 0.30 },
+            formula_pe: "if (x > 0.7) return 1.0 + ((x - 0.7) / 0.3) * 1.0;\nif (x >= 0.3) return 1.0;\nreturn 0.5 + (x / 0.3) * 0.5;",
+            formula_vxn: "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
+            formula_bias: "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
         }
     }
 };

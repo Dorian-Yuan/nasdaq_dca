@@ -185,11 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="text" class="model-item-title" 
                             id="input-name-${modelId}" 
                             value="${model.name}" 
-                            onchange="renameModelLocal('${modelId}', this.value)"
-                            ${isDefault ? 'disabled' : ''}>
+                            onchange="renameModelLocal('${modelId}', this.value)">
                         <div class="model-item-actions">
-                            ${!isActive ? `<button class="icon-btn" onclick="activateModelLocal('${modelId}')" title="设为当前生效模型">✅ 启用</button>` : `<button class="icon-btn" style="color:var(--color-green);border-color:var(--color-green)" disabled>当前活跃</button>`}
-                            ${!isDefault ? `<button class="icon-btn" onclick="deleteModelLocal('${modelId}')" title="删除该草稿" style="color:var(--color-red)">🗑️ 删除</button>` : ''}
+                            ${!isActive ? `<button class="icon-btn" onclick="activateModelLocal('${modelId}')" title="启用">⚪️</button>` : `<button class="icon-btn" style="color:var(--color-green);border-color:var(--color-green)" disabled title="当前活跃">✅</button>`}
+                            <button class="icon-btn" onclick="deleteModelLocal('${modelId}')" title="删除草稿">❌</button>
                         </div>
                     </div>
                     <div class="model-item-meta">

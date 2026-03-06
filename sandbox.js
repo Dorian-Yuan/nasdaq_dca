@@ -164,17 +164,34 @@ window.compileAndRunSandbox = function () {
             if (silentData.length > 0) {
                 let d_shares = 0;
                 let d_invested = 0;
+                let n_shares = 0;
+                let n_invested = 0;
+                const totalW = wVal + wSent + wTrend || 1;
                 for (const row of silentData) {
-                    let mult = wVal * fnVal(row.pe_percentile) + wSent * fnSent(row.volatility) + wTrend * fnTrend(row.bias);
+                    // 动态算法评估定投
+                    let rawMult = wVal * fnVal(row.pe_percentile) + wSent * fnSent(row.volatility) + wTrend * fnTrend(row.bias);
+                    let mult = rawMult / totalW;
                     let invest = 100 * mult;
                     d_invested += invest;
                     d_shares += invest / row.price;
+
+                    // 无脑定投评估 (固定全周 100 块)
+                    n_invested += 100;
+                    n_shares += 100 / row.price;
                 }
+
                 let finalPrice = silentData[silentData.length - 1].price;
+
                 let d_value = d_shares * finalPrice;
-                if (d_invested > 0) {
-                    return5y = ((d_value - d_invested) / d_invested) * 100;
-                }
+                let d_return = 0;
+                if (d_invested > 0) d_return = (d_value - d_invested) / d_invested;
+
+                let n_value = n_shares * finalPrice;
+                let n_return = 0;
+                if (n_invested > 0) n_return = (n_value - n_invested) / n_invested;
+
+                // 返回超额收益 (Alpha)
+                return5y = (d_return - n_return) * 100;
             }
         } catch (e) {
             console.error("静默5年预估失败", e);
