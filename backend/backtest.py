@@ -1,131 +1,122 @@
+"""
+backtest.py - 回测数据生成器
+从 Yahoo Finance 获取价格/均线/波动率，从蛋卷获取 PE 历史并计算展开百分位。
+输出 backtest_data.js 供前端沙盘使用。
+
+PE百分位约定: 越小 = 越高估(昂贵), 越大 = 越低估(便宜)
+计算方式: pe_percentile = (历史中 PE >= 当前 PE 的比例)
+  - PE 很高时(贵): 很少历史值 >= 当前 → pe_percentile 小 → 越高估 ✓
+  - PE 很低时(便宜): 大量历史值 >= 当前 → pe_percentile 大 → 越低估 ✓
+"""
+
 import os
 import json
 import concurrent.futures
 from datetime import datetime
 import pandas as pd
 import requests
+import numpy as np
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
 }
 
-WEIGHT_VALUATION = 0.40
-WEIGHT_SENTIMENT = 0.30
-WEIGHT_TREND = 0.30
+# 回测数据起始日期
+BACKTEST_START = '2018-01-01'
 
-# 复用原策略评估逻辑
-def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率"):
-    if pe_percentile is not None:
-        if pe_percentile < 0.7:
-            val_score = 2.0 * (1.0 - pe_percentile)
-        elif pe_percentile <= 0.8:
-            val_score = 6.0 * (0.8 - pe_percentile)
-        else:
-            val_score = 0.0
-    else:
-        val_score = 1.0
-
-    if vol_score is not None:
-        if vol_score < 20:
-            sentiment_score = max(0.0, (vol_score - 10.0) / 10.0)
-        else:
-            sentiment_score = min(vol_score / 20.0, 2.0)
-    else:
-        sentiment_score = 1.0
-
-    if bias is not None:
-        if bias <= 0:
-            trend_score = 0.8
-        elif bias <= 0.05:
-            trend_score = 0.8 + (bias / 0.05) * 0.4
-        elif bias <= 0.10:
-            trend_score = 1.2
-        elif bias <= 0.20:
-            trend_score = 1.2 - ((bias - 0.10) / 0.10) * 1.2
-        else:
-            trend_score = 0.0
-    else:
-        trend_score = 1.0
-
-    final_weight = (val_score * WEIGHT_VALUATION) + (sentiment_score * WEIGHT_SENTIMENT) + (trend_score * WEIGHT_TREND)
-    final_weight = max(0.0, min(3.0, final_weight))
-    
-    if final_weight <= 0.4:
-        decision = "🔴"
-    elif final_weight <= 0.7:
-        decision = "🟡"
-    else:
-        decision = "🟢"
-        
-    return decision, final_weight
 
 def fetch_yahoo_history(ticker, period="10y"):
+    """从 Yahoo Finance 获取历史价格数据"""
     url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?metrics=high?&interval=1d&range={period}"
-    res = requests.get(url, headers=HEADERS)
+    res = requests.get(url, headers=HEADERS, timeout=30)
     data = res.json()
-    
+
     timestamps = data['chart']['result'][0]['timestamp']
     closes = data['chart']['result'][0]['indicators']['quote'][0]['close']
-    
+
     dates = [datetime.fromtimestamp(ts).strftime('%Y-%m-%d') for ts in timestamps]
-    
+
     df = pd.DataFrame({'Date': dates, 'Close': closes})
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.dropna().drop_duplicates(subset=['Date']).sort_values('Date').set_index('Date')
     return df
 
-def fetch_danjuan_pe_history(index_code, period="all"):
-    url = f"https://danjuanapp.com/djapi/index_eva/pe_history/{index_code}?day={period}"
-    res = requests.get(url, headers=HEADERS)
+
+def fetch_danjuan_pe_history(index_code):
+    """
+    从蛋卷获取完整的 PE 历史数据 (day=all)。
+    返回一个 DataFrame，包含 Date 和 PE 列。
+    """
+    url = f"https://danjuanapp.com/djapi/index_eva/pe_history/{index_code}?day=all"
+    res = requests.get(url, headers=HEADERS, timeout=30)
     data = res.json()['data']['index_eva_pe_growths']
-    
-    dates = [datetime.fromtimestamp(item['ts']/1000).strftime('%Y-%m-%d') for item in data]
+
+    dates = [datetime.fromtimestamp(item['ts'] / 1000).strftime('%Y-%m-%d') for item in data]
     pes = [item['pe'] for item in data]
-    
+
     df = pd.DataFrame({'Date': dates, 'PE': pes})
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.dropna().drop_duplicates(subset=['Date']).sort_values('Date').set_index('Date')
+    print(f"  蛋卷 {index_code} PE 历史: {len(df)} 条, {df.index[0].strftime('%Y-%m-%d')} ~ {df.index[-1].strftime('%Y-%m-%d')}")
     return df
 
-def align_and_calculate_factors(price_df, pe_df, vol_df):
-    # Align on price dates
-    df = price_df.copy()
+
+def compute_pe_percentile(pe_series):
+    """
+    计算展开式 PE 百分位。
+    对每一天，使用从最早到当天的全部 PE 数据计算:
+      pe_percentile = (历史中 PE >= 当天 PE 的比例)
     
-    # Calculate 200-day moving average and bias
+    约定: 越小 = 越高估(昂贵), 越大 = 越低估(便宜)
+    """
+    values = pe_series.values
+    n = len(values)
+    percentiles = np.full(n, np.nan)
+
+    for i in range(1, n):  # 至少需要 2 个数据点
+        current = values[i]
+        history = values[:i + 1]  # 包含当天在内的所有历史
+        percentiles[i] = np.mean(history >= current)
+
+    return pd.Series(percentiles, index=pe_series.index, name='PE_Percentile')
+
+
+def align_and_calculate_factors(price_df, pe_df, vol_df):
+    """
+    将价格、PE、波动率数据按交易日对齐，计算均线乖离率和 PE 百分位。
+    """
+    df = price_df.copy()
+
+    # 200日均线和乖离率
     df['MA200'] = df['Close'].rolling(window=200, min_periods=200).mean()
     df['Bias'] = (df['Close'] - df['MA200']) / df['MA200']
-    
-    # Join PE and calculate rolling historical percentile (10-year rolling window = roughly 2500 trading days)
-    # Using 'all' from Danjuan to get maximum historical data
+
+    # 将蛋卷 PE 数据通过前向填充对齐到交易日
     pe_reindexed = pe_df.reindex(df.index, method='ffill')
     df['PE'] = pe_reindexed['PE']
-    # Expanding percentile: for dot i, what percentage of values from 0 to i are lower than pe[i]?
-    def expanding_percentile(s):
-        if len(s) < 100: return None # need at least 100 days of PE history to rank
-        
-        # Calculate exactly how Danjuan does it: 1 - percentage of historical days below current day
-        # Actually our Python code evaluates pe_percentile as: 0 == expensive, 1.0 == cheap
-        # wait! Danjuan returns "pe_over_history" which is "higher than X% of history".
-        # In fetch_and_calc: 1.0 - pe_over_history.
-        # So we need the percentage of historical PEs that are HIGHER than the current PE.
-        # Which is exactly: (s >= s.iloc[-1]).mean()
-        return (s >= s.iloc[-1]).mean()
-    
-    df['PE_Percentile'] = df['PE'].expanding(min_periods=100).apply(expanding_percentile, raw=False)
-    
-    # Join Volatility
+
+    # 使用蛋卷的完整 PE 历史计算展开百分位
+    # 注意：这里先对 pe_df 本身计算百分位（使用完整的蛋卷历史），
+    # 然后再对齐到交易日
+    print("  正在计算 PE 展开百分位 (基于蛋卷完整历史)...")
+    pe_pct_series = compute_pe_percentile(pe_df['PE'])
+    pe_pct_df = pe_pct_series.to_frame()
+    pe_pct_reindexed = pe_pct_df.reindex(df.index, method='ffill')
+    df['PE_Percentile'] = pe_pct_reindexed['PE_Percentile']
+
+    # 波动率对齐
     vol_reindexed = vol_df.reindex(df.index, method='ffill')
     df['Volatility'] = vol_reindexed['Close']
-    
-    # Drop rows without MA200 or PE Percentile
+
+    # 剔除缺失行
     df_clean = df.dropna(subset=['MA200', 'PE_Percentile', 'Volatility', 'Bias']).copy()
     return df_clean
 
+
 def export_to_js(results, output_path):
-    # Convert dataframes to dictionaries for JSON serialization
+    """将回测结果导出为 JS 格式文件"""
     export_data = {}
     for name, df in results.items():
-        # df index is Date
         records = []
         for date, row in df.iterrows():
             records.append({
@@ -138,54 +129,75 @@ def export_to_js(results, output_path):
                 "volatility": round(row['Volatility'], 4)
             })
         export_data[name] = records
-        
-    js_content = f"// Automatically generated by backtest.py\nconst BACKTEST_DATA = {json.dumps(export_data, indent=2)};\nif (typeof window !== 'undefined') {{ window.BACKTEST_DATA = BACKTEST_DATA; }}"
-    
+
+    js_content = (
+        f"// Automatically generated by backtest.py on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        f"// PE百分位约定: 越小=越高估(昂贵), 越大=越低估(便宜)\n"
+        f"const BACKTEST_DATA = {json.dumps(export_data, indent=2)};\n"
+        f"if (typeof window !== 'undefined') {{ window.BACKTEST_DATA = BACKTEST_DATA; }}\n"
+    )
+
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(js_content)
-    
-    print(f"Data successfully exported to {output_path}")
+
+    # 统计
+    for name, records in export_data.items():
+        print(f"  {name}: {len(records)} 条记录, "
+              f"{records[0]['date']} ~ {records[-1]['date']}, "
+              f"PE百分位范围: {min(r['pe_percentile'] for r in records):.4f} ~ {max(r['pe_percentile'] for r in records):.4f}")
+
+    print(f"\n数据已导出到: {output_path}")
+
 
 def main():
-    print("Initializing Data Fetcher for Interactive GUI...")
-    
+    print("=" * 60)
+    print("回测数据生成器 - 使用蛋卷 PE 历史百分位")
+    print("=" * 60)
+
     configs = {
         "NDX": {"price": "^NDX", "pe": "NDX", "vol": "^VXN"},
         "SP500": {"price": "^GSPC", "pe": "SP500", "vol": "^VIX"}
     }
-    
+
     results = {}
-    
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         fs = {}
         for name, cfg in configs.items():
             fs[f"{name}_price"] = executor.submit(fetch_yahoo_history, cfg['price'], '10y')
-            fs[f"{name}_pe"] = executor.submit(fetch_danjuan_pe_history, cfg['pe'], 'all')
+            fs[f"{name}_pe"] = executor.submit(fetch_danjuan_pe_history, cfg['pe'])
             fs[f"{name}_vol"] = executor.submit(fetch_yahoo_history, cfg['vol'], '10y')
-            
-        print("Data fetching in progress...")
-        
+
+        print("\n数据并发抓取中...\n")
+
         for name in configs.keys():
-            print(f"Aligning {name} data...")
+            print(f"--- {name} ---")
             price_df = fs[f"{name}_price"].result()
             pe_df = fs[f"{name}_pe"].result()
             vol_df = fs[f"{name}_vol"].result()
-            
+
+            print(f"  价格数据: {len(price_df)} 条, {price_df.index[0].strftime('%Y-%m-%d')} ~ {price_df.index[-1].strftime('%Y-%m-%d')}")
+            print(f"  波动率数据: {len(vol_df)} 条")
+
             clean_df = align_and_calculate_factors(price_df, pe_df, vol_df)
-            
-            # Start backtest from 2022 to now to ensure stable percentiles
-            backtest_start_date = pd.to_datetime('2022-01-01')
+
+            # 从 BACKTEST_START 开始截取
+            backtest_start_date = pd.to_datetime(BACKTEST_START)
             sim_df = clean_df[clean_df.index >= backtest_start_date].copy()
-            # Resample to weekly here to reduce JS array size to ~200 items per index
+
+            # 按周一重采样，减小 JS 文件尺寸
             df_weekly = sim_df.resample('W-MON').first().dropna()
-            
+
             results[name] = df_weekly
-            
+            print(f"  输出: {len(df_weekly)} 周数据\n")
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
     js_path = os.path.join(project_root, "backtest_data.js")
-    
+
     export_to_js(results, js_path)
+    print("\n✅ 完成!")
+
 
 if __name__ == "__main__":
     main()
