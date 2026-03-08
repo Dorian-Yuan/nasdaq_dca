@@ -55,6 +55,20 @@ const STRATEGY_MODELS = {
             "formula_pe": "return 5 * x * x;",
             "formula_vxn": "var p = Math.max(0, Math.min(1, (x - 12) / 48));\nreturn 0.25 + 4.75 * p * p * p;",
             "formula_bias": "var p = Math.max(0, Math.min(1, (x + 0.15) / 0.40));\nreturn 5 * (1 - p) * (1 - p);"
+        },
+        "custom_1772958646904": {
+            "id": "custom_1772958646904",
+            "name": "全VXN恐慌策略",
+            "timestamp": 1772958646908,
+            "return_5y": 8.777643004960689,
+            "weights": {
+                "pe": 0,
+                "vxn": 1,
+                "bias": 0
+            },
+            "formula_pe": "return 5*x*x",
+            "formula_vxn": "return 1+(x-22)/12",
+            "formula_bias": "return 0"
         }
     },
     "SP500": {
@@ -75,10 +89,10 @@ const STRATEGY_MODELS = {
 
 if (typeof window !== 'undefined') {
     window.STRATEGY_MODELS = STRATEGY_MODELS;
-
+    
     // 初始化当前激活的模型库索引
     window.ACTIVE_MODELS = {
-        "NDX": "custom_1772778969623",
-        "SP500": "spy_default"
-    };
+    "NDX": "custom_1772778969623",
+    "SP500": "spy_default"
+};
 }
