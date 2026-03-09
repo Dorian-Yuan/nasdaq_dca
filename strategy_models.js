@@ -14,48 +14,6 @@ const STRATEGY_MODELS = {
             "formula_vxn": "return 0",
             "formula_bias": "return 0"
         },
-        "custom_1772788378359": {
-            "id": "custom_1772788378359",
-            "name": "分段线性策略",
-            "timestamp": 1772788378362,
-            "return_5y": 9.653813571393465,
-            "weights": {
-                "pe": 0.4,
-                "vxn": 0.3,
-                "bias": 0.3
-            },
-            "formula_pe": "if (x > 0.7) return 1.0 + ((x - 0.7) / 0.3) * 1.0;\nif (x >= 0.3) return 1 - (0.7-x)/ 0.8;\nreturn (x / 0.3) * 0.5;",
-            "formula_vxn": "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
-            "formula_bias": "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
-        },
-        "custom_1772788449426": {
-            "id": "custom_1772788449426",
-            "name": "y=x线性策略",
-            "timestamp": 1772788449427,
-            "return_5y": 8.746955667016486,
-            "weights": {
-                "pe": 0.4,
-                "vxn": 0.3,
-                "bias": 0.3
-            },
-            "formula_pe": "return x",
-            "formula_vxn": "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
-            "formula_bias": "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
-        },
-        "gemini_balanced": {
-            "id": "gemini_balanced",
-            "name": "Gemini 权衡策略",
-            "timestamp": 1772778969999,
-            "return_5y": 0,
-            "weights": {
-                "pe": 0.4,
-                "vxn": 0.3,
-                "bias": 0.3
-            },
-            "formula_pe": "return 5 * x * x;",
-            "formula_vxn": "var p = Math.max(0, Math.min(1, (x - 12) / 48));\nreturn 0.25 + 4.75 * p * p * p;",
-            "formula_bias": "var p = Math.max(0, Math.min(1, (x + 0.15) / 0.40));\nreturn 5 * (1 - p) * (1 - p);"
-        },
         "custom_1772958646904": {
             "id": "custom_1772958646904",
             "name": "全VXN恐慌策略",
@@ -83,6 +41,20 @@ const STRATEGY_MODELS = {
             "formula_pe": "return 5*x*x",
             "formula_vxn": "return 1+(x-22)/12",
             "formula_bias": "return 0"
+        },
+        "custom_1773019191138": {
+            "id": "custom_1773019191138",
+            "name": "Gemini权衡策略",
+            "timestamp": 1773019191139,
+            "return_5y": 24.67402757327851,
+            "weights": {
+                "pe": 0.4,
+                "vxn": 0.3,
+                "bias": 0.3
+            },
+            "formula_pe": "return 5 * x * x;",
+            "formula_vxn": "var p = Math.max(0, Math.min(1, (x - 12) / 48));\nreturn 0.25 + 4.75 * p * p * p;",
+            "formula_bias": "var p = Math.max(0, Math.min(1, (x + 0.15) / 0.40));\nreturn 5 * (1 - p) * (1 - p);"
         }
     },
     "SP500": {
@@ -106,7 +78,7 @@ if (typeof window !== 'undefined') {
     
     // 初始化当前激活的模型库索引
     window.ACTIVE_MODELS = {
-    "NDX": "custom_1773019017226",
+    "NDX": "custom_1773019191138",
     "SP500": "spy_default"
 };
 }
