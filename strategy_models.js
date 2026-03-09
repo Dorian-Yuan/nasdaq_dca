@@ -55,6 +55,20 @@ const STRATEGY_MODELS = {
             "formula_pe": "return 5 * x * x;",
             "formula_vxn": "var p = Math.max(0, Math.min(1, (x - 12) / 48));\nreturn 0.25 + 4.75 * p * p * p;",
             "formula_bias": "var p = Math.max(0, Math.min(1, (x + 0.15) / 0.40));\nreturn 5 * (1 - p) * (1 - p);"
+        },
+        "custom_1773019955909": {
+            "id": "custom_1773019955909",
+            "name": "三因子权衡策略",
+            "timestamp": 1773019955912,
+            "return_5y": 23.57934621345591,
+            "weights": {
+                "pe": 0.4,
+                "vxn": 0.3,
+                "bias": 0.3
+            },
+            "formula_pe": "return 5 * x * x;",
+            "formula_vxn": "var p = Math.max(0, Math.min(1, (x - 12) / 48));\nreturn 0.25 + 4.75 * p * p ;",
+            "formula_bias": "var p = Math.max(0, Math.min(1, (x + 0.15) / 0.40));\nreturn 5 * (1 - p) * (1 - p);"
         }
     },
     "SP500": {
@@ -78,7 +92,7 @@ if (typeof window !== 'undefined') {
     
     // 初始化当前激活的模型库索引
     window.ACTIVE_MODELS = {
-    "NDX": "custom_1773019191138",
+    "NDX": "custom_1773019955909",
     "SP500": "spy_default"
 };
 }
