@@ -72,18 +72,6 @@ const STRATEGY_MODELS = {
         }
     },
     "SP500": {
-        "spy_default": {
-            "id": "spy_default",
-            "name": "默认经典策略",
-            "weights": {
-                "pe": 0.4,
-                "vxn": 0.3,
-                "bias": 0.3
-            },
-            "formula_pe": "if (x > 0.7) return 1.0 + ((x - 0.7) / 0.3) * 1.0;\nif (x >= 0.3) return 1.0;\nreturn 0.5 + (x / 0.3) * 0.5;",
-            "formula_vxn": "if (x < 14) return 0.8;\nif (x <= 20) return 1.0;\nif (x <= 30) return 1.0 + ((x - 20) / 10.0) * 0.8;\nreturn Math.min(2.5, 1.8 + (x - 30) / 10.0);",
-            "formula_bias": "if (x < -0.10) return 2.0;\nif (x < 0) return 1.0 + (Math.abs(x) / 0.10) * 1.0;\nif (x <= 0.10) return 1.0;\nif (x <= 0.20) return 1.0 - ((x - 0.10) / 0.10) * 0.5;\nreturn 0.5;"
-        },
         "custom_1773020513754": {
             "id": "custom_1773020513754",
             "name": "PE6/VIX4",
