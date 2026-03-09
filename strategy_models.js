@@ -69,6 +69,20 @@ const STRATEGY_MODELS = {
             "formula_pe": "return 5*x*x",
             "formula_vxn": "return 1+(x-22)/12",
             "formula_bias": "return 0"
+        },
+        "custom_1773019017226": {
+            "id": "custom_1773019017226",
+            "name": "PE6/VXN4",
+            "timestamp": 1773019017227,
+            "return_5y": 21.726301011071335,
+            "weights": {
+                "pe": 0.6,
+                "vxn": 0.4,
+                "bias": 0
+            },
+            "formula_pe": "return 5*x*x",
+            "formula_vxn": "return 1+(x-22)/12",
+            "formula_bias": "return 0"
         }
     },
     "SP500": {
@@ -92,7 +106,7 @@ if (typeof window !== 'undefined') {
     
     // 初始化当前激活的模型库索引
     window.ACTIVE_MODELS = {
-    "NDX": "custom_1772778969623",
+    "NDX": "custom_1773019017226",
     "SP500": "spy_default"
 };
 }
