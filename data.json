@@ -1,7 +1,7 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-08 11:23:20",
+      "update_time": "2026-03-09 09:23:33",
       "decision": "🟢",
       "reasons": [
         "估值因子得分: 1.00 (PE分位 37.4%)",
@@ -53,12 +53,21 @@
         "pe_percentile": 0.3736,
         "bias_percent": 1.85,
         "volatility": 31.44
+      },
+      {
+        "date": "2026-03-09",
+        "decision": "🟢",
+        "weight": 1.28,
+        "price": 24643.02,
+        "pe_percentile": 0.3736,
+        "bias_percent": 1.85,
+        "volatility": 31.44
       }
     ]
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-08 11:23:20",
+      "update_time": "2026-03-09 09:23:33",
       "decision": "🟢",
       "reasons": [
         "估值因子得分: 0.84 (PE分位 20.4%)",
@@ -104,6 +113,15 @@
       },
       {
         "date": "2026-03-08",
+        "decision": "🟢",
+        "weight": 1.16,
+        "price": 6740.02,
+        "pe_percentile": 0.2044,
+        "bias_percent": 2.39,
+        "volatility": 29.49
+      },
+      {
+        "date": "2026-03-09",
         "decision": "🟢",
         "weight": 1.16,
         "price": 6740.02,
