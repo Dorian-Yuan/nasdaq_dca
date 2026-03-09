@@ -1,7 +1,7 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-09 09:23:33",
+      "update_time": "2026-03-09 15:00:23",
       "decision": "🟢",
       "reasons": [
         "估值因子得分: 1.00 (PE分位 37.4%)",
@@ -20,7 +20,7 @@
         "ma200": 24194.91,
         "bias_percent": 1.85,
         "daily_return_percent": -1.51,
-        "pe": 33.3371,
+        "pe": 33.3363,
         "pe_percentile": 0.3736,
         "volatility": 31.44,
         "vol_name": "VXN"
@@ -67,7 +67,7 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-09 09:23:33",
+      "update_time": "2026-03-09 15:00:23",
       "decision": "🟢",
       "reasons": [
         "估值因子得分: 0.84 (PE分位 20.4%)",
@@ -86,7 +86,7 @@
         "ma200": 6582.53,
         "bias_percent": 2.39,
         "daily_return_percent": -1.33,
-        "pe": 27.9652,
+        "pe": 27.9648,
         "pe_percentile": 0.2044,
         "volatility": 29.49,
         "vol_name": "VIX"
