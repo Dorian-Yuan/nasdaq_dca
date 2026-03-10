@@ -1,28 +1,29 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-11 01:09:39",
+      "update_time": "2026-03-11 01:24:37",
       "decision": "🟢",
       "reasons": [
-        "估值因子得分: 1.00 (PE分位 32.7%)",
-        "情绪因子得分: 1.43 (VXN 25.42)",
-        "趋势因子得分: 1.00 (乖离率 3.7%)",
-        "综合计算权重: 1.13倍"
+        "使用动态策略模型: Gemini权衡策略",
+        "估值因子得分: 0.53 (PE分位 32.7%)",
+        "情绪因子得分: 0.35 (VXN 25.37)",
+        "趋势因子得分: 1.40 (乖离率 3.9%)",
+        "综合计算权重: 0.74倍"
       ],
       "individual_decisions": {
-        "bias_decision": "1.00x",
-        "pe_decision": "1.00x",
-        "vol_decision": "1.43x",
-        "final_weight": 1.13
+        "bias_decision": "1.40x",
+        "pe_decision": "0.53x",
+        "vol_decision": "0.35x",
+        "final_weight": 0.74
       },
       "metrics": {
-        "price": 25133.94,
-        "ma200": 24233.18,
-        "bias_percent": 3.72,
-        "daily_return_percent": 0.67,
+        "price": 25168.28,
+        "ma200": 24233.35,
+        "bias_percent": 3.86,
+        "daily_return_percent": 0.81,
         "pe": 33.9529,
         "pe_percentile": 0.3268,
-        "volatility": 25.42,
+        "volatility": 25.37,
         "vol_name": "VXN"
       }
     },
@@ -75,38 +76,39 @@
       {
         "date": "2026-03-11",
         "decision": "🟢",
-        "weight": 1.13,
-        "price": 25133.94,
+        "weight": 0.74,
+        "price": 25168.28,
         "pe_percentile": 0.3268,
-        "bias_percent": 3.72,
-        "volatility": 25.42
+        "bias_percent": 3.86,
+        "volatility": 25.37
       }
     ]
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-11 01:09:39",
-      "decision": "🟢",
+      "update_time": "2026-03-11 01:24:37",
+      "decision": "🟡",
       "reasons": [
-        "估值因子得分: 0.82 (PE分位 18.9%)",
-        "情绪因子得分: 1.22 (VIX 22.77)",
-        "趋势因子得分: 1.00 (乖离率 3.6%)",
-        "综合计算权重: 0.99倍"
+        "使用动态策略模型: 三因子策略",
+        "估值因子得分: 0.18 (PE分位 18.9%)",
+        "情绪因子得分: 0.40 (VIX 22.61)",
+        "趋势因子得分: 1.41 (乖离率 3.7%)",
+        "综合计算权重: 0.61倍"
       ],
       "individual_decisions": {
-        "bias_decision": "1.00x",
-        "pe_decision": "0.82x",
-        "vol_decision": "1.22x",
-        "final_weight": 0.99
+        "bias_decision": "1.41x",
+        "pe_decision": "0.18x",
+        "vol_decision": "0.40x",
+        "final_weight": 0.61
       },
       "metrics": {
-        "price": 6831.55,
-        "ma200": 6591.74,
-        "bias_percent": 3.64,
-        "daily_return_percent": 0.52,
+        "price": 6838.39,
+        "ma200": 6591.78,
+        "bias_percent": 3.74,
+        "daily_return_percent": 0.62,
         "pe": 28.2206,
         "pe_percentile": 0.1892,
-        "volatility": 22.77,
+        "volatility": 22.61,
         "vol_name": "VIX"
       }
     },
@@ -158,12 +160,12 @@
       },
       {
         "date": "2026-03-11",
-        "decision": "🟢",
-        "weight": 0.99,
-        "price": 6831.55,
+        "decision": "🟡",
+        "weight": 0.61,
+        "price": 6838.39,
         "pe_percentile": 0.1892,
-        "bias_percent": 3.64,
-        "volatility": 22.77
+        "bias_percent": 3.74,
+        "volatility": 22.61
       }
     ]
   }
