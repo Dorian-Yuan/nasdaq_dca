@@ -139,64 +139,91 @@ def fetch_volatility(ticker):
 # 评估逻辑与主函数
 # ---------------------------------------------------------
 
-def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率", w_val=0.33, w_sent=0.33, w_trend=0.34):
+def evaluate_strategy(symbol, bias, pe_percentile, vol_score, vol_name="波动率"):
     """
-    模型二：「估值-情绪-趋势」三维综合打分系统
-    支持传入专属权重配置 (Style-Tilted Weighting)
+    使用 Node.js 动态执行 strategy_models.js 中激活的策略
     """
+    import subprocess
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    models_path = os.path.join(project_root, "strategy_models.js")
+    
+    # 构造并执行 JS 代码
+    js_runner = f"""
+const fs = require('fs');
+const code = fs.readFileSync('{models_path.replace(os.sep, '/')}');
+const window = {{}};
+eval(code.toString('utf-8'));
+const activeId = window.ACTIVE_MODELS['{symbol}'];
+const model = window.STRATEGY_MODELS['{symbol}'][activeId];
+
+const x_pe = {pe_percentile if pe_percentile is not None else 'null'};
+const x_vxn = {vol_score if vol_score is not None else 'null'};
+const x_bias = {bias if bias is not None else 'null'};
+
+let pe_score = 1.0;
+if (x_pe !== null) {{
+    try {{ pe_score = (new Function('x', model.formula_pe))(x_pe); }} catch(e) {{}}
+}}
+
+let vxn_score = 1.0;
+if (x_vxn !== null) {{
+    try {{ vxn_score = (new Function('x', model.formula_vxn))(x_vxn); }} catch(e) {{}}
+}}
+
+let bias_score = 1.0;
+if (x_bias !== null) {{
+    try {{ bias_score = (new Function('x', model.formula_bias))(x_bias); }} catch(e) {{}}
+}}
+
+let w_pe = model.weights.pe;
+let w_vxn = model.weights.vxn;
+let w_bias = model.weights.bias;
+
+let total_w = w_pe + w_vxn + w_bias;
+let final_weight = total_w > 0 ? (pe_score * w_pe + vxn_score * w_vxn + bias_score * w_bias) / total_w : 1.0;
+
+console.log(JSON.stringify({{
+    model_name: model.name,
+    pe_score: pe_score,
+    vxn_score: vxn_score,
+    bias_score: bias_score,
+    final_weight: final_weight
+}}));
+"""
     reasons = []
     
-    # 1. 估值因子 (Weight: 40%)
-    # Asymmetric Accumulation: 防现金拖累。即便极端高估，也给 0.5x 底仓定投。
-    if pe_percentile is not None:
-        if pe_percentile > 0.7:
-             val_score = 1.0 + ((pe_percentile - 0.7) / 0.3) * 1.0
-        elif pe_percentile >= 0.3:
-             val_score = 1.0
+    try:
+        res = subprocess.run(["node", "-e", js_runner], capture_output=True, text=True, check=True, encoding='utf-8')
+        result = json.loads(res.stdout)
+        
+        val_score = result['pe_score']
+        sentiment_score = result['vxn_score']
+        trend_score = result['bias_score']
+        final_weight = result['final_weight']
+        model_name = result['model_name']
+        
+        reasons.append(f"使用动态策略模型: {model_name}")
+        if pe_percentile is not None:
+            reasons.append(f"估值因子得分: {val_score:.2f} (PE分位 {pe_percentile*100:.1f}%)")
         else:
-             val_score = 0.5 + (pe_percentile / 0.3) * 0.5
-        reasons.append(f"估值因子得分: {val_score:.2f} (PE分位 {pe_percentile*100:.1f}%)")
-    else:
-        val_score = 1.0
-        reasons.append("估值数据缺失，由于防御性给予默认得分 1.0")
-
-    # 2. 情绪因子 (Weight: 30%)
-    if vol_score is not None:
-        if vol_score < 14:
-            sentiment_score = 0.8
-        elif vol_score <= 20:
-            sentiment_score = 1.0
-        elif vol_score <= 30:
-            sentiment_score = 1.0 + ((vol_score - 20) / 10.0) * 0.8
+            reasons.append("估值数据缺失，给予默认得分 1.0")
+            
+        if vol_score is not None:
+            reasons.append(f"情绪因子得分: {sentiment_score:.2f} ({vol_name} {vol_score:.2f})")
         else:
-            sentiment_score = min(2.5, 1.8 + (vol_score - 30) / 10.0)
-        reasons.append(f"情绪因子得分: {sentiment_score:.2f} ({vol_name} {vol_score:.2f})")
-    else:
-        sentiment_score = 1.0
-        reasons.append("情绪数据缺失，给予默认得分 1.0")
-
-    # 3. 趋势因子 (Weight: 30%)
-    if bias is not None:
-        if bias < -0.10:
-            trend_score = 2.0
-        elif bias < 0:
-            trend_score = 1.0 + (abs(bias) / 0.10) * 1.0
-        elif bias <= 0.10:
-            trend_score = 1.0
-        elif bias <= 0.20:
-            trend_score = 1.0 - ((bias - 0.10) / 0.10) * 0.5
+            reasons.append("情绪数据缺失，给予默认得分 1.0")
+            
+        if bias is not None:
+            reasons.append(f"趋势因子得分: {trend_score:.2f} (乖离率 {bias*100:.1f}%)")
         else:
-            trend_score = 0.5
-        reasons.append(f"趋势因子得分: {trend_score:.2f} (乖离率 {bias*100:.1f}%)")
-    else:
-        trend_score = 1.0
-        reasons.append("均线数据缺失，给予默认得分 1.0")
+            reasons.append("均线数据缺失，给予默认得分 1.0")
+            
+    except Exception as e:
+        print(f"动态策略执行失败，回退到默认分值 1.0: {e}")
+        val_score = sentiment_score = trend_score = final_weight = 1.0
+        reasons.append("策略执行失败，使用默认 1.0 倍权重")
 
-    # 计算综合加权系数
-    # 权重归一化防出错
-    total_w = w_val + w_sent + w_trend
-    final_weight = (val_score * w_val + sentiment_score * w_sent + trend_score * w_trend) / total_w
-    
     # 限制极值边界
     final_weight = max(0.0, min(3.0, final_weight))
     
@@ -216,7 +243,6 @@ def evaluate_strategy(bias, pe_percentile, vol_score, vol_name="波动率", w_va
         "final_weight": round(final_weight, 2)
     }
     
-    # 调整总体的 reasons 加入一条总结
     reasons.append(f"综合计算权重: {final_weight:.2f}倍")
     
     return decision, reasons, individual_decisions
@@ -297,11 +323,7 @@ def main():
         print(f"-> {config['pe_code']} PE: {pe}, 历史百分位: {pe_percentile}")
         print(f"-> 市场情緖: {config['vol_name']} = {vol_score}")
         
-        w_val = config["weights"]["val"]
-        w_sent = config["weights"]["sent"]
-        w_trend = config["weights"]["trend"]
-        
-        decision, reasons, individual_decisions = evaluate_strategy(bias, pe_percentile, vol_score, config["vol_name"], w_val, w_sent, w_trend)
+        decision, reasons, individual_decisions = evaluate_strategy(name, bias, pe_percentile, vol_score, config["vol_name"])
         print(f"\n=> 最终建议: {decision}")
         
         metrics = {
