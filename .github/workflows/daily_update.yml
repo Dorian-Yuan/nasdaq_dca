@@ -36,6 +36,11 @@ jobs:
       run: |
         python backend/fetch_and_calc.py
         
+    - name: Run Backtest Data Generator (Only at 14:00 BJ / 06:00 UTC or Manual)
+      if: github.event.schedule == '0 6 * * 1-5' || github.event_name == 'workflow_dispatch'
+      run: |
+        python backend/backtest.py
+        
     - name: Check for changes
       id: git-check
       run: |
@@ -46,6 +51,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data.json
-        git commit -m "Auto-update NASDAQ strategy data [skip ci]"
+        git add data.json backtest_data.js
+        git commit -m "Auto-update NASDAQ strategy and backtest data [skip ci]"
         git push
