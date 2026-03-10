@@ -272,27 +272,11 @@ def main():
     project_root = os.path.dirname(script_dir)
     json_path = os.path.join(project_root, "data.json")
     
-    # 1. 初始化多标的数据结构并尝试读取旧数据
+    # 1. 初始化多标的数据结构
     result_data = {
-        "NDX": {"latest": {}, "history": []},
-        "SP500": {"latest": {}, "history": []}
+        "NDX": {"latest": {}},
+        "SP500": {"latest": {}}
     }
-    if os.path.exists(json_path):
-        try:
-            with open(json_path, 'r', encoding='utf-8') as f:
-                old_data = json.load(f)
-                # 兼容性检查：如果是新版本结构则直接继承
-                if "NDX" in old_data and "history" in old_data["NDX"]:
-                    result_data["NDX"]["history"] = old_data["NDX"]["history"]
-                elif "QQQ" in old_data and "history" in old_data["QQQ"]:
-                    result_data["NDX"]["history"] = old_data["QQQ"]["history"]
-                    
-                if "SP500" in old_data and "history" in old_data["SP500"]:
-                    result_data["SP500"]["history"] = old_data["SP500"]["history"]
-                elif "SPY" in old_data and "history" in old_data["SPY"]:
-                    result_data["SP500"]["history"] = old_data["SPY"]["history"]
-        except Exception as e:
-            print(f"读取旧版 data.json 失败，将重新生成: {e}")
 
     # 获取北京时间作为时间戳
     beijing_tz = timezone(timedelta(hours=8))
@@ -348,27 +332,6 @@ def main():
         # 更新 latest 字段
         result_data[name]["latest"] = latest_obj
         
-        # 组装 history entry并追加 (如果同一天重复执行则覆盖当天数据)
-        new_hist_entry = {
-            "date": date_str,
-            "decision": decision,
-            "weight": individual_decisions.get("final_weight", 0),
-            "price": metrics["price"],
-            "pe_percentile": metrics["pe_percentile"],
-            "bias_percent": metrics["bias_percent"],
-            "volatility": metrics["volatility"]
-        }
-        
-        history = result_data[name]["history"]
-        if len(history) > 0 and history[-1]["date"] == date_str:
-            history[-1] = new_hist_entry
-        else:
-            history.append(new_hist_entry)
-            
-        # 限制历史天数防膨胀 (保留过去365天)
-        if len(history) > 365:
-            result_data[name]["history"] = history[-365:]
-            
         # 整理推送信息
         cn_name = {"NDX": "纳斯达克100", "SP500": "标普500"}.get(name, name)
         if metrics['price'] and metrics['pe_percentile'] is not None:
