@@ -553,6 +553,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetElement.classList.add('active');
                 targetElement.style.display = 'block';
             }
+            if (targetView === 'view-dashboard') {
+                document.body.classList.add('no-scroll');
+            } else {
+                document.body.classList.remove('no-scroll');
+            }
+            
             if (targetView === 'view-sandbox' && typeof window.compileAndRunSandbox === 'function') {
                 window.compileAndRunSandbox(false);
             }
@@ -562,6 +568,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    if (document.getElementById('view-dashboard').classList.contains('active')) {
+        document.body.classList.add('no-scroll');
+    }
     loadData();
 
     // 修复移动端强制关闭 tooltip
