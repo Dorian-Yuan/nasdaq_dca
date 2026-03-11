@@ -1,3 +1,13 @@
+/**
+ * 该文件由 NASDAQ PWA 聚合生成，包含活跃模型及其公式权重。
+ * 供 GitHub Actions 及本地加载使用。
+ */
+
+window.GLOBAL_CONFIG = {
+    threshold_red: 0.5,
+    threshold_green: 0.85
+};
+
 const STRATEGY_MODELS = {
     "NDX": {
         "custom_1772778969623": {
