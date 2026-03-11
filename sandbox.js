@@ -28,9 +28,11 @@ window.updateSandboxConfigs = function () { if(typeof window.compileAndRunSandbo
     compileAndRunSandbox();
 };
 
-window.setSandboxRange = function (years, autoCompile = true) {
+window.setSandboxRange = function (years, autoCompile = true, showToast = true) {
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
+    if (event && event.target && event.target.classList) {
+        event.target.classList.add('active');
+    }
 
     const endInput = document.getElementById('sandbox-end-date');
     const startInput = document.getElementById('sandbox-start-date');
@@ -55,7 +57,7 @@ window.setSandboxRange = function (years, autoCompile = true) {
         const dd = String(endDate.getDate()).padStart(2, '0');
         startInput.value = `${yyyy}-${mm}-${dd}`;
     }
-    compileAndRunSandbox();
+    if (autoCompile) compileAndRunSandbox(showToast);
 };
 
 window.toggleFormulaBuilder = function (factor) {
