@@ -740,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     y: {
                         grid: { 
-                            color: "rgba(255, 255, 255, 0.1)", 
+                            color: "rgba(255, 255, 255, 0.2)", 
                             borderDash: [5, 5],
                             drawTicks: false
                         },
