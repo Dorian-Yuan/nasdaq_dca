@@ -169,20 +169,19 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(displayInd.vol_decision)}`;
         }
 
-        // 建议买入金额渲染逻辑
-        const suggestedContainer = document.getElementById('suggested-buy-container');
+        // 建议买入金额渲染逻辑 v2.3.2
         const suggestedAmountEl = document.getElementById('suggested-amount');
-        if (suggestedContainer && suggestedAmountEl && displayWeight !== null) {
-            const realBase = parseFloat(localStorage.getItem('setting-real-amount')) || 0;
-            if (realBase > 0) {
+        if (suggestedAmountEl && displayWeight !== null) {
+            // 优先读取标准化后的键名，兼容旧键名
+            const realBaseStr = localStorage.getItem('setting-real-amount') || localStorage.getItem('REAL_AMOUNT');
+            const realBase = parseFloat(realBaseStr);
+            
+            if (!isNaN(realBase) && realBase > 0) {
                 const finalAmount = Math.round(realBase * displayWeight);
                 suggestedAmountEl.textContent = finalAmount.toLocaleString();
-                suggestedContainer.style.display = 'inline-block';
             } else {
-                suggestedContainer.style.display = 'none';
+                suggestedAmountEl.textContent = '--';
             }
-        } else if (suggestedContainer) {
-            suggestedContainer.style.display = 'none';
         }
     }
 
