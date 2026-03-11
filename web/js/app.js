@@ -302,8 +302,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let newFileContent = "/**\n * 该文件由 NASDAQ PWA 聚合生成，包含活跃模型及其公式权重。\n * 供 GitHub Actions 及本地加载使用。\n */\n\n";
         
-        const realAmount = localStorage.getItem('setting-real-amount') || localStorage.getItem('REAL_AMOUNT') || '0';
-        const sandboxAmount = localStorage.getItem('setting-sandbox-amount') || localStorage.getItem('SANDBOX_AMOUNT') || '1000000';
+        const realAmount = localStorage.getItem('setting-real-amount') || '0';
+        const sandboxAmount = localStorage.getItem('setting-sandbox-amount') || '1000000';
         const tRed = localStorage.getItem('setting-threshold-red') || '0.4';
         const tGreen = localStorage.getItem('setting-threshold-green') || '0.7';
 
@@ -835,25 +835,53 @@ window.saveSettings = function() {
 };
 
 window.loadSettings = function() {
-    const settingMap = {
-        'setting-real-amount': 'REAL_AMOUNT',
-        'setting-sandbox-amount': 'SANDBOX_AMOUNT',
-        'setting-threshold-red': 'THRESHOLD_RED',
-        'setting-threshold-green': 'THRESHOLD_GREEN',
-        'setting-github-token': 'GITHUB_TOKEN',
-        'setting-theme': 'USER_THEME'
-    };
+    const settingIds = [
+        'setting-real-amount', 'setting-sandbox-amount', 
+        'setting-threshold-red', 'setting-threshold-green', 
+        'setting-github-token', 'setting-theme',
+        'setting-repo-owner', 'setting-repo-name', 'setting-repo-path'
+    ];
     
-    for (const id in settingMap) {
-        const value = localStorage.getItem(settingMap[id]);
-        if (value !== null) {
+    // 1. 先加载本地数据 (ID 为主)
+    settingIds.forEach(id => {
+        let saved = localStorage.getItem(id);
+        
+        // 兼容旧版全大写键名 (如果是第一次启动新版本)
+        if (saved === null) {
+            const oldKey = id.replace('setting-', '').toUpperCase().replace('-', '_');
+            saved = localStorage.getItem(oldKey);
+            if (saved !== null) {
+                localStorage.setItem(id, saved); // 迁移到新格式
+            }
+        }
+
+        if (saved !== null) {
             const el = document.getElementById(id);
-            if (el) el.value = value;
+            if (el) el.value = saved;
+        }
+    });
+
+    // 2. 云端配置优先 (GLOBAL_CONFIG)
+    if (window.GLOBAL_CONFIG) {
+        console.log("Cloud Config detected, Merging...", window.GLOBAL_CONFIG);
+        const cloudMapping = {
+            'threshold_red': 'setting-threshold-red',
+            'threshold_green': 'setting-threshold-green',
+            'real_amount': 'setting-real-amount',
+            'sandbox_amount': 'setting-sandbox-amount'
+        };
+
+        for (const [cfgKey, id] of Object.entries(cloudMapping)) {
+            const val = window.GLOBAL_CONFIG[cfgKey];
+            if (val !== undefined && val !== null) {
+                localStorage.setItem(id, val);
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            }
         }
     }
     
-    const savedTheme = localStorage.getItem('USER_THEME') || 'system';
-    applyTheme(savedTheme);
+    applyTheme(localStorage.getItem('setting-theme') || 'system');
 };
 
 // 为所有设置项绑定自动保存和即时预览
