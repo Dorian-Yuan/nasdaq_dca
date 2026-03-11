@@ -1,8 +1,8 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-11 11:02:34",
-      "decision": "🟢",
+      "update_time": "2026-03-11 14:52:26",
+      "decision": "🟡",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
         "估值因子得分: 0.53 (PE分位 32.4%)",
@@ -30,7 +30,7 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-11 11:02:34",
+      "update_time": "2026-03-11 14:52:26",
       "decision": "🟡",
       "reasons": [
         "使用动态策略模型: 三因子策略",
