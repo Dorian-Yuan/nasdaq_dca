@@ -739,7 +739,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         ticks: { color: "#94a3b8", maxTicksLimit: 12 }
                     },
                     y: {
-                        grid: { color: "rgba(255,255,255,0.05)" },
+                        grid: { 
+                            color: "rgba(255, 255, 255, 0.1)", 
+                            borderDash: [5, 5],
+                            drawTicks: false
+                        },
                         ticks: { color: "#94a3b8" }
                     }
                 },
