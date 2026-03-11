@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-width=1.0">
+    <title>量化策略回测实验室 (Model 4.2)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --border: #334155;
+            --accent: #3b82f6;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --green: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .main-container {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .control-panel {
+            flex: 1;
+            min-width: 300px;
+            max-width: 400px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chart-container {
+            flex: 2;
+            min-width: 400px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            flex: 1;
+            min-height: 400px;
+            width: 100%;
+        }
+
+        .control-group {
+            margin-bottom: 5px;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .control-val {
+            color: var(--accent);
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: auto;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .value-green {
+            color: var(--green);
+        }
+
+        .value-red {
+            color: var(--red);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: var(--border);
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>量化定投 4 年沙盘推演 (Model 4.2 Local)</h1>
+        <p>纯本地浏览器数据脱水回放，高度隐私图表渲染引擎</p>
+    </div>
+
+    <div class="main-container">
+        <!-- 控制面板 -->
+        <div class="control-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('NDX')" id="tab-ndx">纳斯达克 (NDX)</button>
+                <button class="tab-btn" onclick="switchTab('SP500')" id="tab-sp500">标普500 (SP500)</button>
+            </div>
+
+            <h3 style="font-size:1rem; margin-bottom:5px;">因子权重配置</h3>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span>估值因子 (PE) 权重</span>
+                    <span class="control-val" id="val-weight">0.30</span>
+                </div>
+                <input type="range" id="slider-weight-val" min="0" max="1" step="0.05" value="0.30"
+                    oninput="runSimulation()">
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span>情绪因子 (VXN/VIX) 权重</span>
+                    <span class="control-val" id="val-weight-sent">0.30</span>
+                </div>
+                <input type="range" id="slider-weight-sent" min="0" max="1" step="0.05" value="0.30"
+                    oninput="runSimulation()">
+            </div>
+
+            <div class="control-group">
+                <div class="control-header">
+                    <span>趋势因子 (Bias) 权重</span>
+                    <span class="control-val" id="val-weight-trend">0.40</span>
+                </div>
+                <input type="range" id="slider-weight-trend" min="0" max="1" step="0.05" value="0.40"
+                    oninput="runSimulation()">
+            </div>
+
+            <hr>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">无脑定投回报率</div>
+                    <div class="stat-value" id="stat-naive">0.00%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">动态策略回报率</div>
+                    <div class="stat-value" id="stat-dynamic">0.00%</div>
+                </div>
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-label">策略模型 Alpha (超额收益)</div>
+                    <div class="stat-value" id="stat-alpha">0.00%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">总投入 (无脑)</div>
+                    <div class="stat-value" style="font-size:1rem;" id="stat-cost-naive">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">总投入 (动态)</div>
+                    <div class="stat-value" style="font-size:1rem;" id="stat-cost-dynamic">$0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表展示 -->
+        <div class="chart-container">
+            <h3 id="chart-title" style="margin-bottom: 10px;">策略净值曲线对比</h3>
+            <div class="chart-wrapper">
+                <canvas id="equityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入脱水数据源 -->
+    <script src="backtest_data.js"></script>
+
+    <script>
+        // --- 核心模拟引擎 ---
+        let currentTab = 'NDX';
+        let chartInstance = null;
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            document.getElementById('tab-ndx').className = tabName === 'NDX' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('tab-sp500').className = tabName === 'SP500' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('chart-title').innerText = `${tabName} 策略净值曲线对比`;
+
+            // 自动加载该指数的"风格迁移加权 (Style-Tilted Weighting)"最优解
+            if (tabName === 'NDX') {
+                document.getElementById('slider-weight-val').value = 0.30;
+                document.getElementById('slider-weight-sent').value = 0.30;
+                document.getElementById('slider-weight-trend').value = 0.40;
+            } else if (tabName === 'SP500') {
+                document.getElementById('slider-weight-val').value = 0.40;
+                document.getElementById('slider-weight-sent').value = 0.30;
+                document.getElementById('slider-weight-trend').value = 0.30;
+            }
+
+            runSimulation();
+        }
+
+        // JS版打分逻辑（严格对齐 Python Model 4.3 源码）
+        function evaluateStrategy(bias, pePercentile, volScore, wVal, wSent, wTrend) {
+            let valScore = 1.0;
+            if (pePercentile !== null && pePercentile !== undefined) {
+                if (pePercentile > 0.7) valScore = 1.0 + ((pePercentile - 0.7) / 0.3) * 1.0;
+                else if (pePercentile >= 0.3) valScore = 1.0;
+                else valScore = 0.5 + (pePercentile / 0.3) * 0.5;
+            }
+
+            let sentimentScore = 1.0;
+            if (volScore !== null && volScore !== undefined) {
+                if (volScore < 14) sentimentScore = 0.8;
+                else if (volScore <= 20) sentimentScore = 1.0;
+                else if (volScore <= 30) sentimentScore = 1.0 + ((volScore - 20) / 10.0) * 0.8;
+                else sentimentScore = Math.min(2.5, 1.8 + (volScore - 30) / 10.0);
+            }
+
+            let trendScore = 1.0;
+            if (bias !== null && bias !== undefined) {
+                if (bias < -0.10) trendScore = 2.0;
+                else if (bias < 0) trendScore = 1.0 + (Math.abs(bias) / 0.10) * 1.0;
+                else if (bias <= 0.10) trendScore = 1.0;
+                else if (bias <= 0.20) trendScore = 1.0 - ((bias - 0.10) / 0.10) * 0.5;
+                else trendScore = 0.5;
+            }
+
+            // 权重归一化 (防用户拖动加总不为1)
+            let totalW = wVal + wSent + wTrend;
+            if (totalW === 0) totalW = 1;
+            let nwVal = wVal / totalW;
+            let nwSent = wSent / totalW;
+            let nwTrend = wTrend / totalW;
+
+            let finalWeight = (valScore * nwVal) + (sentimentScore * nwSent) + (trendScore * nwTrend);
+            finalWeight = Math.max(0.0, Math.min(3.0, finalWeight));
+
+            return finalWeight; // 返回连续倍率
+        }
+
+        function runSimulation() {
+            if (typeof BACKTEST_DATA === 'undefined') {
+                alert("未找到本地脱水数据字典 backtest_data.js，请先运行 Python 脚本生成！");
+                return;
+            }
+
+            // 获取滑动条
+            const wVal = parseFloat(document.getElementById('slider-weight-val').value);
+            const wSent = parseFloat(document.getElementById('slider-weight-sent').value);
+            const wTrend = parseFloat(document.getElementById('slider-weight-trend').value);
+
+            // 更新显示
+            document.getElementById('val-weight').innerText = wVal.toFixed(2);
+            document.getElementById('val-weight-sent').innerText = wSent.toFixed(2);
+            document.getElementById('val-weight-trend').innerText = wTrend.toFixed(2);
+
+            // 提取数据列
+            const dataTable = BACKTEST_DATA[currentTab];
+            const labels = [];
+            const naiveEquity = [];
+            const dynamicEquity = [];
+
+            const INV_BASE = 1000;
+
+            let totalNaiveInvested = 0;
+            let naiveShares = 0;
+
+            let totalDynInvested = 0;
+            let dynShares = 0;
+
+            for (let i = 0; i < dataTable.length; i++) {
+                let row = dataTable[i];
+                let price = row.price;
+
+                // 1. 无脑定投买入
+                totalNaiveInvested += INV_BASE;
+                naiveShares += INV_BASE / price;
+
+                // 2. 动态模型买入
+                let weight = evaluateStrategy(row.bias, row.pe_percentile, row.volatility, wVal, wSent, wTrend);
+                let dynInvest = INV_BASE * weight;
+
+                totalDynInvested += dynInvest;
+                if (dynInvest > 0) {
+                    dynShares += dynInvest / price;
+                }
+
+                // 3. 记录每周周末的持仓净值 (用于画图)
+                labels.push(row.date);
+                naiveEquity.push({ x: row.date, y: naiveShares * price });
+                dynamicEquity.push({ x: row.date, y: dynShares * price });
+            }
+
+            // 计算终局表现
+            const finalPrice = dataTable[dataTable.length - 1].price;
+            const finalNaiveVal = naiveShares * finalPrice;
+            const finalDynVal = dynShares * finalPrice;
+
+            const retNaive = ((finalNaiveVal - totalNaiveInvested) / totalNaiveInvested) * 100;
+            const retDyn = ((finalDynVal - totalDynInvested) / totalDynInvested) * 100;
+            const alpha = retDyn - retNaive;
+
+            // 渲染数字面板
+            let sn = document.getElementById('stat-naive');
+            sn.innerText = retNaive.toFixed(2) + '%';
+            sn.className = retNaive >= 0 ? 'stat-value value-green' : 'stat-value value-red';
+
+            let sd = document.getElementById('stat-dynamic');
+            sd.innerText = retDyn.toFixed(2) + '%';
+            sd.className = retDyn >= 0 ? 'stat-value value-green' : 'stat-value value-red';
+
+            let sa = document.getElementById('stat-alpha');
+            sa.innerText = alpha.toFixed(2) + '%';
+            sa.className = alpha >= 0 ? 'stat-value value-green' : 'stat-value value-red';
+
+            document.getElementById('stat-cost-naive').innerText = '$' + totalNaiveInvested.toLocaleString(undefined, { maximumFractionDigits: 0 });
+            document.getElementById('stat-cost-dynamic').innerText = '$' + totalDynInvested.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+            // 绘制图表
+            renderChart(labels, naiveEquity, dynamicEquity);
+        }
+
+        function renderChart(labels, naiveData, dynData) {
+            const ctx = document.getElementById('equityChart').getContext('2d');
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '三因子动态定投净值',
+                            data: dynData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            pointRadius: 0,
+                            pointHitRadius: 10,
+                        },
+                        {
+                            label: '无脑傻瓜定投净值',
+                            data: naiveData,
+                            borderColor: '#94a3b8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            pointHitRadius: 10,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f8fafc' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed.y !== null) {
+                                        label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8', maxTicksLimit: 12 }
+                        },
+                        y: {
+                            grid: { color: '#334155' },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: function (value) { return '$' + (value / 1000) + 'k'; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 初始化
+        window.onload = () => {
+            setTimeout(runSimulation, 500); // Wait for external JS object to load
+        };
+    </script>
+</body>
+
+</html>

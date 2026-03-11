@@ -550,6 +550,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // 将 PE百分位转换为直观的 (1 - 蛋卷原始百分位)
             // 数值越高，代表(1-pe)*100 越大，越便宜。
             datasetData = dataArray.map(d => d.pe_percentile * 100);
+        } else if (metricType === 'price') {
+            chartLabel = "价格走势";
+            color = "#8b5cf6"; // 紫色系
+            labels = dataArray.map(d => d.date);
+            datasetData = dataArray.map(d => d.price);
         }
 
         modalTitle.textContent = `${currentTab} ${chartLabel}`;
@@ -613,10 +618,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const cardBias = document.getElementById('card-bias');
     const cardVol = document.getElementById('card-vol');
     const cardPe = document.getElementById('card-pe');
+    const cardReturn = document.getElementById('card-return');
 
     if (cardBias) cardBias.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('bias'); });
     if (cardVol) cardVol.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('vol'); });
     if (cardPe) cardPe.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('pe'); });
+    if (cardReturn) cardReturn.addEventListener('click', (e) => { if (e.target.closest('.tooltip-icon')) return; openModalAndDrawChart('price'); });
 
     // 关闭 Modal
     if (closeBtn) {

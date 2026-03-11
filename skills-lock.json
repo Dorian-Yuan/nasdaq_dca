@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "data-visualization": {
+      "source": "toolshell/skills",
+      "sourceType": "github",
+      "computedHash": "e46403bcf8c3e23aa8259ca1f1731d9971cc062aaa3c79d7fbff842ff901d7b3"
+    }
+  }
+}
