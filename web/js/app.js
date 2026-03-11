@@ -282,7 +282,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        let newFileContent = "const STRATEGY_MODELS = " + JSON.stringify(cleanModels, null, 4) + ";\n\n";
+        let newFileContent = "/**\n * 该文件由 NASDAQ PWA 聚合生成，包含活跃模型及其公式权重。\n * 供 GitHub Actions 及本地加载使用。\n */\n\n";
+        newFileContent += `window.GLOBAL_CONFIG = {\n    threshold_red: ${parseFloat(localStorage.getItem('THRESHOLD_RED')) || 0.4},\n    threshold_green: ${parseFloat(localStorage.getItem('THRESHOLD_GREEN')) || 0.7}\n};\n\n`;
+        newFileContent += "const STRATEGY_MODELS = " + JSON.stringify(cleanModels, null, 4) + ";\n\n";
         newFileContent += "if (typeof window !== 'undefined') {\n";
         newFileContent += "    window.STRATEGY_MODELS = STRATEGY_MODELS;\n";
         newFileContent += "    \n";
@@ -439,6 +441,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 始终显示刷新按钮
     refreshBtn.style.display = 'inline-block';
+    
+    // 版本更新按钮逻辑
+    const versionUpdateBtn = document.getElementById('version-update-btn');
+    if (versionUpdateBtn) {
+        versionUpdateBtn.addEventListener('click', () => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    for (let registration of registrations) {
+                        registration.update();
+                    }
+                    window.showToast("正在查询最新系统资源...", "success");
+                    setTimeout(() => window.location.reload(true), 1200);
+                });
+            } else {
+                window.location.reload(true);
+            }
+        });
+    }
+
     refreshBtn.addEventListener('click', () => {
         if (!GITHUB_TOKEN) {
             window.showToast("未检测到 GitHub Token，请在设置中填写。", "warning");
@@ -698,20 +719,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+// 仪表盘刷新逻辑 (被设置项调用)
 window.refreshDashboardWithNewThresholds = function() {
     if (cachedData) {
         renderData(cachedData);
-        if(window.showToast) window.showToast('阈值已更新并重绘页面', 'success');
     }
-};
-
-
-// 主题切换逻辑
-window.changeTheme = function() {
-    const theme = document.getElementById('setting-theme').value;
-    localStorage.setItem('USER_THEME', theme);
-    applyTheme(theme);
-    if(window.showToast) window.showToast('主题已切换', 'success');
 };
 
 function applyTheme(theme) {
@@ -741,10 +753,9 @@ window.saveSettings = function() {
         localStorage.setItem(key, settings[key]);
     }
     
-    // 同步更新全局变量
-    if (window.refreshDashboardWithNewThresholds) {
-        window.refreshDashboardWithNewThresholds();
-    }
+    // 同步更新 UI
+    applyTheme(settings['USER_THEME']);
+    window.refreshDashboardWithNewThresholds();
     
     if (window.showToast) window.showToast('设置已保存', 'success');
 };
@@ -771,17 +782,31 @@ window.loadSettings = function() {
     applyTheme(savedTheme);
 };
 
-// 为所有设置项绑定自动保存
+// 为所有设置项绑定自动保存和即时预览
 document.addEventListener('DOMContentLoaded', () => {
     const settingIds = [
         'setting-real-amount', 'setting-sandbox-amount', 
         'setting-threshold-red', 'setting-threshold-green', 
         'setting-github-token', 'setting-theme'
     ];
+    
     settingIds.forEach(id => {
         const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('change', () => window.saveSettings());
+        if (!el) return;
+        
+        // 任何改变都会触发保存（带 Toast）
+        el.addEventListener('change', () => window.saveSettings());
+        
+        // 阈值修改支持即时预览（不带 Toast）
+        if (id.includes('threshold')) {
+            el.addEventListener('input', () => window.refreshDashboardWithNewThresholds());
+        }
+        
+        // 主题修改支持即时预览
+        if (id === 'setting-theme') {
+            el.addEventListener('input', () => {
+                applyTheme(el.value);
+            });
         }
     });
 });

@@ -385,13 +385,13 @@ h1 {
 }
 
 .secondary-btn {
-    background-color: var(--color-gray);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
 }
 
-.secondary-btn:hover {
-    background-color: var(--border-color);
+.secondary-btn:active {
+    background-color: #e2e8f0;
 }
 
 .btn-action {
@@ -399,7 +399,7 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 12px 20px;
+    padding: 0 20px;
     border-radius: var(--radius-elem);
     font-size: 14px;
     font-weight: 700;
@@ -409,6 +409,18 @@ h1 {
     font-family: inherit;
     width: 100%;
     min-height: 48px;
+    box-shadow: var(--shadow-sm);
+}
+
+@media (prefers-color-scheme: dark) {
+    .secondary-btn {
+        background-color: rgba(255, 255, 255, 0.08);
+        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .secondary-btn:active {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
 }
 
 .btn-action:active {

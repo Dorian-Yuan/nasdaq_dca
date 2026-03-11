@@ -183,12 +183,16 @@ let w_bias = model.weights.bias;
 let total_w = w_pe + w_vxn + w_bias;
 let final_weight = total_w > 0 ? (pe_score * w_pe + vxn_score * w_vxn + bias_score * w_bias) / total_w : 1.0;
 
+// 获取全局阈值配置 (后端适配)
+const config = window.GLOBAL_CONFIG || {{ threshold_red: 0.4, threshold_green: 0.7 }};
+
 console.log(JSON.stringify({{
     model_name: model.name,
     pe_score: pe_score,
     vxn_score: vxn_score,
     bias_score: bias_score,
-    final_weight: final_weight
+    final_weight: final_weight,
+    thresholds: config
 }}));
 """
     reasons = []
@@ -202,6 +206,7 @@ console.log(JSON.stringify({{
         trend_score = result['bias_score']
         final_weight = result['final_weight']
         model_name = result['model_name']
+        thresholds = result.get('thresholds', {'threshold_red': 0.4, 'threshold_green': 0.7})
         
         reasons.append(f"使用动态策略模型: {model_name}")
         if pe_percentile is not None:
@@ -222,15 +227,19 @@ console.log(JSON.stringify({{
     except Exception as e:
         print(f"动态策略执行失败，回退到默认分值 1.0: {e}")
         val_score = sentiment_score = trend_score = final_weight = 1.0
+        thresholds = {'threshold_red': 0.4, 'threshold_green': 0.7}
         reasons.append("策略执行失败，使用默认 1.0 倍权重")
 
     # 限制极值边界
     final_weight = max(0.0, min(3.0, final_weight))
     
-    # 根据用户定义：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞)
-    if final_weight <= 0.4:
+    # 动态阈值判定
+    t_red = float(thresholds['threshold_red'])
+    t_green = float(thresholds['threshold_green'])
+    
+    if final_weight <= t_red:
         decision = "🔴"
-    elif final_weight <= 0.7:
+    elif final_weight <= t_green:
         decision = "🟡"
     else:
         decision = "🟢"
