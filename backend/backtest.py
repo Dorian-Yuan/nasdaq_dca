@@ -190,7 +190,7 @@ def main():
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    js_path = os.path.join(project_root, "backtest_data.js")
+    js_path = os.path.join(project_root, "data", "backtest_data.js")
 
     export_to_js(results, js_path)
     print("\n✅ 完成!")

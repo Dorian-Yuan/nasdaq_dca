@@ -2,10 +2,10 @@ const CACHE_NAME = 'nasdaq-dca-v1';
 const urlsToCache = [
     './',
     './index.html',
-    './style.css',
-    './app.js',
+    './web/css/style.css',
+    './web/js/app.js',
     './manifest.json',
-    './icon.png'
+    './web/assets/icon.png'
 ];
 
 self.addEventListener('install', event => {

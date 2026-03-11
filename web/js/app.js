@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadData() {
     document.querySelectorAll(".metric-value, #decision-text").forEach(el => el.classList.add("skeleton"));
 
-        const fetchUrl = `./data.json?t=${new Date().getTime()}`;
+        const fetchUrl = `./data/data.json?t=${new Date().getTime()}`;
         fetch(fetchUrl)
             .then(response => {
                 if (!response.ok) {

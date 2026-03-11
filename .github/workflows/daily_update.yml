@@ -51,6 +51,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data.json backtest_data.js
+        git add data/data.json data/backtest_data.js
         git commit -m "Auto-update NASDAQ strategy and backtest data [skip ci]"
         git push

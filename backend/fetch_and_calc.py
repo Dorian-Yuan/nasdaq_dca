@@ -146,7 +146,7 @@ def evaluate_strategy(symbol, bias, pe_percentile, vol_score, vol_name="波动�
     import subprocess
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    models_path = os.path.join(project_root, "strategy_models.js")
+    models_path = os.path.join(project_root, "web", "js", "strategy_models.js")
     
     # 构造并执行 JS 代码
     js_runner = f"""
@@ -270,7 +270,7 @@ def main():
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(script_dir)
-    json_path = os.path.join(project_root, "data.json")
+    json_path = os.path.join(project_root, "data", "data.json")
     
     # 1. 初始化多标的数据结构
     result_data = {
