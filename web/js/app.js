@@ -8,7 +8,13 @@
 })();
 
 
+let lastToastTime = 0;
 window.showToast = function(message, type = 'success') {
+    // 简单的防抖：防止 1 秒内弹出重复或多个 Toast (针对 iOS change+blur 同时触发)
+    const now = Date.now();
+    if (type === 'success' && now - lastToastTime < 1000) return;
+    if (type === 'success') lastToastTime = now;
+
     const container = document.getElementById('toast-container');
     if (!container) return;
     const toast = document.createElement('div');
@@ -442,19 +448,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // 始终显示刷新按钮
     refreshBtn.style.display = 'inline-block';
     
-    // 版本更新按钮逻辑
+    // 版本更新按钮逻辑 (针对 iOS PWA 优化)
     const versionUpdateBtn = document.getElementById('version-update-btn');
     if (versionUpdateBtn) {
-        versionUpdateBtn.addEventListener('click', () => {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(registrations => {
+        versionUpdateBtn.addEventListener('click', async () => {
+            window.showToast("正在强制清除缓存并更新系统...", "loading");
+            
+            try {
+                // 1. 清除 Service Worker
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
                     for (let registration of registrations) {
-                        registration.update();
+                        await registration.unregister();
                     }
-                    window.showToast("正在查询最新系统资源...", "success");
-                    setTimeout(() => window.location.reload(true), 1200);
-                });
-            } else {
+                }
+                
+                // 2. 清除 Cache Storage
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    for (let key of keys) {
+                        await caches.delete(key);
+                    }
+                }
+                
+                // 3. 清除特定本地缓存 (如有)
+                localStorage.removeItem('APP_VERSION');
+                
+                window.showToast("更新准备就绪，刷新中...", "success");
+                
+                // 给 Toast 一点显示时间
+                setTimeout(() => {
+                    // 使用更加暴力的方式刷新，附带时间戳确保绕过所有缓存
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('reload_time', Date.now());
+                    window.location.replace(url.toString());
+                }, 1000);
+            } catch (err) {
+                console.error("Update failed:", err);
                 window.location.reload(true);
             }
         });
@@ -716,18 +746,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // 仪表盘刷新逻辑 (被设置项调用) - 修复作用域：放在 DOMContentLoaded 内部以访问 renderData
+    window.refreshDashboardWithNewThresholds = function() {
+        const r = localStorage.getItem('THRESHOLD_RED');
+        const g = localStorage.getItem('THRESHOLD_GREEN');
+        console.log("Refreshing dashboard with thresholds (scoped):", r, g);
+        if (cachedData) {
+            renderData(cachedData);
+        }
+    };
 });
 
 
-// 仪表盘刷新逻辑 (被设置项调用)
-window.refreshDashboardWithNewThresholds = function() {
-    console.log("Refreshing dashboard with thresholds:", 
-        localStorage.getItem('THRESHOLD_RED'), 
-        localStorage.getItem('THRESHOLD_GREEN'));
-    if (cachedData) {
-        renderData(cachedData);
-    }
-};
 
 function applyTheme(theme) {
     if (theme === 'system' || !theme) {
@@ -804,7 +834,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 任何改变都会触发保存（带 Toast）
         el.addEventListener('change', () => {
-            console.log(`Setting changed: ${id}`);
+            console.log(`Setting changed (change): ${id}`);
+            window.saveSettings();
+        });
+
+        // iOS PWA 优化：显式失焦触发保存
+        el.addEventListener('blur', () => {
+            // 避免与 change 重复触发导致双重 Toast，采用简单防抖或检查值变化
+            console.log(`Setting blurred: ${id}`);
             window.saveSettings();
         });
         
