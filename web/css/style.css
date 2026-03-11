@@ -385,9 +385,13 @@ h1 {
 }
 
 .secondary-btn {
-    background-color: var(--bg-card);
+    background-color: var(--color-gray);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
+}
+
+.secondary-btn:hover {
+    background-color: var(--border-color);
 }
 
 .btn-action {
@@ -756,7 +760,7 @@ footer {
     border: 1px solid rgba(148, 163, 184, 0.15);
     border-radius: 12px;
     padding: 16px 20px;
-    margin: var(--spacing-md) auto 0 auto !important;
+    margin: 0 auto !important;
     width: 100%;
     max-width: 1000px;
     display: flex;

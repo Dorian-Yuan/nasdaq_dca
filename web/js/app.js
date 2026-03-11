@@ -293,10 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!githubToken) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(newFileContent).then(() => {
-                    window.showToast("未检测到 Github Token！\n我们已将暂存区里的所有变动代码汇聚并复制到了您的剪贴板。\n请手动将代码覆盖进本地的 strategy_models.js 中以永久生效！");
+                    window.showToast("未检测到 GitHub Token\n已将变动复制至剪贴板", "warning");
                 }).catch(err => alert("请手动复制更新后的底层代码！"));
             } else {
-                window.showToast("未配置 Github Token，且浏览器不支持自动粘贴代码！");
+                window.showToast("未检测到 GitHub Token\n浏览器不支持自动复制", "error");
             }
             return;
         }
