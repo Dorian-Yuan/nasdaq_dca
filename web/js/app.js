@@ -314,7 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const owner = localStorage.getItem('REPO_OWNER') || 'Dorian-Yuan';
             const repo = localStorage.getItem('REPO_NAME') || 'nasdaq_dca';
-            const path = 'strategy_models.js';
+            // 修复：默认路径应为 web/js/strategy_models.js，因为文件已移位
+            const path = localStorage.getItem('REPO_PATH') || 'web/js/strategy_models.js';
             const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
             let getRes = await fetch(url, {
@@ -832,7 +833,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingIds = [
         'setting-real-amount', 'setting-sandbox-amount', 
         'setting-threshold-red', 'setting-threshold-green', 
-        'setting-github-token', 'setting-theme'
+        'setting-github-token', 'setting-theme',
+        'setting-repo-owner', 'setting-repo-name', 'setting-repo-path'
     ];
     
     settingIds.forEach(id => {
