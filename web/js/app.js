@@ -721,6 +721,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 仪表盘刷新逻辑 (被设置项调用)
 window.refreshDashboardWithNewThresholds = function() {
+    console.log("Refreshing dashboard with thresholds:", 
+        localStorage.getItem('THRESHOLD_RED'), 
+        localStorage.getItem('THRESHOLD_GREEN'));
     if (cachedData) {
         renderData(cachedData);
     }
@@ -749,6 +752,7 @@ window.saveSettings = function() {
         'USER_THEME': document.getElementById('setting-theme').value
     };
     
+    console.log("Saving settings to localStorage:", settings);
     for (const key in settings) {
         localStorage.setItem(key, settings[key]);
     }
@@ -757,7 +761,11 @@ window.saveSettings = function() {
     applyTheme(settings['USER_THEME']);
     window.refreshDashboardWithNewThresholds();
     
-    if (window.showToast) window.showToast('设置已保存', 'success');
+    if (window.showToast) {
+        window.showToast('✅ 设置已保存', 'success');
+    } else {
+        alert('设置已保存');
+    }
 };
 
 window.loadSettings = function() {
@@ -795,11 +803,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el) return;
         
         // 任何改变都会触发保存（带 Toast）
-        el.addEventListener('change', () => window.saveSettings());
+        el.addEventListener('change', () => {
+            console.log(`Setting changed: ${id}`);
+            window.saveSettings();
+        });
         
         // 阈值修改支持即时预览（不带 Toast）
         if (id.includes('threshold')) {
-            el.addEventListener('input', () => window.refreshDashboardWithNewThresholds());
+            el.addEventListener('input', () => {
+                // 实时更新临时值以便预览生效
+                const val = el.value;
+                const storageKey = id.replace('setting-', '').toUpperCase().replace('-', '_');
+                localStorage.setItem(storageKey, val);
+                window.refreshDashboardWithNewThresholds();
+            });
         }
         
         // 主题修改支持即时预览

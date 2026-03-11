@@ -385,13 +385,14 @@ h1 {
 }
 
 .secondary-btn {
-    background-color: #f1f5f9;
-    color: #334155;
-    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    color: #475569;
+    border: 2px solid #e2e8f0;
 }
 
-.secondary-btn:active {
-    background-color: #e2e8f0;
+.secondary-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
 }
 
 .btn-action {
@@ -399,27 +400,30 @@ h1 {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 0 20px;
-    border-radius: var(--radius-elem);
-    font-size: 14px;
+    padding: 0 24px;
+    border-radius: 12px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: none;
     font-family: inherit;
     width: 100%;
-    min-height: 48px;
-    box-shadow: var(--shadow-sm);
+    min-height: 52px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 @media (prefers-color-scheme: dark) {
     .secondary-btn {
-        background-color: rgba(255, 255, 255, 0.08);
+        background-color: rgba(30, 41, 59, 0.5); /* Deep slate translucent */
         color: #f8fafc;
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        border: 2px solid #3b82f6; /* Vibrant blue border */
+        backdrop-filter: blur(8px);
     }
-    .secondary-btn:active {
-        background-color: rgba(255, 255, 255, 0.15);
+    .secondary-btn:hover {
+        background-color: rgba(51, 65, 85, 0.8);
+        border-color: #60a5fa;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
     }
 }
 
