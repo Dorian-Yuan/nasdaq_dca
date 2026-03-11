@@ -5,7 +5,9 @@
 
 window.GLOBAL_CONFIG = {
     threshold_red: 0.5,
-    threshold_green: 0.85
+    threshold_green: 0.85,
+    real_amount: 100,
+    sandbox_amount: 200
 };
 
 const STRATEGY_MODELS = {
