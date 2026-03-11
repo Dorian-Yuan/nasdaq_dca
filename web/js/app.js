@@ -326,10 +326,10 @@ document.addEventListener('DOMContentLoaded', () => {
             let btns = document.querySelectorAll('.global-sync-btn');
             btns.forEach(b => { b.classList.add('loading'); b.disabled = true; });
 
-            const owner = localStorage.getItem('REPO_OWNER') || 'Dorian-Yuan';
-            const repo = localStorage.getItem('REPO_NAME') || 'nasdaq_dca';
+            const owner = localStorage.getItem('setting-repo-owner') || 'Dorian-Yuan';
+            const repo = localStorage.getItem('setting-repo-name') || 'nasdaq_dca';
             // 修复：默认路径应为 web/js/strategy_models.js，因为文件已移位
-            const path = localStorage.getItem('REPO_PATH') || 'web/js/strategy_models.js';
+            const path = localStorage.getItem('setting-repo-path') || 'web/js/strategy_models.js';
             const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
 
             let getRes = await fetch(url, {
@@ -770,8 +770,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 仪表盘刷新逻辑 (被设置项调用) - 修复作用域：放在 DOMContentLoaded 内部以访问 renderData
     window.refreshDashboardWithNewThresholds = function() {
-        const r = localStorage.getItem('THRESHOLD_RED');
-        const g = localStorage.getItem('THRESHOLD_GREEN');
+        const r = localStorage.getItem('setting-threshold-red');
+        const g = localStorage.getItem('setting-threshold-green');
         console.log("Refreshing dashboard with thresholds (scoped):", r, g);
         if (cachedData) {
             renderData(cachedData);
@@ -795,14 +795,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 window.saveSettings = function() {
-    const settings = {
-        'REAL_AMOUNT': document.getElementById('setting-real-amount').value,
-        'SANDBOX_AMOUNT': document.getElementById('setting-sandbox-amount').value,
-        'THRESHOLD_RED': document.getElementById('setting-threshold-red').value,
-        'THRESHOLD_GREEN': document.getElementById('setting-threshold-green').value,
-        'GITHUB_TOKEN': document.getElementById('setting-github-token').value,
-        'USER_THEME': document.getElementById('setting-theme').value
-    };
+    const settingIds = [
+        'setting-real-amount', 'setting-sandbox-amount', 
+        'setting-threshold-red', 'setting-threshold-green', 
+        'setting-github-token', 'setting-theme',
+        'setting-repo-owner', 'setting-repo-name', 'setting-repo-path'
+    ];
+    
+    const settings = {};
+    settingIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) settings[id] = el.value;
+    });
     
     console.log("Saving settings to localStorage:", settings);
     for (const key in settings) {
