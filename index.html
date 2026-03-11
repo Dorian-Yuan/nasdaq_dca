@@ -13,8 +13,8 @@
     <link rel="apple-touch-icon" href="./web/assets/icon.png">
     <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./web/css/style.css?v=228">
-    <link rel="stylesheet" href="./web/css/sandbox.css?v=228">
+    <link rel="stylesheet" href="./web/css/style.css?v=229">
+    <link rel="stylesheet" href="./web/css/sandbox.css?v=229">
 </head>
 
 <body>
@@ -41,6 +41,10 @@
                     <div class="light" id="light-green"></div>
                 </div>
                 <h2 id="decision-text">评估中</h2>
+                <div id="suggested-buy-container" class="suggested-buy-container" style="display: none;">
+                    <div class="suggested-buy-label">今日建议买入</div>
+                    <div class="suggested-buy-value"><span class="currency">¥</span><span id="suggested-amount">--</span></div>
+                </div>
             </section>
 
             <!-- 详细指标区 -->
@@ -306,7 +310,7 @@
             </div>
 
             <div class="settings-footer" style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 12px; padding-bottom: 20px;">
-                <p>Version <span class="font-mono">v2.2.8</span></p>
+                <p>Version <span class="font-mono">v2.2.9</span></p>
                 <p style="margin-top: 10px;">数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
             </div>
         </div>
@@ -339,13 +343,13 @@
         </div>
     </div>
 
-    <!-- Config for Github Actions. (This file is ignored by git) -->
-    <script src="./config.js?v=228"></script>
+    <!-- Config for GitHub Actions. (This file is ignored by git) -->
+    <script src="./config.js?v=229"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="./web/js/strategy_models.js?v=228"></script>
-    <script src="./data/backtest_data.js?v=228"></script>
-    <script src="./web/js/app.js?v=228"></script>
-    <script src="./web/js/sandbox.js?v=228"></script>
+    <script src="./web/js/strategy_models.js?v=229"></script>
+    <script src="./data/backtest_data.js?v=229"></script>
+    <script src="./web/js/app.js?v=229"></script>
+    <script src="./web/js/sandbox.js?v=229"></script>
 </body>
 
 </html>

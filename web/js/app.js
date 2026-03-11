@@ -166,9 +166,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 return decisionStr === '加倍定投' ? 'text-green' : decisionStr === '暂停定投' ? 'text-red' : 'text-yellow';
             };
 
-            document.getElementById('decision-bias').className = `metric-decision ${getDecisionClass(displayInd.bias_decision)}`;
-            document.getElementById('decision-pe').className = `metric-decision ${getDecisionClass(displayInd.pe_decision)}`;
             document.getElementById('decision-vxn').className = `metric-decision ${getDecisionClass(displayInd.vol_decision)}`;
+        }
+
+        // 建议买入金额渲染逻辑
+        const suggestedContainer = document.getElementById('suggested-buy-container');
+        const suggestedAmountEl = document.getElementById('suggested-amount');
+        if (suggestedContainer && suggestedAmountEl && displayWeight !== null) {
+            const realBase = parseFloat(localStorage.getItem('setting-real-amount')) || 0;
+            if (realBase > 0) {
+                const finalAmount = Math.round(realBase * displayWeight);
+                suggestedAmountEl.textContent = finalAmount.toLocaleString();
+                suggestedContainer.style.display = 'inline-block';
+            } else {
+                suggestedContainer.style.display = 'none';
+            }
+        } else if (suggestedContainer) {
+            suggestedContainer.style.display = 'none';
         }
     }
 
