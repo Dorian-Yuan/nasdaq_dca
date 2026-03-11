@@ -379,20 +379,9 @@ h1 {
     }
 }
 
-.primary-btn {
+.primary-btn, .secondary-btn {
     background-color: var(--text-primary);
     color: var(--bg-main);
-}
-
-.secondary-btn {
-    background-color: #f8fafc;
-    color: #475569;
-    border: 2px solid #e2e8f0;
-}
-
-.secondary-btn:hover {
-    background-color: #f1f5f9;
-    border-color: #cbd5e1;
 }
 
 .btn-action {
@@ -413,17 +402,15 @@ h1 {
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
+.btn-action:active {
+    transform: scale(0.98);
+}
+
 @media (prefers-color-scheme: dark) {
-    .secondary-btn {
-        background-color: rgba(30, 41, 59, 0.5); /* Deep slate translucent */
-        color: #f8fafc;
-        border: 2px solid #3b82f6; /* Vibrant blue border */
-        backdrop-filter: blur(8px);
-    }
-    .secondary-btn:hover {
-        background-color: rgba(51, 65, 85, 0.8);
-        border-color: #60a5fa;
-        box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+    .primary-btn, .secondary-btn {
+        background-color: #f8fafc;
+        color: #0f172a;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
     }
 }
 
