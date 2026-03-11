@@ -27,9 +27,9 @@
 }
 
 .sandbox-header {
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-sm);
     border-bottom: 1px solid var(--border);
-    padding-bottom: 15px;
+    padding-bottom: 10px;
 }
 
 .sandbox-header h2 {

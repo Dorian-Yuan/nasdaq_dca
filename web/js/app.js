@@ -441,14 +441,8 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshBtn.style.display = 'inline-block';
     refreshBtn.addEventListener('click', () => {
         if (!GITHUB_TOKEN) {
-            const token = prompt("检测到您是首次在新环境使用刷新功能。\n由于安全原因，GitHub Token 没有公开上传。\n\n请输入您的 GitHub Personal Access Token (以 ghp_ 开头):");
-            if (token && token.trim() !== "") {
-                GITHUB_TOKEN = token.trim();
-                localStorage.setItem('GITHUB_TOKEN', GITHUB_TOKEN);
-            } else {
-                window.showToast("未输入 Token，无法触发远程刷新。");
-                return;
-            }
+            window.showToast("未检测到 GitHub Token，请在设置中填写。", "warning");
+            return;
         }
 
         if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 20-30 秒。')) return;
@@ -728,10 +722,66 @@ function applyTheme(theme) {
     }
 }
 
-// 页面加载时恢复主题
+// 页面加载时恢复主题与设置
 document.addEventListener('DOMContentLoaded', () => {
+    loadSettings();
+});
+
+window.saveSettings = function() {
+    const settings = {
+        'REAL_AMOUNT': document.getElementById('setting-real-amount').value,
+        'SANDBOX_AMOUNT': document.getElementById('setting-sandbox-amount').value,
+        'THRESHOLD_RED': document.getElementById('setting-threshold-red').value,
+        'THRESHOLD_GREEN': document.getElementById('setting-threshold-green').value,
+        'GITHUB_TOKEN': document.getElementById('setting-github-token').value,
+        'USER_THEME': document.getElementById('setting-theme').value
+    };
+    
+    for (const key in settings) {
+        localStorage.setItem(key, settings[key]);
+    }
+    
+    // 同步更新全局变量
+    if (window.refreshDashboardWithNewThresholds) {
+        window.refreshDashboardWithNewThresholds();
+    }
+    
+    if (window.showToast) window.showToast('设置已保存', 'success');
+};
+
+window.loadSettings = function() {
+    const settingMap = {
+        'setting-real-amount': 'REAL_AMOUNT',
+        'setting-sandbox-amount': 'SANDBOX_AMOUNT',
+        'setting-threshold-red': 'THRESHOLD_RED',
+        'setting-threshold-green': 'THRESHOLD_GREEN',
+        'setting-github-token': 'GITHUB_TOKEN',
+        'setting-theme': 'USER_THEME'
+    };
+    
+    for (const id in settingMap) {
+        const value = localStorage.getItem(settingMap[id]);
+        if (value !== null) {
+            const el = document.getElementById(id);
+            if (el) el.value = value;
+        }
+    }
+    
     const savedTheme = localStorage.getItem('USER_THEME') || 'system';
-    const themeSelect = document.getElementById('setting-theme');
-    if (themeSelect) themeSelect.value = savedTheme;
     applyTheme(savedTheme);
+};
+
+// 为所有设置项绑定自动保存
+document.addEventListener('DOMContentLoaded', () => {
+    const settingIds = [
+        'setting-real-amount', 'setting-sandbox-amount', 
+        'setting-threshold-red', 'setting-threshold-green', 
+        'setting-github-token', 'setting-theme'
+    ];
+    settingIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', () => window.saveSettings());
+        }
+    });
 });
