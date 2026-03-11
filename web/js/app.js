@@ -301,7 +301,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let newFileContent = "/**\n * 该文件由 NASDAQ PWA 聚合生成，包含活跃模型及其公式权重。\n * 供 GitHub Actions 及本地加载使用。\n */\n\n";
-        newFileContent += `window.GLOBAL_CONFIG = {\n    threshold_red: ${parseFloat(localStorage.getItem('THRESHOLD_RED')) || 0.4},\n    threshold_green: ${parseFloat(localStorage.getItem('THRESHOLD_GREEN')) || 0.7}\n};\n\n`;
+        
+        const realAmount = localStorage.getItem('setting-real-amount') || localStorage.getItem('REAL_AMOUNT') || '0';
+        const sandboxAmount = localStorage.getItem('setting-sandbox-amount') || localStorage.getItem('SANDBOX_AMOUNT') || '1000000';
+        const tRed = localStorage.getItem('setting-threshold-red') || '0.4';
+        const tGreen = localStorage.getItem('setting-threshold-green') || '0.7';
+
+        newFileContent += `window.GLOBAL_CONFIG = {\n`;
+        newFileContent += `    threshold_red: ${parseFloat(tRed)},\n`;
+        newFileContent += `    threshold_green: ${parseFloat(tGreen)},\n`;
+        newFileContent += `    real_amount: ${parseFloat(realAmount)},\n`;
+        newFileContent += `    sandbox_amount: ${parseFloat(sandboxAmount)}\n`;
+        newFileContent += `};\n\n`;
         newFileContent += "const STRATEGY_MODELS = " + JSON.stringify(cleanModels, null, 4) + ";\n\n";
         newFileContent += "if (typeof window !== 'undefined') {\n";
         newFileContent += "    window.STRATEGY_MODELS = STRATEGY_MODELS;\n";
