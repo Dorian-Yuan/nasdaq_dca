@@ -19,8 +19,7 @@ window.showToast = function(message, type = 'success') {
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
-    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    toast.innerHTML = `<span>${message}</span>`;
     container.appendChild(toast);
     
     setTimeout(() => toast.classList.add('show'), 10);
@@ -792,7 +791,7 @@ window.saveSettings = function() {
     window.refreshDashboardWithNewThresholds();
     
     if (window.showToast) {
-        window.showToast('✅ 设置已保存', 'success');
+        window.showToast('设置已保存', 'success');
     } else {
         alert('设置已保存');
     }
