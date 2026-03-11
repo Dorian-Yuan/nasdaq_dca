@@ -65,9 +65,9 @@
 }
 
 .control-card {
-    background-color: var(--card-bg);
+    background-color: var(--bg-card);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-inner);
     padding: 20px;
     box-shadow: var(--shadow-md);
 }
@@ -98,7 +98,7 @@
 
 .date-filters input[type="date"] {
     flex: 1;
-    background: var(--bg-color);
+    background: var(--bg-main);
     border: 1px solid var(--border);
     color: var(--text-primary);
     padding: 8px 10px;
@@ -123,7 +123,7 @@
 
 .freq-select {
     flex: 1;
-    background: var(--bg-color, #0f172a);
+    background: var(--bg-main, #0f172a);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: var(--text-primary, #e2e8f0);
     padding: 8px 12px;
@@ -156,7 +156,7 @@
 }
 
 .preset-btn.active {
-    background-color: var(--card-bg);
+    background-color: var(--bg-card);
     color: var(--text-primary);
     font-weight: 600;
     box-shadow: var(--shadow-sm);
@@ -274,7 +274,7 @@ textarea.formula-input:focus {
 }
 
 .secondary-btn {
-    background: var(--card-bg, #1e293b);
+    background: var(--bg-card, #1e293b);
     color: var(--text-primary, #e2e8f0);
     border: 1px solid rgba(255, 255, 255, 0.15);
     width: 100%;
@@ -333,9 +333,9 @@ textarea.formula-input:focus {
 .sandbox-chart-container {
     flex: 2;
     min-width: 320px;
-    background-color: var(--card-bg);
+    background-color: var(--bg-card);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-inner);
     padding: 20px;
     box-shadow: var(--shadow-md);
     position: relative;

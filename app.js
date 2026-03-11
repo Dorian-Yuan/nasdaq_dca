@@ -1,3 +1,29 @@
+
+// 立即执行以防闪烁
+(function() {
+    const savedTheme = localStorage.getItem('USER_THEME') || 'system';
+    if (savedTheme !== 'system') {
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+})();
+
+
+window.showToast = function(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    let icon = type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️';
+    toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // 注册 Service Worker (用于 PWA)
     if ('serviceWorker' in navigator) {
@@ -39,12 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 根据当前 Tab 动态替换文案
     function updateLabelsForTab() {
         if (currentTab === 'NDX') {
-            document.getElementById('main-title').textContent = '纳斯达克100 (NDX) 定投评估';
+            document.getElementById('main-title').textContent = '纳斯达克100 (NDX)';
             document.getElementById('label-price-title').textContent = 'NDX 指数';
             document.getElementById('label-vol-title').textContent = '^VXN';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 纳斯达克 100 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
         } else if (currentTab === 'SP500') {
-            document.getElementById('main-title').textContent = '标普500 (SP500) 定投评估';
+            document.getElementById('main-title').textContent = '标普500 (SP500)';
             document.getElementById('label-price-title').textContent = 'SP500 指数';
             document.getElementById('label-vol-title').textContent = '^VIX';
             document.getElementById('tooltip-vol').setAttribute('data-tooltip', 'CBOE 标普500 波动率指数。\n通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。');
@@ -53,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 渲染 UI 数据
     function renderData(allData) {
+    document.querySelectorAll(".skeleton").forEach(el => el.classList.remove("skeleton"));
+
         cachedData = allData;
         updateLabelsForTab();
 
@@ -73,13 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let displayWeight = dynResults ? dynResults.finalWeight : finalWeight;
         let displayInd = dynResults ? dynResults : (data.individual_decisions || {});
 
-        // 设置主策略红绿灯及权重得分显示 (模型二：红灯[0,0.4]，黄灯(0.4,0.7]，绿灯(0.7,+∞))
+        // 设置主策略红绿灯及权重得分显示
         if (displayWeight !== null) {
-            if (displayWeight <= 0.4) {
+            const threshRed = parseFloat(document.getElementById('setting-threshold-red')?.value) || 0.4;
+            const threshGreen = parseFloat(document.getElementById('setting-threshold-green')?.value) || 0.7;
+
+            if (displayWeight <= threshRed) {
                 dom.lightRed.classList.add('active-red');
                 dom.decisionText.textContent = `🔴 综合权重得分: ${displayWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-red');
-            } else if (displayWeight > 0.7) {
+            } else if (displayWeight > threshGreen) {
                 dom.lightGreen.classList.add('active-green');
                 dom.decisionText.textContent = `🟢 综合权重得分: ${displayWeight.toFixed(2)} 倍`;
                 dom.decisionText.classList.add('decision-green');
@@ -262,17 +293,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!githubToken) {
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(newFileContent).then(() => {
-                    alert("⚠️ 未检测到 Github Token！\n我们已将暂存区里的所有变动代码汇聚并复制到了您的剪贴板。\n请手动将代码覆盖进本地的 strategy_models.js 中以永久生效！");
+                    window.showToast("未检测到 Github Token！\n我们已将暂存区里的所有变动代码汇聚并复制到了您的剪贴板。\n请手动将代码覆盖进本地的 strategy_models.js 中以永久生效！");
                 }).catch(err => alert("请手动复制更新后的底层代码！"));
             } else {
-                alert("未配置 Github Token，且浏览器不支持自动粘贴代码！");
+                window.showToast("未配置 Github Token，且浏览器不支持自动粘贴代码！");
             }
             return;
         }
 
         try {
-            commitBtn.innerText = "云端聚合提交中...";
-            commitBtn.disabled = true;
+            let btns = document.querySelectorAll('.global-sync-btn');
+            btns.forEach(b => { b.classList.add('loading'); b.disabled = true; });
 
             const owner = localStorage.getItem('REPO_OWNER') || 'Dorian-Yuan';
             const repo = localStorage.getItem('REPO_NAME') || 'nasdaq_dca';
@@ -299,19 +330,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            commitBtn.innerText = "🚀 提交保存至 Github";
-            commitBtn.disabled = false;
+            btns = document.querySelectorAll('.global-sync-btn');
+            btns.forEach(b => { b.classList.remove('loading'); b.disabled = false; });
 
             if (!putRes.ok) throw new Error("更新远程文件跨域冲突/权限拦截");
 
             window.STRATEGY_MODELS = cleanModels;
             renderModelManagerList();
-            alert(`🎉 聚合发布成功！\n所有的策略增删改草稿已于 1 秒内整体覆盖并固化至 Github。`);
+            window.showToast("🎉 聚合发布成功！", "success"); //\n所有的策略增删改草稿已于 1 秒内整体覆盖并固化至 Github。`);
         } catch (e) {
             console.error(e);
-            commitBtn.innerText = "🚀 提交保存至 Github";
-            commitBtn.disabled = false;
-            alert("推送云端发生网络或鉴权错误：" + e.message);
+            const btns = document.querySelectorAll('.global-sync-btn');
+            btns.forEach(b => { b.classList.remove('loading'); b.disabled = false; });
+            window.showToast("推送云端发生网络或鉴权错误：" + e.message);
         }
     };
 
@@ -351,6 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 获取数据的方法。加个随机数防止浏览器缓存 data.json
     function loadData() {
+    document.querySelectorAll(".metric-value, #decision-text").forEach(el => el.classList.add("skeleton"));
+
         const fetchUrl = `./data.json?t=${new Date().getTime()}`;
         fetch(fetchUrl)
             .then(response => {
@@ -364,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeof window.loadSandboxFormulas === 'function') {
                     window.loadSandboxFormulas();
                 }
+                if (typeof window.compileAndRunSandbox === 'function') window.compileAndRunSandbox(false);
             })
             .catch(error => {
                 console.error('获取策略数据失败:', error);
@@ -412,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 GITHUB_TOKEN = token.trim();
                 localStorage.setItem('GITHUB_TOKEN', GITHUB_TOKEN);
             } else {
-                alert("未输入 Token，无法触发远程刷新。");
+                window.showToast("未输入 Token，无法触发远程刷新。");
                 return;
             }
         }
@@ -420,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('确认要触发远程服务器重新获取数据吗？执行通常需要 20-30 秒。')) return;
 
         refreshBtn.disabled = true;
-        refreshBtn.textContent = '触发中...';
+        refreshBtn.classList.add('loading');
 
         // 记录触发前的时间
         const currentUpdateTime = dom.updateTime.textContent;
@@ -455,30 +489,26 @@ document.addEventListener('DOMContentLoaded', () => {
                                     clearInterval(pollInterval);
                                     renderData(newData);
                                     refreshBtn.disabled = false;
-                                    refreshBtn.textContent = '✅ 更新成功！';
-                                    setTimeout(() => {
-                                        refreshBtn.textContent = '强制刷新策略数据';
-                                    }, 3000);
+                                    refreshBtn.classList.remove('loading');
+                                    window.showToast('更新成功！', 'success');
                                 } else if (pollCount >= maxPolls) {
                                     clearInterval(pollInterval);
                                     refreshBtn.disabled = false;
-                                    refreshBtn.textContent = '⚠️ 等待超时，您可以手动刷新页面试试';
-                                    setTimeout(() => {
-                                        refreshBtn.textContent = '强制刷新策略数据';
-                                    }, 5000);
+                                    refreshBtn.classList.remove('loading');
+                                    window.showToast('等待超时，您可以手动刷新页面试试', 'warning');
                                 }
                             })
                             .catch(err => console.error("轮询获取JSON失败:", err));
                     }, 5000); // 每 5 秒请求一次
 
                 } else {
-                    alert(`触发失败：${res.status} ${res.statusText}`);
+                    window.showToast(`触发失败：${res.status} ${res.statusText}`);
                     refreshBtn.disabled = false;
                     refreshBtn.textContent = '强制刷新策略数据';
                 }
             })
             .catch(err => {
-                alert('网络错误: ' + err);
+                window.showToast('网络错误: ' + err);
                 refreshBtn.disabled = false;
                 refreshBtn.textContent = '强制刷新策略数据';
             });
@@ -505,6 +535,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 初始化加载
+    
+    // 路由切换逻辑
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetView = e.currentTarget.getAttribute('data-view');
+            
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(v => {
+                v.classList.remove('active');
+                v.style.display = 'none';
+            });
+            const targetElement = document.getElementById(targetView);
+            if (targetElement) {
+                targetElement.classList.add('active');
+                targetElement.style.display = 'block';
+            }
+            if (targetView === 'view-sandbox' && typeof window.compileAndRunSandbox === 'function') {
+                window.compileAndRunSandbox(false);
+            }
+            
+            // Re-render chart if switching to sandbox
+            
+        });
+    });
+
     loadData();
 
     // 修复移动端强制关闭 tooltip
@@ -523,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openModalAndDrawChart(metricType) {
         if (typeof BACKTEST_DATA === 'undefined' || !BACKTEST_DATA[currentTab]) {
-            alert("正在加载历史数据库，请稍后重试。");
+            window.showToast("正在加载历史数据库，请稍后重试。");
             return;
         }
 
@@ -635,4 +692,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+});
+
+
+window.refreshDashboardWithNewThresholds = function() {
+    if (cachedData) {
+        renderData(cachedData);
+        if(window.showToast) window.showToast('阈值已更新并重绘页面', 'success');
+    }
+};
+
+
+// 主题切换逻辑
+window.changeTheme = function() {
+    const theme = document.getElementById('setting-theme').value;
+    localStorage.setItem('USER_THEME', theme);
+    applyTheme(theme);
+    if(window.showToast) window.showToast('主题已切换', 'success');
+};
+
+function applyTheme(theme) {
+    if (theme === 'system' || !theme) {
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        document.documentElement.setAttribute('data-theme', theme);
+    }
+}
+
+// 页面加载时恢复主题
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('USER_THEME') || 'system';
+    const themeSelect = document.getElementById('setting-theme');
+    if (themeSelect) themeSelect.value = savedTheme;
+    applyTheme(savedTheme);
 });

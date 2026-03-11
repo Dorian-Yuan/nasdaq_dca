@@ -13,246 +13,302 @@
     <link rel="apple-touch-icon" href="./icon.png">
     <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=5">
-    <link rel="stylesheet" href="./sandbox.css?v=8">
+    <link rel="stylesheet" href="./style.css?v=6">
+    <link rel="stylesheet" href="./sandbox.css?v=9">
 </head>
 
 <body>
+    <div id="toast-container" class="toast-container"></div>
     <div class="container">
         <header>
-            <h1 id="main-title">纳斯达克100 (NDX) 定投评估</h1>
+            <h1 id="main-title">纳斯达克100 (NDX)</h1>
             <p id="update-time" class="subtitle">加载中...</p>
         </header>
 
-        <!-- 标签页切换区 -->
-        <div class="tabs-container">
-            <button class="tab-btn active" data-tab="NDX">纳斯达克100 (NDX)</button>
-            <button class="tab-btn" data-tab="SP500">标普500 (SP500)</button>
+        <!-- View 1: Dashboard -->
+        <div id="view-dashboard" class="view-section active">
+            <!-- 标签页切换区 -->
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="NDX">纳斯达克100 (NDX)</button>
+                <button class="tab-btn" data-tab="SP500">标普500 (SP500)</button>
+            </div>
+
+            <!-- 主状态红绿灯区 -->
+            <section class="status-card" id="main-status-card">
+                <div class="status-indicator">
+                    <div class="light" id="light-red"></div>
+                    <div class="light" id="light-yellow"></div>
+                    <div class="light" id="light-green"></div>
+                </div>
+                <h2 id="decision-text">评估中</h2>
+            </section>
+
+            <!-- 详细指标区 -->
+            <section class="metrics-grid">
+                <div class="metric-card clickable" id="card-bias">
+                    <div class="metric-title">
+                        <span>均线乖离率 <span class="tooltip-icon" tabindex="0" data-tooltip="衡量当前价格偏离过去200天平均成本的百分比。&#xa;偏离过大可能发生均值回归（下跌），跌破太多则可能是超跌反弹（抄底）的信号。">?</span></span>
+                        <span id="decision-bias" class="metric-decision">--</span>
+                    </div>
+                    <div class="metric-value font-mono" id="val-bias">--%</div>
+                    <div class="metric-sub"><span id="label-price-title">NDX 指数</span>: <span id="val-price" class="font-mono">--</span></div>
+                </div>
+
+                <div class="metric-card clickable" id="card-vol">
+                    <div class="metric-title">
+                        <span><span id="label-vol-title">^VXN</span> <span class="tooltip-icon" tabindex="0" data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。" id="tooltip-vol">?</span></span>
+                        <span id="decision-vxn" class="metric-decision">--</span>
+                    </div>
+                    <div class="metric-value font-mono" id="val-vxn">--</div>
+                    <div class="metric-sub" style="visibility: hidden;">--</div>
+                </div>
+
+                <div class="metric-card clickable" id="card-pe">
+                    <div class="metric-title">
+                        <span>PE百分位 <span class="tooltip-icon" tabindex="0" data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
+                        <span id="decision-pe" class="metric-decision">--</span>
+                    </div>
+                    <div class="metric-value font-mono" id="val-pe-pct">--%</div>
+                    <div class="metric-sub">相对估值: <span id="val-pe" class="font-mono">--</span></div>
+                </div>
+
+                <div class="metric-card clickable" id="card-return">
+                    <div class="metric-title">
+                        <span>今日涨跌 <span class="tooltip-icon" tabindex="0" data-tooltip="相比上一个交易日收盘价的涨跌百分比。美股实行完全的绿跌红涨体系。">?</span></span>
+                        <span id="decision-return" class="metric-decision" style="visibility: hidden;">--</span>
+                    </div>
+                    <div class="metric-value font-mono" id="val-daily-return">--%</div>
+                    <div class="metric-sub"><span id="label-daily-return-title">相比昨日收盘</span></div>
+                </div>
+            </section>
         </div>
 
-        <!-- 主状态红绿灯区 -->
-        <section class="status-card" id="main-status-card">
-            <div class="status-indicator">
-                <div class="light" id="light-red"></div>
-                <div class="light" id="light-yellow"></div>
-                <div class="light" id="light-green"></div>
-            </div>
-            <h2 id="decision-text">评估中</h2>
-        </section>
-
-        <!-- 详细指标区 -->
-        <section class="metrics-grid">
-            <!-- 乖离率卡片 -->
-            <div class="metric-card clickable" id="card-bias">
-                <div class="metric-title">
-                    <span>均线乖离率 <span class="tooltip-icon" tabindex="0" onclick=""
-                            data-tooltip="衡量当前价格偏离过去200天平均成本的百分比。&#xa;偏离过大可能发生均值回归（下跌），跌破太多则可能是超跌反弹（抄底）的信号。">?</span></span>
-                    <span id="decision-bias" class="metric-decision">--</span>
+        <!-- View 2: Sandbox -->
+        <div id="view-sandbox" class="view-section">
+            <section class="controls-group">
+                <div class="model-manager-trigger interactive-block" onclick="toggleModelManager()">
+                    <span class="model-selector-label">评估模型：</span>
+                    <span id="active-model-name-display" class="active-model-text">默认经典策略</span>
+                    <span id="model-manager-icon" class="toggle-arrow">▼</span>
                 </div>
-                <div class="metric-value" id="val-bias">--%</div>
-                <div class="metric-sub"><span id="label-price-title">NDX 指数</span>: <span id="val-price">--</span></div>
-            </div>
 
-            <!-- 情绪卡片 -->
-            <div class="metric-card clickable" id="card-vol">
-                <div class="metric-title">
-                    <span><span id="label-vol-title">^VXN</span> <span class="tooltip-icon" tabindex="0" onclick=""
-                            data-tooltip="CBOE 纳斯达克 100 波动率指数。&#xa;通常15-20为常态，低于15偏向贪婪，高于30代表恐慌并开始提供可观的买入乘数。"
-                            id="tooltip-vol">?</span></span>
-                    <span id="decision-vxn" class="metric-decision">--</span>
-                </div>
-                <div class="metric-value" id="val-vxn">--</div>
-                <div class="metric-sub" style="visibility: hidden;">--</div>
-            </div>
-
-            <!-- 估值卡片 -->
-            <div class="metric-card clickable" id="card-pe">
-                <div class="metric-title">
-                    <span>PE百分位 <span class="tooltip-icon" tabindex="0" onclick=""
-                            data-tooltip="衡量当前市盈率(PE)在过去很长一段时间历史中处于什么位置。&#xa;数值越低代表越便宜（被低估），数值越高代表越贵（被高估甚至有泡沫）。">?</span></span>
-                    <span id="decision-pe" class="metric-decision">--</span>
-                </div>
-                <div class="metric-value" id="val-pe-pct">--%</div>
-                <div class="metric-sub">相对估值: <span id="val-pe">--</span></div>
-            </div>
-
-            <!-- 今日涨跌卡片 -->
-            <div class="metric-card clickable" id="card-return">
-                <div class="metric-title">
-                    <span>今日涨跌 <span class="tooltip-icon" tabindex="0" onclick=""
-                            data-tooltip="相比上一个交易日收盘价的涨跌百分比。美股实行完全的绿跌红涨体系。">?</span></span>
-                    <span id="decision-return" class="metric-decision" style="visibility: hidden;">--</span>
-                </div>
-                <div class="metric-value" id="val-daily-return">--%</div>
-                <div class="metric-sub"><span id="label-daily-return-title">相比昨日收盘</span></div>
-            </div>
-        </section>
-
-        <!-- 策略交互控制区 (Unified Controls) -->
-        <section class="controls-group">
-            <button id="refresh-btn" class="interactive-block">强制刷新策略数据</button>
-
-            <div class="model-manager-trigger interactive-block" onclick="toggleModelManager()">
-                <span class="model-selector-label">评估模型：</span>
-                <span id="active-model-name-display" class="active-model-text">默认经典策略</span>
-                <span id="model-manager-icon" class="toggle-arrow">▼</span>
-            </div>
-
-            <!-- 展开的模型管理器面板 -->
-            <div id="model-manager-panel" class="model-manager-panel" style="display: none;">
-                <div class="model-manager-header">
-                    <span style="font-weight: 600; font-size: 15px;">策略草稿池 (Local Strategy Pool)</span>
-                </div>
-                <div id="model-list-container" class="model-list-container">
-                    <!-- 动态注入的模型列表项将在这里渲染 -->
-                </div>
-                <div class="model-manager-footer">
-                    <button id="commit-strats-btn" class="btn primary-btn" onclick="commitModelsToCloud()"
-                        style="width: 100%; max-width: 300px;">🚀 提交保存至 Github</button>
-                    <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">*
-                        列表中的新增/修改在点击提交前仅作为草稿暂存于网页内存中</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="sandbox-section" id="sandbox-section" style="display: none;">
-            <div class="sandbox-header interactive-block" onclick="toggleSandboxGrid()">
-                <div style="text-align: center;">
-                    <h2
-                        style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        全息回测沙盘与公式引擎 <span id="sandbox-toggle-icon" class="toggle-arrow">▼</span>
-                    </h2>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">自定义策略参数与执行阈值，实时推演历史收益 Alpha</p>
-                </div>
-            </div>
-
-            <div class="sandbox-grid" id="sandbox-grid" style="display: none; padding-top: 10px;">
-                <div class="sandbox-controls">
-                    <!-- 时间切片过滤器 -->
-                    <div class="control-card">
-                        <h3>时间切片 (Time Range)</h3>
-                        <div class="date-filters">
-                            <input type="date" id="sandbox-start-date">
-                            <span>至</span>
-                            <input type="date" id="sandbox-end-date">
-                        </div>
-                        <div class="date-presets">
-                            <button class="preset-btn" onclick="setSandboxRange(1)">近1年</button>
-                            <button class="preset-btn" onclick="setSandboxRange(2)">近2年</button>
-                            <button class="preset-btn" onclick="setSandboxRange(3)">近3年</button>
-                            <button class="preset-btn" onclick="setSandboxRange(4)">近4年</button>
-                            <button class="preset-btn" onclick="setSandboxRange(5)">近5年</button>
-                            <button class="preset-btn active" onclick="setSandboxRange('ALL')">全部</button>
-                        </div>
-                        <div class="freq-selector" style="margin-top: 10px; display: flex; gap: 8px;">
-                            <select id="dca-freq" class="freq-select" onchange="onDcaFreqChange()">
-                                <option value="daily">按天定投</option>
-                                <option value="weekly" selected>按周定投</option>
-                                <option value="monthly">按月定投</option>
-                            </select>
-                            <select id="dca-day" class="freq-select">
-                                <option value="1">周一</option>
-                                <option value="2">周二</option>
-                                <option value="3" selected>周三</option>
-                                <option value="4">周四</option>
-                                <option value="5">周五</option>
-                            </select>
-                        </div>
+                <div id="model-manager-panel" class="model-manager-panel" style="display: none;">
+                    <div class="model-manager-header">
+                        <span style="font-weight: 600; font-size: 15px;">策略草稿池 (Local Strategy Pool)</span>
                     </div>
-
-                    <!-- 动态公式沙盘与权重 -->
-                    <div class="control-card">
-                        <h3>动态因子与公式引擎 <small>(点击展开编辑公式)</small></h3>
-
-                        <div class="factor-group" id="group-val">
-                            <div class="factor-header" onclick="toggleFormulaBuilder('val')">
-                                <span>估值因子 (PE) 权重</span>
-                                <span class="factor-val" id="sb-weight-val">0.30</span>
-                            </div>
-                            <input type="range" id="sb-slider-val" min="0" max="1" step="0.05" value="0.30"
-                                oninput="updateSandboxConfigs()">
-                            <div class="formula-builder" id="builder-val" style="display: none;"></div>
-                        </div>
-
-                        <div class="factor-group" id="group-sent">
-                            <div class="factor-header" onclick="toggleFormulaBuilder('sent')">
-                                <span>情绪因子 (VXN) 权重</span>
-                                <span class="factor-val" id="sb-weight-sent">0.30</span>
-                            </div>
-                            <input type="range" id="sb-slider-sent" min="0" max="1" step="0.05" value="0.30"
-                                oninput="updateSandboxConfigs()">
-                            <div class="formula-builder" id="builder-sent" style="display: none;"></div>
-                        </div>
-
-                        <div class="factor-group" id="group-trend">
-                            <div class="factor-header" onclick="toggleFormulaBuilder('trend')">
-                                <span>趋势因子 (Bias) 权重</span>
-                                <span class="factor-val" id="sb-weight-trend">0.40</span>
-                            </div>
-                            <input type="range" id="sb-slider-trend" min="0" max="1" step="0.05" value="0.40"
-                                oninput="updateSandboxConfigs()">
-                            <div class="formula-builder" id="builder-trend" style="display: none;"></div>
-                        </div>
-
-                        <div class="compile-action" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="compile-formula-btn" class="btn sandbox-btn" style="flex: 1;"
-                                onclick="compileAndRunSandbox()">⚙️ 编译并回测</button>
-                            <button class="btn secondary-btn" style="flex: 1;" onclick="exportSandboxModel()"
-                                title="将当前回测配置打包发布为量化模型代码">📦 保存模型</button>
-                        </div>
+                    <div id="model-list-container" class="model-list-container"></div>
+                    <div class="model-manager-footer">
+                        <button id="commit-strats-btn" class="btn primary-btn global-sync-btn" onclick="commitModelsToCloud()" style="width: 100%; max-width: 300px;">🚀 保存至云端</button>
+                        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">* 列表中的新增/修改在点击提交前仅暂存于本地</p>
                     </div>
+                </div>
+            </section>
 
-                    <!-- 统计数据 -->
-                    <div class="control-card stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-label">无脑定投回报率</div>
-                            <div class="stat-value" id="sb-stat-naive">0.00%</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">动态策略回报率</div>
-                            <div class="stat-value" id="sb-stat-dynamic">0.00%</div>
-                        </div>
-                        <div class="stat-item highlight"
-                            style="display: flex; justify-content: space-around; align-items: center; gap: 20px;">
-                            <div style="text-align: center; flex: 1;">
-                                <div class="stat-label">超额收益率 (Alpha)</div>
-                                <div class="stat-value" id="sb-stat-alpha">0.00%</div>
-                            </div>
-                            <div style="width: 1px; height: 36px; background: rgba(148, 163, 184, 0.2);"></div>
-                            <div style="text-align: center; flex: 1;">
-                                <div class="stat-label">总收益差异 (Profit Diff)</div>
-                                <div class="stat-value" id="sb-stat-profit-diff">$0</div>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">无脑总投入</div>
-                            <div class="stat-value small" id="sb-cost-naive">$0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">动态总投入</div>
-                            <div class="stat-value small" id="sb-cost-dynamic">$0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">无脑绝对总收益</div>
-                            <div class="stat-value small" id="sb-profit-naive">$0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">动态绝对总收益</div>
-                            <div class="stat-value small" id="sb-profit-dynamic">$0</div>
-                        </div>
+            <section class="sandbox-section" id="sandbox-section">
+                <div class="sandbox-header">
+                    <div style="text-align: center;">
+                        <h2 style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 4px;">全息回测沙盘与公式引擎</h2>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">自定义策略参数与执行阈值，实时推演历史收益 Alpha</p>
                     </div>
                 </div>
 
-                <div class="sandbox-chart-container">
-                    <canvas id="sandboxChart"></canvas>
+                <div class="sandbox-grid" id="sandbox-grid" style="padding-top: 10px;">
+                    <div class="sandbox-controls">
+                        <!-- 时间切片过滤器 -->
+                        <div class="control-card">
+                            <h3>时间切片 (Time Range)</h3>
+                            <div class="date-filters">
+                                <input type="date" id="sandbox-start-date">
+                                <span>至</span>
+                                <input type="date" id="sandbox-end-date">
+                            </div>
+                            <div class="date-presets">
+                                <button class="preset-btn" onclick="setSandboxRange(1)">近1年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(2)">近2年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(3)">近3年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(4)">近4年</button>
+                                <button class="preset-btn" onclick="setSandboxRange(5)">近5年</button>
+                                <button class="preset-btn active" onclick="setSandboxRange('ALL')">全部</button>
+                            </div>
+                            <div class="freq-selector" style="margin-top: 10px; display: flex; gap: 8px;">
+                                <select id="dca-freq" class="freq-select" onchange="onDcaFreqChange()">
+                                    <option value="daily">按天定投</option>
+                                    <option value="weekly" selected>按周定投</option>
+                                    <option value="monthly">按月定投</option>
+                                </select>
+                                <select id="dca-day" class="freq-select">
+                                    <option value="1">周一</option>
+                                    <option value="2">周二</option>
+                                    <option value="3" selected>周三</option>
+                                    <option value="4">周四</option>
+                                    <option value="5">周五</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 动态公式沙盘与权重 -->
+                        <div class="control-card">
+                            <h3>动态因子与公式引擎 <small>(点击展开编辑公式)</small></h3>
+
+                            <div class="factor-group" id="group-val">
+                                <div class="factor-header" onclick="toggleFormulaBuilder('val')">
+                                    <span>估值因子 (PE) 权重</span>
+                                    <span class="factor-val font-mono" id="sb-weight-val">0.30</span>
+                                </div>
+                                <input type="range" id="sb-slider-val" min="0" max="1" step="0.05" value="0.30" oninput="updateSandboxConfigs()">
+                                <div class="formula-builder" id="builder-val" style="display: none;"></div>
+                            </div>
+
+                            <div class="factor-group" id="group-sent">
+                                <div class="factor-header" onclick="toggleFormulaBuilder('sent')">
+                                    <span>情绪因子 (VXN) 权重</span>
+                                    <span class="factor-val font-mono" id="sb-weight-sent">0.30</span>
+                                </div>
+                                <input type="range" id="sb-slider-sent" min="0" max="1" step="0.05" value="0.30" oninput="updateSandboxConfigs()">
+                                <div class="formula-builder" id="builder-sent" style="display: none;"></div>
+                            </div>
+
+                            <div class="factor-group" id="group-trend">
+                                <div class="factor-header" onclick="toggleFormulaBuilder('trend')">
+                                    <span>趋势因子 (Bias) 权重</span>
+                                    <span class="factor-val font-mono" id="sb-weight-trend">0.40</span>
+                                </div>
+                                <input type="range" id="sb-slider-trend" min="0" max="1" step="0.05" value="0.40" oninput="updateSandboxConfigs()">
+                                <div class="formula-builder" id="builder-trend" style="display: none;"></div>
+                            </div>
+
+                            <div class="compile-action" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="compile-formula-btn" class="btn sandbox-btn" style="flex: 1;" onclick="compileAndRunSandbox()">⚙️ 编译并回测</button>
+                                <button class="btn secondary-btn" style="flex: 1;" onclick="exportSandboxModel()" title="将当前回测配置打包发布为量化模型代码">📦 保存模型</button>
+                            </div>
+                        </div>
+
+                        <!-- 统计数据 -->
+                        <div class="control-card stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-label">固定定投回报率</div>
+                                <div class="stat-value font-mono" id="sb-stat-naive">0.00%</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">动态策略回报率</div>
+                                <div class="stat-value font-mono" id="sb-stat-dynamic">0.00%</div>
+                            </div>
+                            <div class="stat-item highlight" style="display: flex; justify-content: space-around; align-items: center; gap: 20px;">
+                                <div style="text-align: center; flex: 1;">
+                                    <div class="stat-label">超额收益率 (Alpha)</div>
+                                    <div class="stat-value font-mono" id="sb-stat-alpha">0.00%</div>
+                                </div>
+                                <div style="width: 1px; height: 36px; background: rgba(148, 163, 184, 0.2);"></div>
+                                <div style="text-align: center; flex: 1;">
+                                    <div class="stat-label">总收益差异 (Profit Diff)</div>
+                                    <div class="stat-value font-mono" id="sb-stat-profit-diff">$0</div>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">固定总投入</div>
+                                <div class="stat-value font-mono small" id="sb-cost-naive">$0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">动态总投入</div>
+                                <div class="stat-value font-mono small" id="sb-cost-dynamic">$0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">固定绝对总收益</div>
+                                <div class="stat-value font-mono small" id="sb-profit-naive">$0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">动态绝对总收益</div>
+                                <div class="stat-value font-mono small" id="sb-profit-dynamic">$0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-chart-container">
+                        <canvas id="sandboxChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- View 3: Settings -->
+        <div id="view-settings" class="view-section">
+            <div class="settings-group">
+                <div class="settings-group-title">基础参数</div>
+                <div class="settings-item">
+                    <label for="setting-real-amount">实盘基础定投额</label>
+                    <input type="number" id="setting-real-amount" class="setting-input font-mono" value="100">
                 </div>
             </div>
-        </section>
+            
+            <div class="settings-group">
+                <div class="settings-group-title">沙盘参数</div>
+                <div class="settings-item">
+                    <label for="setting-sandbox-amount">回测基础金额</label>
+                    <input type="number" id="setting-sandbox-amount" class="setting-input font-mono" value="1000">
+                </div>
+            </div>
+            
+            
+            <div class="settings-group">
+                <div class="settings-group-title">阈值参数 (红绿灯)</div>
+                <div class="settings-item">
+                    <label for="setting-threshold-red">红灯最高阈值 (≤)</label>
+                    <input type="number" id="setting-threshold-red" class="setting-input font-mono" step="0.1" value="0.4" onchange="refreshDashboardWithNewThresholds()">
+                </div>
+                <div class="settings-item">
+                    <label for="setting-threshold-green">绿灯最低阈值 (>)</label>
+                    <input type="number" id="setting-threshold-green" class="setting-input font-mono" step="0.1" value="0.7" onchange="refreshDashboardWithNewThresholds()">
+                </div>
+            </div>
+            
+            <div class="settings-group">
+                <div class="settings-group-title">显示设置</div>
+                <div class="settings-item">
+                    <label for="setting-theme">外观模式</label>
+                    <select id="setting-theme" class="setting-input" onchange="changeTheme()">
+                        <option value="system">跟随系统</option>
+                        <option value="light">浅色模式</option>
+                        <option value="dark">深色模式</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-group">
+                <div class="settings-group-title">高级配置</div>
+                <div class="settings-item">
+                    <label for="setting-github-token">Github Token</label>
+                    <input type="password" id="setting-github-token" class="setting-input font-mono" placeholder="ghp_xxxx">
+                </div>
+                <button class="btn primary-btn btn-full global-sync-btn" onclick="commitModelsToCloud()" style="margin-top: 10px;">🚀 聚合保存至云端</button>
+            </div>
+            
+            <div class="settings-group">
+                <div class="settings-group-title">系统操作</div>
+                <button id="refresh-btn" class="interactive-block btn-full" style="margin:0;">强制刷新策略数据</button>
+                <button id="clear-cache-btn" class="btn secondary-btn btn-full" style="margin-top: 10px;" onclick="localStorage.clear(); alert('本地缓存已清除，请刷新页面'); location.reload();">清除本地缓存</button>
+            </div>
 
-        <footer>
-            <p>数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
-        </footer>
+            <div class="settings-footer" style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 12px; padding-bottom: 20px;">
+                <p>Version <span class="font-mono">v2.0.1</span></p>
+                <p style="margin-top: 10px;">数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
+            </div>
+        </div>
     </div>
+
+    <!-- Main Navigation -->
+    <nav id="main-nav" class="main-nav">
+        <button class="nav-item active" data-view="view-dashboard">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+            <span class="nav-label">策略概览</span>
+        </button>
+        <button class="nav-item" data-view="view-sandbox">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3v3M15 3v3M9 6l-3 12h12L15 6M7.5 14h9"/></svg></span>
+            <span class="nav-label">回测沙盘</span>
+        </button>
+        <button class="nav-item" data-view="view-settings">
+            <span class="nav-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+            <span class="nav-label">全局设置</span>
+        </button>
+    </nav>
 
     <!-- 历史走势弹窗 (Modal) -->
     <div id="chartModal" class="modal">
@@ -270,8 +326,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="./strategy_models.js?v=6"></script>
     <script src="./backtest_data.js?v=6"></script>
-    <script src="./app.js?v=6"></script>
-    <script src="./sandbox.js?v=8"></script>
+    <script src="./app.js?v=7"></script>
+    <script src="./sandbox.js?v=9"></script>
 </body>
 
 </html>

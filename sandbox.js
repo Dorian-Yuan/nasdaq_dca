@@ -24,11 +24,11 @@ window.loadSandboxFormulas = function () {
 };
 
 // 全局暴露的对象，用于绑定 UI 事件
-window.updateSandboxConfigs = function () {
+window.updateSandboxConfigs = function () { if(typeof window.compileAndRunSandbox === 'function') setTimeout(() => window.compileAndRunSandbox(false), 50);
     compileAndRunSandbox();
 };
 
-window.setSandboxRange = function (years) {
+window.setSandboxRange = function (years, autoCompile = true) {
     document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
     event.target.classList.add('active');
 
@@ -93,9 +93,12 @@ window.toggleFormulaBuilder = function (factor) {
 };
 
 // 定投频率切换逻辑
-window.onDcaFreqChange = function () {
+window.onDcaFreqChange = function () { if(typeof window.compileAndRunSandbox === 'function') setTimeout(() => window.compileAndRunSandbox(true), 50);
     const freq = document.getElementById('dca-freq').value;
     const daySelect = document.getElementById('dca-day');
+    daySelect.addEventListener('change', () => {
+        if(typeof window.compileAndRunSandbox === 'function') window.compileAndRunSandbox(true);
+    });
     daySelect.innerHTML = '';
 
     if (freq === 'daily') {
@@ -123,7 +126,10 @@ window.onDcaFreqChange = function () {
     }
 };
 
-window.compileAndRunSandbox = function () {
+window.compileAndRunSandbox = function (showToastMsg = true) {
+    const btn = document.getElementById('compile-formula-btn');
+    if (btn && showToastMsg) { btn.classList.add('loading'); btn.disabled = true; }
+    setTimeout(() => {
     if (typeof BACKTEST_DATA === 'undefined') {
         return; // 数据暂未加载
     }
@@ -203,7 +209,7 @@ window.compileAndRunSandbox = function () {
                 const nwVal = wVal / totalW;
                 const nwSent = wSent / totalW;
                 const nwTrend = wTrend / totalW;
-                const INV_BASE = 1000;
+                const INV_BASE = parseFloat(document.getElementById("setting-sandbox-amount")?.value) || 1000;
 
                 for (const row of silentData) {
                     let vScore = 1.0, sScore = 1.0, tScore = 1.0;
@@ -294,12 +300,12 @@ window.compileAndRunSandbox = function () {
     });
 
     if (viewData.length === 0) {
-        alert("该日期区间内无数据！");
+        if(window.showToast) window.showToast("该日期区间内无数据！", "error"); else alert("该日期区间内无数据！");
         return;
     }
 
     // 4. 执行千万次矩阵沙盘推演
-    const INV_BASE = 1000;
+    const INV_BASE = parseFloat(document.getElementById("setting-sandbox-amount")?.value) || 1000;
     let totalNaiveInvested = 0, naiveShares = 0;
     let totalDynInvested = 0, dynShares = 0;
 
@@ -393,6 +399,9 @@ window.compileAndRunSandbox = function () {
 
     // 6. 重绘高速 Canvas 曲线图
     renderSandboxChart(labels, naiveEquity, dynamicEquity);
+    if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+        if(window.showToast && showToastMsg) window.showToast('回测完成', 'success');
+    }, 50);
 };
 
 function renderSandboxChart(labels, naiveData, dynData) {
