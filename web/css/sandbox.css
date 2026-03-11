@@ -27,7 +27,7 @@
 }
 
 .sandbox-header {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-lg);
     border-bottom: 1px solid var(--border);
     padding-bottom: 15px;
 }
@@ -46,7 +46,7 @@
 .sandbox-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: var(--spacing-lg);
 }
 
 .sandbox-controls {
@@ -55,7 +55,7 @@
     max-width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-md);
 }
 
 @media (min-width: 768px) {
