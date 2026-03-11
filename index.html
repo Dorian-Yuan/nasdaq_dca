@@ -13,8 +13,8 @@
     <link rel="apple-touch-icon" href="./web/assets/icon.png">
     <!-- Styles -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./web/css/style.css?v=225">
-    <link rel="stylesheet" href="./web/css/sandbox.css?v=225">
+    <link rel="stylesheet" href="./web/css/style.css?v=227">
+    <link rel="stylesheet" href="./web/css/sandbox.css?v=227">
 </head>
 
 <body>
@@ -131,8 +131,8 @@
                                 <button class="preset-btn" onclick="setSandboxRange(2)">近2年</button>
                                 <button class="preset-btn" onclick="setSandboxRange(3)">近3年</button>
                                 <button class="preset-btn" onclick="setSandboxRange(4)">近4年</button>
-                                <button class="preset-btn" onclick="setSandboxRange(5)">近5年</button>
-                                <button class="preset-btn active" onclick="setSandboxRange('ALL')">全部</button>
+                                <button class="preset-btn active" onclick="setSandboxRange(5)">近5年</button>
+                                <button class="preset-btn" onclick="setSandboxRange('ALL')">全部</button>
                             </div>
                             <div class="freq-selector" style="margin-top: 10px; display: flex; gap: 8px;">
                                 <select id="dca-freq" class="freq-select" onchange="onDcaFreqChange()">
@@ -294,7 +294,7 @@
             </div>
 
             <div class="settings-footer" style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 12px; padding-bottom: 20px;">
-                <p>Version <span class="font-mono">v2.2.6</span></p>
+                <p>Version <span class="font-mono">v2.2.7</span></p>
                 <p style="margin-top: 10px;">数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
             </div>
         </div>
@@ -328,12 +328,12 @@
     </div>
 
     <!-- Config for Github Actions. (This file is ignored by git) -->
-    <script src="./config.js?v=225"></script>
+    <script src="./config.js?v=227"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="./web/js/strategy_models.js?v=225"></script>
-    <script src="./data/backtest_data.js?v=225"></script>
-    <script src="./web/js/app.js?v=225"></script>
-    <script src="./web/js/sandbox.js?v=225"></script>
+    <script src="./web/js/strategy_models.js?v=227"></script>
+    <script src="./data/backtest_data.js?v=227"></script>
+    <script src="./web/js/app.js?v=227"></script>
+    <script src="./web/js/sandbox.js?v=227"></script>
 </body>
 
 </html>

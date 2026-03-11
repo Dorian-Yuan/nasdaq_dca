@@ -321,7 +321,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Authorization': `token ${githubToken}`, 'Accept': 'application/vnd.github.v3+json' }
             });
 
-            if (!getRes.ok) throw new Error("获取远程文件失败");
+            if (!getRes.ok) {
+                const errorData = await getRes.json().catch(() => ({}));
+                console.error("Github GET failure:", getRes.status, errorData);
+                throw new Error(`获取远程文件失败 (${getRes.status}): ${errorData.message || '网络或权限问题'}`);
+            }
             let fileData = await getRes.json();
 
             let encodedContent = btoa(unescape(encodeURIComponent(newFileContent)));
@@ -340,7 +344,11 @@ document.addEventListener('DOMContentLoaded', () => {
             btns = document.querySelectorAll('.global-sync-btn');
             btns.forEach(b => { b.classList.remove('loading'); b.disabled = false; });
 
-            if (!putRes.ok) throw new Error("更新远程文件跨域冲突/权限拦截");
+            if (!putRes.ok) {
+                const errorData = await putRes.json().catch(() => ({}));
+                console.error("Github PUT failure:", putRes.status, errorData);
+                throw new Error(`更新远程文件失败 (${putRes.status}): ${errorData.message || '权限/冲突/Token无效'}`);
+            }
 
             window.STRATEGY_MODELS = cleanModels;
             renderModelManagerList();

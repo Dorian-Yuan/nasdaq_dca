@@ -504,7 +504,7 @@ setTimeout(() => {
         // 挂载自动适配当前选项卡的逻辑（借助 MutationObserver 监听 Tab 变化最解耦）
         const tabContainer = document.querySelector('.tabs') || document.body;
 
-        // Setup initial dates to "All" to prep stats
-        setSandboxRange('ALL');
+        // Setup initial dates to "5y" to prep stats (Requested Defaults)
+        setSandboxRange(5);
     }
 }, 1500);
