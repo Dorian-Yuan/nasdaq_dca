@@ -924,7 +924,7 @@ body {
     padding-bottom: 100px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .main-nav {
         width: 90%;
         justify-content: space-around;
@@ -933,6 +933,68 @@ body {
     }
     .nav-label { display: none; }
     .nav-item { padding: 14px; }
+}
+
+@media (min-width: 768px) {
+    .main-nav {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 80px;
+        transform: none;
+        background-color: var(--bg-card);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        border-right: 1px solid var(--border-color);
+        border-radius: 0;
+        flex-direction: column;
+        justify-content: flex-start;
+        padding: 30px 0 0 0;
+        gap: 0;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    [data-theme="light"] .main-nav {
+        background-color: var(--bg-card);
+        border: none;
+        border-right: 1px solid var(--border-color);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .nav-item {
+        padding: 20px 0;
+        border-radius: 0;
+        flex-direction: column;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .nav-item.active {
+        background: transparent;
+        color: var(--color-green);
+    }
+
+    [data-theme="light"] .nav-item.active {
+        background: transparent;
+        color: var(--color-green);
+    }
+    
+    .nav-item.active .nav-icon {
+        transform: translateY(-2px);
+    }
+
+    .nav-label {
+        font-size: 11px;
+        font-weight: 600;
+        display: block;
+    }
+
+    body {
+        padding-bottom: 0;
+        padding-left: 80px;
+    }
 }
 
 /* --- 设置页样式 --- */
