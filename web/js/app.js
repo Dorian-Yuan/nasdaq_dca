@@ -1,7 +1,7 @@
 
 // 立即执行以防闪烁
 (function() {
-    const savedTheme = localStorage.getItem('USER_THEME') || 'system';
+    const savedTheme = localStorage.getItem('setting-theme') || 'system';
     if (savedTheme !== 'system') {
         document.documentElement.setAttribute('data-theme', savedTheme);
     }
@@ -831,7 +831,7 @@ window.saveSettings = function() {
     }
     
     // 同步更新 UI
-    applyTheme(settings['USER_THEME']);
+    applyTheme(settings['setting-theme']);
     window.refreshDashboardWithNewThresholds();
     
     if (window.showToast) {
