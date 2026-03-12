@@ -221,9 +221,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isDefault = (modelId === 'ndx_default' || modelId === 'spy_default');
                 const isActive = (modelId === activeId);
 
-                const return5yText = model.return_5y !== undefined ?
-                    `<span style="margin-left:8px; color:${model.return_5y >= 0 ? 'var(--color-green)' : 'var(--color-red)'}">5年预估: ${model.return_5y >= 0 ? '+' : ''}${(model.return_5y).toFixed(1)}%</span>`
-                    : '';
+                let dynReturn5y = 0;
+                if (typeof window.calculate5YearAlpha === 'function') {
+                    dynReturn5y = window.calculate5YearAlpha(model, currentTab);
+                } else if (model.return_5y !== undefined) {
+                    dynReturn5y = model.return_5y;
+                }
+
+                const return5yText = `<span style="margin-left:8px; color:${dynReturn5y >= 0 ? 'var(--color-green)' : 'var(--color-red)'}">5年预估: ${dynReturn5y >= 0 ? '+' : ''}${(dynReturn5y).toFixed(1)}%</span>`;
                 const dateText = model.timestamp ? new Date(model.timestamp).toLocaleDateString() : '预设模型';
 
                 const itemDiv = document.createElement('div');

@@ -188,72 +188,10 @@ window.compileAndRunSandbox = function (showToastMsg = true) {
         const wSent = parseFloat(document.getElementById('sb-slider-sent').value);
         const wTrend = parseFloat(document.getElementById('sb-slider-trend').value);
 
-        // 后台静默推演近 5 年收益率
-        let return5y = 0;
-        try {
-            const fnVal = new Function("x", codeVal);
-            const fnSent = new Function("x", codeSent);
-            const fnTrend = new Function("x", codeTrend);
-
-            let silentData = window.BACKTEST_DATA[activeTab] || [];
-            const fiveYearsAgo = new Date();
-            fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
-            silentData = silentData.filter(d => new Date(d.date) >= fiveYearsAgo);
-
-            if (silentData.length > 0) {
-                let d_shares = 0;
-                let d_invested = 0;
-                let n_shares = 0;
-                let n_invested = 0;
-                // 与可视沙盘完全一致的归一化逻辑
-                let totalW = wVal + wSent + wTrend;
-                if (totalW === 0) totalW = 1;
-                const nwVal = wVal / totalW;
-                const nwSent = wSent / totalW;
-                const nwTrend = wTrend / totalW;
-                const INV_BASE = parseFloat(document.getElementById("setting-sandbox-amount")?.value) || 1000;
-
-                for (const row of silentData) {
-                    let vScore = 1.0, sScore = 1.0, tScore = 1.0;
-                    try { vScore = fnVal(row.pe_percentile !== null ? row.pe_percentile : 0.5); } catch (e) { }
-                    try { sScore = fnSent(row.volatility !== null ? row.volatility : 20); } catch (e) { }
-                    try { tScore = fnTrend(row.bias !== null ? row.bias : 0); } catch (e) { }
-
-                    let finalWeight = (vScore * nwVal) + (sScore * nwSent) + (tScore * nwTrend);
-                    finalWeight = Math.max(0.0, Math.min(3.0, finalWeight)); // 与可视引擎完全一致的兜底
-
-                    let invest = INV_BASE * finalWeight;
-                    d_invested += invest;
-                    d_shares += invest / row.price;
-
-                    // 固定定投
-                    n_invested += INV_BASE;
-                    n_shares += INV_BASE / row.price;
-                }
-
-                let finalPrice = silentData[silentData.length - 1].price;
-
-                let d_value = d_shares * finalPrice;
-                let d_return = 0;
-                if (d_invested > 0) d_return = (d_value - d_invested) / d_invested;
-
-                let n_value = n_shares * finalPrice;
-                let n_return = 0;
-                if (n_invested > 0) n_return = (n_value - n_invested) / n_invested;
-
-                // 返回超额收益 (Alpha)
-                return5y = (d_return - n_return) * 100;
-            }
-        } catch (e) {
-            console.error("静默5年预估失败", e);
-            return5y = 0;
-        }
-
         const exported = {
             id: id,
             name: nameInput,
             timestamp: Date.now(),
-            return_5y: return5y,
             weights: { pe: wVal, vxn: wSent, bias: wTrend },
             formula_pe: codeVal,
             formula_vxn: codeSent,
@@ -601,3 +539,75 @@ setTimeout(() => {
         setSandboxRange(5);
     }
 }, 1500);
+
+window.calculate5YearAlpha = function(model, activeTab) {
+    if (!model || typeof BACKTEST_DATA === 'undefined' || !BACKTEST_DATA[activeTab]) return 0;
+    
+    let return5y = 0;
+    try {
+        const codeVal = model.formula_pe || "";
+        const codeSent = model.formula_vxn || "";
+        const codeTrend = model.formula_bias || "";
+
+        const fnVal = new Function("x", codeVal);
+        const fnSent = new Function("x", codeSent);
+        const fnTrend = new Function("x", codeTrend);
+
+        const wVal = model.weights?.pe || 0;
+        const wSent = model.weights?.vxn || 0;
+        const wTrend = model.weights?.bias || 0;
+
+        let silentData = window.BACKTEST_DATA[activeTab] || [];
+        const fiveYearsAgo = new Date();
+        fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+        silentData = silentData.filter(d => new Date(d.date) >= fiveYearsAgo);
+
+        if (silentData.length > 0) {
+            let d_shares = 0;
+            let d_invested = 0;
+            let n_shares = 0;
+            let n_invested = 0;
+            
+            let totalW = wVal + wSent + wTrend;
+            if (totalW === 0) totalW = 1;
+            const nwVal = wVal / totalW;
+            const nwSent = wSent / totalW;
+            const nwTrend = wTrend / totalW;
+            const INV_BASE = parseFloat(document.getElementById("setting-sandbox-amount")?.value) || 1000;
+
+            for (const row of silentData) {
+                let vScore = 1.0, sScore = 1.0, tScore = 1.0;
+                try { vScore = fnVal(row.pe_percentile !== null ? row.pe_percentile : 0.5); } catch (e) { }
+                try { sScore = fnSent(row.volatility !== null ? row.volatility : 20); } catch (e) { }
+                try { tScore = fnTrend(row.bias !== null ? row.bias : 0); } catch (e) { }
+
+                let finalWeight = (vScore * nwVal) + (sScore * nwSent) + (tScore * nwTrend);
+                finalWeight = Math.max(0.0, Math.min(3.0, finalWeight));
+
+                let invest = INV_BASE * finalWeight;
+                d_invested += invest;
+                d_shares += invest / row.price;
+
+                n_invested += INV_BASE;
+                n_shares += INV_BASE / row.price;
+            }
+
+            let finalPrice = silentData[silentData.length - 1].price;
+
+            let d_value = d_shares * finalPrice;
+            let d_return = 0;
+            if (d_invested > 0) d_return = (d_value - d_invested) / d_invested;
+
+            let n_value = n_shares * finalPrice;
+            let n_return = 0;
+            if (n_invested > 0) n_return = (n_value - n_invested) / n_invested;
+
+            return5y = (d_return - n_return) * 100;
+        }
+    } catch (e) {
+        console.error("动态计算5年预估Alpha失败", e);
+        return5y = 0;
+    }
+    return return5y;
+};
+

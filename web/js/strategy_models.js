@@ -16,7 +16,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1772778969623",
             "name": "5x²全PE百分位",
             "timestamp": 1772778969623,
-            "return_5y": 38.3632165509057,
             "weights": {
                 "pe": 1,
                 "vxn": 0,
@@ -30,7 +29,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1772958646904",
             "name": "全VXN恐慌策略",
             "timestamp": 1772958646908,
-            "return_5y": 8.777643004960689,
             "weights": {
                 "pe": 0,
                 "vxn": 1,
@@ -44,7 +42,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1773019017226",
             "name": "PE6/VXN4",
             "timestamp": 1773019017227,
-            "return_5y": 21.726301011071335,
             "weights": {
                 "pe": 0.6,
                 "vxn": 0.4,
@@ -58,7 +55,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1773019191138",
             "name": "Gemini权衡策略",
             "timestamp": 1773019191139,
-            "return_5y": 24.67402757327851,
             "weights": {
                 "pe": 0.4,
                 "vxn": 0.3,
@@ -72,7 +68,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1773019955909",
             "name": "三因子权衡策略",
             "timestamp": 1773019955912,
-            "return_5y": 23.57934621345591,
             "weights": {
                 "pe": 0.4,
                 "vxn": 0.3,
@@ -88,7 +83,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1773020513754",
             "name": "PE6/VIX4",
             "timestamp": 1773020513758,
-            "return_5y": 19.192086316929363,
             "weights": {
                 "pe": 0.6,
                 "vxn": 0.4,
@@ -102,7 +96,6 @@ const STRATEGY_MODELS = {
             "id": "custom_1773020787426",
             "name": "三因子策略",
             "timestamp": 1773020787428,
-            "return_5y": 14.381645120684356,
             "weights": {
                 "pe": 0.4,
                 "vxn": 0.3,

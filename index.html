@@ -126,9 +126,9 @@
                         <div class="control-card">
                             <h3>时间切片 (Time Range)</h3>
                             <div class="date-filters">
-                                <input type="date" id="sandbox-start-date">
+                                <input type="date" id="sandbox-start-date" onchange="compileAndRunSandbox()">
                                 <span>至</span>
-                                <input type="date" id="sandbox-end-date">
+                                <input type="date" id="sandbox-end-date" onchange="compileAndRunSandbox()">
                             </div>
                             <div class="date-presets">
                                 <button class="preset-btn" onclick="setSandboxRange(1)">近1年</button>
@@ -257,15 +257,11 @@
         <!-- View 3: Settings -->
         <div id="view-settings" class="view-section">
             <div class="settings-group">
-                <div class="settings-group-title">基础参数</div>
+                <div class="settings-group-title">基础参数 (实盘与沙盘)</div>
                 <div class="settings-item">
                     <label for="setting-real-amount">实盘基础定投额</label>
                     <input type="number" id="setting-real-amount" class="setting-input font-mono" value="100">
                 </div>
-            </div>
-            
-            <div class="settings-group">
-                <div class="settings-group-title">沙盘参数</div>
                 <div class="settings-item">
                     <label for="setting-sandbox-amount">回测基础金额</label>
                     <input type="number" id="setting-sandbox-amount" class="setting-input font-mono" value="1000">
@@ -326,7 +322,7 @@
             </div>
 
             <div class="settings-footer" style="text-align: center; margin-top: 30px; color: var(--text-secondary); font-size: 12px; padding-bottom: 20px;">
-                <p>Version <span class="font-mono">v2.4.3</span></p>
+                <p>Version <span class="font-mono">v2.4.4</span></p>
                 <p style="margin-top: 10px;">数据从雅虎财经、蛋卷基金及市场情绪接口获取。</p>
             </div>
         </div>
