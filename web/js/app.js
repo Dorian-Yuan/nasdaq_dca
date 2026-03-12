@@ -249,6 +249,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     };
+    
+    // Initialize immediately to show the correct active model name before data fetch completes
+    window.renderModelManagerList();
 
     window.activateModelLocal = function (id) {
         if (window.ACTIVE_MODELS && window.STRATEGY_MODELS[currentTab][id]) {
@@ -878,9 +881,12 @@ window.loadSettings = function() {
         for (const [cfgKey, id] of Object.entries(cloudMapping)) {
             const val = window.GLOBAL_CONFIG[cfgKey];
             if (val !== undefined && val !== null) {
-                localStorage.setItem(id, val);
-                const el = document.getElementById(id);
-                if (el) el.value = val;
+                // Only overwrite if not already set in localStorage
+                if (localStorage.getItem(id) === null) {
+                    localStorage.setItem(id, val);
+                    const el = document.getElementById(id);
+                    if (el) el.value = val;
+                }
             }
         }
     }

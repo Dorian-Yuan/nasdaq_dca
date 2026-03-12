@@ -247,7 +247,7 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">无脑定投回报率</div>
+                    <div class="stat-label">固定定投回报率</div>
                     <div class="stat-value" id="stat-naive">0.00%</div>
                 </div>
                 <div class="stat-card">
@@ -265,6 +265,22 @@
                 <div class="stat-card">
                     <div class="stat-label">总投入 (动态)</div>
                     <div class="stat-value" style="font-size:1rem;" id="stat-cost-dynamic">$0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">固定夏普比率</div>
+                    <div class="stat-value" style="font-size:1rem;" id="stat-sharpe-naive">0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">动态夏普比率</div>
+                    <div class="stat-value" style="font-size:1rem;" id="stat-sharpe-dynamic">0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">固定最大回撤(修复)</div>
+                    <div class="stat-value" style="font-size:0.9rem;" id="stat-mdd-naive">0.00% (-)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">动态最大回撤(修复)</div>
+                    <div class="stat-value" style="font-size:0.9rem;" id="stat-mdd-dynamic">0.00% (-)</div>
                 </div>
             </div>
         </div>
@@ -345,6 +361,82 @@
             return finalWeight; // 返回连续倍率
         }
 
+        function calcMetrics(equityArr, costArr) {
+            let dailyReturns = [];
+            let maxDrawdown = 0;
+            let peakEq = -Infinity;
+            let peakDate = null;
+            let maxDrawdownPeakDate = null;
+            let maxDrawdownTroughDate = null;
+
+            let prevEq = 0;
+
+            for (let i = 0; i < equityArr.length; i++) {
+                let eq = equityArr[i].y;
+
+                if (i > 0) {
+                    let r = prevEq > 0 ? (eq - prevEq) / prevEq : 0;
+                    dailyReturns.push(r);
+                }
+                prevEq = eq;
+
+                if (eq > peakEq) {
+                    peakEq = eq;
+                    peakDate = equityArr[i].x;
+                }
+                if (peakEq > 0) {
+                    let dd = (peakEq - eq) / peakEq;
+                    if (dd > maxDrawdown) {
+                        maxDrawdown = dd;
+                        maxDrawdownPeakDate = peakDate;
+                        maxDrawdownTroughDate = equityArr[i].x;
+                    }
+                }
+            }
+
+            let meanR = 0;
+            if (dailyReturns.length > 0) {
+                meanR = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+            }
+            let varR = 0;
+            if (dailyReturns.length > 1) {
+                varR = dailyReturns.reduce((a, b) => a + Math.pow(b - meanR, 2), 0) / (dailyReturns.length - 1);
+            }
+            let stdR = Math.sqrt(varR);
+            let sharpe = 0;
+            if (stdR > 0) {
+                sharpe = (meanR / stdR) * Math.sqrt(252);
+            }
+
+            let recoveryDays = '-';
+            if (maxDrawdown > 0 && maxDrawdownPeakDate && maxDrawdownTroughDate) {
+                let troughPassed = false;
+                let peakValueAtDrawdown = 0;
+                for (let i = 0; i < equityArr.length; i++) {
+                    if (equityArr[i].x === maxDrawdownPeakDate) {
+                        peakValueAtDrawdown = equityArr[i].y;
+                    }
+                    if (equityArr[i].x === maxDrawdownTroughDate) {
+                        troughPassed = true;
+                    }
+                    if (troughPassed && equityArr[i].y >= peakValueAtDrawdown) {
+                        let ms = new Date(equityArr[i].x) - new Date(maxDrawdownPeakDate);
+                        recoveryDays = Math.ceil(ms / (1000 * 60 * 60 * 24)) + '天';
+                        break;
+                    }
+                }
+                if (recoveryDays === '-') recoveryDays = '未修复';
+            } else {
+                recoveryDays = '0天';
+            }
+
+            return {
+                sharpe: sharpe.toFixed(2),
+                maxDrawdown: (maxDrawdown * 100).toFixed(2) + '%',
+                recoveryDays: recoveryDays
+            };
+        }
+
         function runSimulation() {
             if (typeof BACKTEST_DATA === 'undefined') {
                 alert("未找到本地脱水数据字典 backtest_data.js，请先运行 Python 脚本生成！");
@@ -366,6 +458,8 @@
             const labels = [];
             const naiveEquity = [];
             const dynamicEquity = [];
+            const naiveCostArr = [];
+            const dynCostArr = [];
 
             const INV_BASE = 1000;
 
@@ -379,7 +473,7 @@
                 let row = dataTable[i];
                 let price = row.price;
 
-                // 1. 无脑定投买入
+                // 1. 固定定投买入
                 totalNaiveInvested += INV_BASE;
                 naiveShares += INV_BASE / price;
 
@@ -396,6 +490,8 @@
                 labels.push(row.date);
                 naiveEquity.push({ x: row.date, y: naiveShares * price });
                 dynamicEquity.push({ x: row.date, y: dynShares * price });
+                naiveCostArr.push({ x: row.date, y: totalNaiveInvested });
+                dynCostArr.push({ x: row.date, y: totalDynInvested });
             }
 
             // 计算终局表现
@@ -422,6 +518,14 @@
 
             document.getElementById('stat-cost-naive').innerText = '$' + totalNaiveInvested.toLocaleString(undefined, { maximumFractionDigits: 0 });
             document.getElementById('stat-cost-dynamic').innerText = '$' + totalDynInvested.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+            const naiveMetrics = calcMetrics(naiveEquity, naiveCostArr);
+            const dynMetrics = calcMetrics(dynamicEquity, dynCostArr);
+
+            document.getElementById('stat-sharpe-naive').innerText = naiveMetrics.sharpe;
+            document.getElementById('stat-sharpe-dynamic').innerText = dynMetrics.sharpe;
+            document.getElementById('stat-mdd-naive').innerText = naiveMetrics.maxDrawdown + ' (' + naiveMetrics.recoveryDays + ')';
+            document.getElementById('stat-mdd-dynamic').innerText = dynMetrics.maxDrawdown + ' (' + dynMetrics.recoveryDays + ')';
 
             // 绘制图表
             renderChart(labels, naiveEquity, dynamicEquity);

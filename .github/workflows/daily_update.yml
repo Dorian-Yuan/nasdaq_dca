@@ -4,7 +4,7 @@ on:
   # 每天定时执行 (使用 cron，UTC时间)
   schedule:
     - cron: '30 21 * * 1-5'  # 美股收盘后 (北京时间早上 5:30)，周二到周六早晨
-    - cron: '0 6 * * 1-5'    # 北京时间 14:00 (UTC 6:00)，周一到周五
+    - cron: '30 5 * * 1-5'   # 北京时间 13:30 (UTC 5:30)，周一到周五
   
   # 允许手动在 GitHub Actions 页面或通过 Webhook 触发
   workflow_dispatch:
@@ -36,8 +36,8 @@ jobs:
       run: |
         python backend/fetch_and_calc.py
         
-    - name: Run Backtest Data Generator (Only at 14:00 BJ / 06:00 UTC or Manual)
-      if: github.event.schedule == '0 6 * * 1-5' || github.event_name == 'workflow_dispatch'
+    - name: Run Backtest Data Generator (Only at 13:30 BJ / 05:30 UTC or Manual)
+      if: github.event.schedule == '30 5 * * 1-5' || github.event_name == 'workflow_dispatch'
       run: |
         python backend/backtest.py
         

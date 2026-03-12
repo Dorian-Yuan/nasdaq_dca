@@ -226,7 +226,7 @@ window.compileAndRunSandbox = function (showToastMsg = true) {
                     d_invested += invest;
                     d_shares += invest / row.price;
 
-                    // 无脑定投
+                    // 固定定投
                     n_invested += INV_BASE;
                     n_shares += INV_BASE / row.price;
                 }
@@ -314,6 +314,8 @@ window.compileAndRunSandbox = function (showToastMsg = true) {
     const labels = [];
     const naiveEquity = [];
     const dynamicEquity = [];
+    const naiveCostArr = [];
+    const dynCostArr = [];
 
     // 权重归一化 (防止用户滑块加总不为1)
     let totalW = wVal + wSent + wTrend;
@@ -326,7 +328,7 @@ window.compileAndRunSandbox = function (showToastMsg = true) {
         let row = viewData[i];
         let price = row.price;
 
-        // 无脑定投
+        // 固定定投
         totalNaiveInvested += INV_BASE;
         naiveShares += INV_BASE / price;
 
@@ -348,6 +350,8 @@ window.compileAndRunSandbox = function (showToastMsg = true) {
         labels.push(row.date);
         naiveEquity.push({ x: row.date, y: naiveShares * price });
         dynamicEquity.push({ x: row.date, y: dynShares * price });
+        naiveCostArr.push({ x: row.date, y: totalNaiveInvested });
+        dynCostArr.push({ x: row.date, y: totalDynInvested });
     }
 
     // 5. 渲染终局成绩单
@@ -399,12 +403,101 @@ window.compileAndRunSandbox = function (showToastMsg = true) {
         spd.className = 'stat-value ' + (profitDiff >= 0 ? 'value-green' : 'value-red');
     }
 
+    const naiveMetrics = calcMetrics(naiveEquity, naiveCostArr);
+    const dynMetrics = calcMetrics(dynamicEquity, dynCostArr);
+    
+    const ssn = document.getElementById('sb-sharpe-naive');
+    if(ssn) ssn.innerText = naiveMetrics.sharpe;
+    const ssd = document.getElementById('sb-sharpe-dynamic');
+    if(ssd) ssd.innerText = dynMetrics.sharpe;
+    
+    const smn = document.getElementById('sb-mdd-naive');
+    if(smn) smn.innerText = naiveMetrics.maxDrawdown + ' (' + naiveMetrics.recoveryDays + ')';
+    const smd = document.getElementById('sb-mdd-dynamic');
+    if(smd) smd.innerText = dynMetrics.maxDrawdown + ' (' + dynMetrics.recoveryDays + ')';
+
     // 6. 重绘高速 Canvas 曲线图
     renderSandboxChart(labels, naiveEquity, dynamicEquity);
     if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
         if(window.showToast && showToastMsg) window.showToast('回测完成', 'success');
     }, 50);
 };
+
+function calcMetrics(equityArr, costArr) {
+    let dailyReturns = [];
+    let maxDrawdown = 0;
+    let peakEq = -Infinity;
+    let peakDate = null;
+    let maxDrawdownPeakDate = null;
+    let maxDrawdownTroughDate = null;
+
+    let prevEq = 0;
+
+    for (let i = 0; i < equityArr.length; i++) {
+        let eq = equityArr[i].y;
+
+        if (i > 0) {
+            let r = prevEq > 0 ? (eq - prevEq) / prevEq : 0;
+            dailyReturns.push(r);
+        }
+        prevEq = eq;
+
+        if (eq > peakEq) {
+            peakEq = eq;
+            peakDate = equityArr[i].x;
+        }
+        if (peakEq > 0) {
+            let dd = (peakEq - eq) / peakEq;
+            if (dd > maxDrawdown) {
+                maxDrawdown = dd;
+                maxDrawdownPeakDate = peakDate;
+                maxDrawdownTroughDate = equityArr[i].x;
+            }
+        }
+    }
+
+    let meanR = 0;
+    if (dailyReturns.length > 0) {
+        meanR = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+    }
+    let varR = 0;
+    if (dailyReturns.length > 1) {
+        varR = dailyReturns.reduce((a, b) => a + Math.pow(b - meanR, 2), 0) / (dailyReturns.length - 1);
+    }
+    let stdR = Math.sqrt(varR);
+    let sharpe = 0;
+    if (stdR > 0) {
+        sharpe = (meanR / stdR) * Math.sqrt(252);
+    }
+
+    let recoveryDays = '-';
+    if (maxDrawdown > 0 && maxDrawdownPeakDate && maxDrawdownTroughDate) {
+        let troughPassed = false;
+        let peakValueAtDrawdown = 0;
+        for (let i = 0; i < equityArr.length; i++) {
+            if (equityArr[i].x === maxDrawdownPeakDate) {
+                peakValueAtDrawdown = equityArr[i].y;
+            }
+            if (equityArr[i].x === maxDrawdownTroughDate) {
+                troughPassed = true;
+            }
+            if (troughPassed && equityArr[i].y >= peakValueAtDrawdown) {
+                let ms = new Date(equityArr[i].x) - new Date(maxDrawdownPeakDate);
+                recoveryDays = Math.ceil(ms / (1000 * 60 * 60 * 24)) + '天';
+                break;
+            }
+        }
+        if (recoveryDays === '-') recoveryDays = '未修复';
+    } else {
+        recoveryDays = '0天';
+    }
+
+    return {
+        sharpe: sharpe.toFixed(2),
+        maxDrawdown: (maxDrawdown * 100).toFixed(2) + '%',
+        recoveryDays: recoveryDays
+    };
+}
 
 function renderSandboxChart(labels, naiveData, dynData) {
     const ctx = document.getElementById('sandboxChart').getContext('2d');
@@ -428,7 +521,7 @@ function renderSandboxChart(labels, naiveData, dynData) {
                     pointHitRadius: 10,
                 },
                 {
-                    label: '无脑定投对照组',
+                    label: '固定定投对照组',
                     data: naiveData,
                     borderColor: '#94a3b8',
                     borderWidth: 2,

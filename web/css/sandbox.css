@@ -228,8 +228,8 @@ input[type=range]::-moz-range-track {
 
 /* 公式编辑器面板 */
 .formula-builder {
-    background: #0f172a;
-    border: 1px inset var(--border);
+    background: var(--bg-main);
+    border: 1px inset var(--border-color);
     border-radius: 8px;
     padding: 12px;
     margin-top: 10px;
@@ -237,9 +237,9 @@ input[type=range]::-moz-range-track {
 
 textarea.formula-input {
     width: 100%;
-    background: #1e293b;
-    border: 1px solid var(--border);
-    color: #10b981;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--color-green);
     font-family: 'Courier New', Courier, monospace;
     font-size: 13px;
     padding: 8px;
