@@ -266,7 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderData(cachedData);
                 if (typeof window.loadSandboxFormulas === 'function') {
                     window.loadSandboxFormulas();
-                    window.compileAndRunSandbox();
+                    if (typeof window.compileAndRunSandbox === 'function') {
+                        window.compileAndRunSandbox(false);
+                    }
                 }
             }
         }
@@ -446,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.loadSandboxFormulas();
                 }
                 if (typeof window.compileAndRunSandbox === 'function') window.compileAndRunSandbox(false);
+                if (typeof window.renderModelManagerList === 'function') window.renderModelManagerList();
             })
             .catch(error => {
                 console.error('获取策略数据失败:', error);
