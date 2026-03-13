@@ -32,12 +32,15 @@ def fetch_price_and_bias(price_ticker, tencent_ticker):
         # 第一步：从腾讯调用权威行情接口作为备选
         tencent_url = f"http://qt.gtimg.cn/q={tencent_ticker}"
         tencent_res = requests.get(tencent_url, headers=HEADERS, timeout=10)
-        daily_return_str = None
+        daily_return_tencent = None
         if tencent_res.status_code == 200 and "~" in tencent_res.text:
             parts = tencent_res.text.split("~")
-            if len(parts) > 32:
-                daily_return_str = parts[32]
-        daily_return_tencent = float(daily_return_str) / 100.0 if daily_return_str else None
+            # 腾讯美股接口: parts[33] 通常是百分比涨跌幅 (如 1.23 表示 1.23%)
+            if len(parts) > 33:
+                try:
+                    daily_return_tencent = float(parts[33]) / 100.0
+                except ValueError:
+                    pass
 
         # 第二步：获取过去 1 年的历史折线以计算 MA200 和 乖离率
         url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{price_ticker}?metrics=high?&interval=1d&range=1y"
@@ -45,8 +48,20 @@ def fetch_price_and_bias(price_ticker, tencent_ticker):
         data_1y = res_1y.json()
         
         meta = data_1y['chart']['result'][0]['meta']
+        timestamps = data_1y['chart']['result'][0].get('timestamp', [])
         close_prices = data_1y['chart']['result'][0]['indicators']['quote'][0]['close']
-        valid_prices = [p for p in close_prices if p is not None]
+        
+        # 将价格映射到日期（确保即使同一天有多个点，也只保留最新的）
+        # Yahoo 有时会在收盘后多出一个数据点，导致简单的 valid_prices[-1] == valid_prices[-2]
+        daily_prices = {}
+        for ts, p in zip(timestamps, close_prices):
+            if p is not None:
+                # 使用 UTC 日期进行分组
+                dt_str = datetime.fromtimestamp(ts, timezone.utc).strftime('%Y-%m-%d')
+                daily_prices[dt_str] = p
+        
+        sorted_dates = sorted(daily_prices.keys())
+        valid_prices = [daily_prices[d] for d in sorted_dates]
         
         daily_return = None
         current_price = valid_prices[-1] if valid_prices else None
@@ -62,7 +77,9 @@ def fetch_price_and_bias(price_ticker, tencent_ticker):
             if prev_close and prev_close > 0:
                 daily_return = (current_price - prev_close) / prev_close
         
-        if daily_return is None:
+        # 如果 Yahoo 的 daily_return 为 0 (可能还是因为各种原因)，
+        # 且 Tencent 有数据，可以考虑优先用 Tencent，或者至少兜底
+        if (daily_return is None or daily_return == 0) and daily_return_tencent is not None:
             daily_return = daily_return_tencent
         
         if not valid_prices or len(valid_prices) < 200:
