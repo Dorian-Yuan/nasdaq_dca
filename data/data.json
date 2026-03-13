@@ -1,7 +1,7 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-03-13 14:06:54",
+      "update_time": "2026-03-13 15:43:45",
       "decision": "🟢",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
@@ -30,20 +30,20 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-03-13 14:06:54",
+      "update_time": "2026-03-13 15:43:45",
       "decision": "🟡",
       "reasons": [
         "使用动态策略模型: 三因子策略",
         "估值因子得分: 0.24 (PE分位 21.9%)",
-        "情绪因子得分: 0.63 (VIX 27.29)",
+        "情绪因子得分: 0.67 (VIX 27.83)",
         "趋势因子得分: 1.79 (乖离率 1.0%)",
-        "综合计算权重: 0.82倍"
+        "综合计算权重: 0.84倍"
       ],
       "individual_decisions": {
         "bias_decision": "1.79x",
         "pe_decision": "0.24x",
-        "vol_decision": "0.63x",
-        "final_weight": 0.82
+        "vol_decision": "0.67x",
+        "final_weight": 0.84
       },
       "metrics": {
         "price": 6672.62,
@@ -52,7 +52,7 @@
         "daily_return_percent": 0.0,
         "pe": 27.7199,
         "pe_percentile": 0.2192,
-        "volatility": 27.29,
+        "volatility": 27.83,
         "vol_name": "VIX"
       }
     }
