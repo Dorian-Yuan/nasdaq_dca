@@ -1,7 +1,7 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-04-03 14:41:56",
+      "update_time": "2026-04-04 05:55:15",
       "decision": "🟢",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
@@ -30,7 +30,7 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-04-03 14:41:56",
+      "update_time": "2026-04-04 05:55:15",
       "decision": "🟢",
       "reasons": [
         "使用动态策略模型: 三因子策略",
