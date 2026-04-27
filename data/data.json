@@ -1,7 +1,7 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-04-25 10:28:51",
+      "update_time": "2026-04-27 10:00:50",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
@@ -21,7 +21,7 @@
         "ma200": 24711.63,
         "bias_percent": 10.49,
         "daily_return_percent": 1.95,
-        "pe": 37.1306,
+        "pe": 37.1304,
         "pe_percentile": 0.09,
         "volatility": 23.38,
         "vol_name": "VXN"
@@ -30,7 +30,7 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-04-25 10:28:51",
+      "update_time": "2026-04-27 10:00:50",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: 三因子策略",
@@ -50,7 +50,7 @@
         "ma200": 6705.59,
         "bias_percent": 6.85,
         "daily_return_percent": 0.8,
-        "pe": 29.5876,
+        "pe": 29.5884,
         "pe_percentile": 0.1056,
         "volatility": 18.71,
         "vol_name": "VIX"
