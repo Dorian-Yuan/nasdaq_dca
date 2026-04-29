@@ -5,14 +5,14 @@ const urlsToCache = [
     './web/css/style.css',
     './web/js/app.js',
     './manifest.json',
-    './web/assets/icon.png'
+    './web/assets/icon2.png'
 ];
 
 self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                // 使用相对路径尝试缓存基本框架。忽略可能的404（例如icon.png还没放）
+                // 使用相对路径尝试缓存基本框架。忽略可能的404（例如icon2.png还没放）
                 return cache.addAll(urlsToCache).catch(err => console.log('部分资源缓存失败，不影响主流程', err));
             })
     );
@@ -20,10 +20,10 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // 对于 data.json，总是倾向于从网络获取最新数据
-    if (event.request.url.includes('data.json')) {
+    // 对于 data.json 和 backtest_data.js，总是倾向于从网络获取最新数据
+    if (event.request.url.includes('data.json') || event.request.url.includes('backtest_data.js')) {
         event.respondWith(
-            fetch(event.request).catch(() => caches.match(event.request))
+            fetch(event.request.url, { cache: 'no-store' }).catch(() => caches.match(event.request))
         );
         return;
     }

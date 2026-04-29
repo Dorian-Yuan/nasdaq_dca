@@ -383,7 +383,7 @@ def main():
             payload = {
                 "title": title,
                 "body": body,
-                "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/icon.png",
+                "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/icon2.png",
                 "group": "US_INDEX",
                 "sound": "minuet"
             }
