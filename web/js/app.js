@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.commitModelsToCloud = async function () {
-        const githubToken = localStorage.getItem('GITHUB_TOKEN');
+        const githubToken = localStorage.getItem('setting-github-token') || localStorage.getItem('GITHUB_TOKEN');
         const commitBtn = document.getElementById('commit-strats-btn');
 
         // 生成纯净的清理版对象
@@ -534,7 +534,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     refreshBtn.addEventListener('click', () => {
-        if (!GITHUB_TOKEN) {
+        let currentToken = localStorage.getItem('setting-github-token') || localStorage.getItem('GITHUB_TOKEN') || GITHUB_TOKEN;
+        let currentOwner = localStorage.getItem('setting-repo-owner') || localStorage.getItem('REPO_OWNER') || REPO_OWNER;
+        let currentRepo = localStorage.getItem('setting-repo-name') || localStorage.getItem('REPO_NAME') || REPO_NAME;
+
+        if (!currentToken) {
             window.showToast("未检测到 GitHub Token，请在设置中填写。", "warning");
             return;
         }
@@ -547,10 +551,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // 记录触发前的时间
         const currentUpdateTime = dom.updateTime.textContent;
 
-        fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+        fetch(`https://api.github.com/repos/${currentOwner}/${currentRepo}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
             method: 'POST',
             headers: {
-                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Authorization': `token ${currentToken}`,
                 'Accept': 'application/vnd.github.v3+json'
             },
             body: JSON.stringify({
