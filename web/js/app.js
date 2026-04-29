@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const pollInterval = setInterval(() => {
                         pollCount++;
-                        const fetchUrl = `./data.json?t=${new Date().getTime()}`;
+                        const fetchUrl = `./data/data.json?t=${new Date().getTime()}`;
                         fetch(fetchUrl)
                             .then(r => r.json())
                             .then(newData => {
