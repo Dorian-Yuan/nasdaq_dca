@@ -1,58 +1,58 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-05-13 16:14:09",
+      "update_time": "2026-05-14 06:42:41",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
         "估值因子得分: 0.13 (PE分位 15.9%)",
-        "情绪因子得分: 0.33 (VXN 24.13)",
-        "趋势因子得分: 0.24 (乖离率 16.2%)",
-        "综合计算权重: 0.22倍"
+        "情绪因子得分: 0.34 (VXN 24.59)",
+        "趋势因子得分: 0.19 (乖离率 17.3%)",
+        "综合计算权重: 0.21倍"
       ],
       "individual_decisions": {
-        "bias_decision": "0.24x",
+        "bias_decision": "0.19x",
         "pe_decision": "0.13x",
-        "vol_decision": "0.33x",
-        "final_weight": 0.22
+        "vol_decision": "0.34x",
+        "final_weight": 0.21
       },
       "metrics": {
-        "price": 29064.8,
-        "ma200": 25015.79,
-        "bias_percent": 16.19,
-        "daily_return_percent": -0.87,
+        "price": 29366.94,
+        "ma200": 25045.84,
+        "bias_percent": 17.25,
+        "daily_return_percent": 1.04,
         "pe": 36.2034,
         "pe_percentile": 0.1592,
-        "volatility": 24.13,
+        "volatility": 24.59,
         "vol_name": "VXN"
       }
     }
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-05-13 16:14:09",
+      "update_time": "2026-05-14 06:42:41",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: 三因子策略",
         "估值因子得分: 0.10 (PE分位 14.1%)",
-        "情绪因子得分: 0.29 (VIX 17.93)",
-        "趋势因子得分: 0.76 (乖离率 9.4%)",
-        "综合计算权重: 0.35倍"
+        "情绪因子得分: 0.29 (VIX 17.87)",
+        "趋势因子得分: 0.71 (乖离率 10.0%)",
+        "综合计算权重: 0.34倍"
       ],
       "individual_decisions": {
-        "bias_decision": "0.76x",
+        "bias_decision": "0.71x",
         "pe_decision": "0.10x",
         "vol_decision": "0.29x",
-        "final_weight": 0.35
+        "final_weight": 0.34
       },
       "metrics": {
-        "price": 7400.96,
-        "ma200": 6763.72,
-        "bias_percent": 9.42,
-        "daily_return_percent": -0.16,
+        "price": 7444.25,
+        "ma200": 6768.99,
+        "bias_percent": 9.98,
+        "daily_return_percent": 0.58,
         "pe": 29.0898,
         "pe_percentile": 0.1408,
-        "volatility": 17.93,
+        "volatility": 17.87,
         "vol_name": "VIX"
       }
     }
