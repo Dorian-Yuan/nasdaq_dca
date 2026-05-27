@@ -1,28 +1,28 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-05-27 06:46:00",
+      "update_time": "2026-05-27 13:48:09",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
-        "估值因子得分: 0.28 (PE分位 23.5%)",
+        "估值因子得分: 0.20 (PE分位 20.1%)",
         "情绪因子得分: 0.32 (VXN 23.90)",
         "趋势因子得分: 0.13 (乖离率 18.6%)",
-        "综合计算权重: 0.25倍"
+        "综合计算权重: 0.22倍"
       ],
       "individual_decisions": {
         "bias_decision": "0.13x",
-        "pe_decision": "0.28x",
+        "pe_decision": "0.20x",
         "vol_decision": "0.32x",
-        "final_weight": 0.25
+        "final_weight": 0.22
       },
       "metrics": {
         "price": 30001.32,
         "ma200": 25291.39,
         "bias_percent": 18.62,
         "daily_return_percent": 1.76,
-        "pe": 35.1881,
-        "pe_percentile": 0.2348,
+        "pe": 35.6087,
+        "pe_percentile": 0.2012,
         "volatility": 23.9,
         "vol_name": "VXN"
       }
@@ -30,28 +30,28 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-05-27 06:46:00",
+      "update_time": "2026-05-27 13:48:09",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: 三因子策略",
-        "估值因子得分: 0.13 (PE分位 16.3%)",
+        "估值因子得分: 0.11 (PE分位 15.0%)",
         "情绪因子得分: 0.28 (VIX 17.01)",
         "趋势因子得分: 0.67 (乖离率 10.4%)",
-        "综合计算权重: 0.34倍"
+        "综合计算权重: 0.33倍"
       ],
       "individual_decisions": {
         "bias_decision": "0.67x",
-        "pe_decision": "0.13x",
+        "pe_decision": "0.11x",
         "vol_decision": "0.28x",
-        "final_weight": 0.34
+        "final_weight": 0.33
       },
       "metrics": {
         "price": 7519.12,
         "ma200": 6813.55,
         "bias_percent": 10.36,
         "daily_return_percent": 0.61,
-        "pe": 28.7613,
-        "pe_percentile": 0.1632,
+        "pe": 28.9511,
+        "pe_percentile": 0.1504,
         "volatility": 17.01,
         "vol_name": "VIX"
       }
