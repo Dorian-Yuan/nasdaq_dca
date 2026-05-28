@@ -20,8 +20,8 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // 对于 data.json 和 backtest_data.js，总是倾向于从网络获取最新数据
-    if (event.request.url.includes('data.json') || event.request.url.includes('backtest_data.js')) {
+    // 对于 data.json 和 backtest_data.json，总是倾向于从网络获取最新数据
+    if (event.request.url.includes('data.json') || event.request.url.includes('backtest_data.json')) {
         event.respondWith(
             fetch(event.request.url, { cache: 'no-store' }).catch(() => caches.match(event.request))
         );

@@ -434,22 +434,29 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadData() {
     document.querySelectorAll(".metric-value, #decision-text").forEach(el => el.classList.add("skeleton"));
 
-        const fetchUrl = `./data/data.json?t=${new Date().getTime()}`;
-        fetch(fetchUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('网络响应失败');
-                }
+        const t = new Date().getTime();
+        const fetchUrl1 = `./data/data.json?t=${t}`;
+        const fetchUrl2 = `./data/backtest_data.json?t=${t}`;
+        
+        Promise.all([
+            fetch(fetchUrl1).then(response => {
+                if (!response.ok) throw new Error('网络响应失败 data.json');
+                return response.json();
+            }),
+            fetch(fetchUrl2).then(response => {
+                if (!response.ok) throw new Error('网络响应失败 backtest_data.json');
                 return response.json();
             })
-            .then(data => {
-                renderData(data);
-                if (typeof window.loadSandboxFormulas === 'function') {
-                    window.loadSandboxFormulas();
-                }
-                if (typeof window.compileAndRunSandbox === 'function') window.compileAndRunSandbox(false);
-                if (typeof window.renderModelManagerList === 'function') window.renderModelManagerList();
-            })
+        ])
+        .then(([data, backtestData]) => {
+            window.BACKTEST_DATA = backtestData;
+            renderData(data);
+            if (typeof window.loadSandboxFormulas === 'function') {
+                window.loadSandboxFormulas();
+            }
+            if (typeof window.compileAndRunSandbox === 'function') window.compileAndRunSandbox(false);
+            if (typeof window.renderModelManagerList === 'function') window.renderModelManagerList();
+        })
             .catch(error => {
                 console.error('获取策略数据失败:', error);
                 dom.updateTime.textContent = '数据加载失败，请检查网络或点击刷新按钮重试。';

@@ -294,9 +294,7 @@
         </div>
     </div>
 
-    <!-- 导入脱水数据源 -->
-    <script src="../data/backtest_data.js"></script>
-
+    <!-- 动态导入脱水数据源 -->
     <script>
         // --- 核心模拟引擎 ---
         let currentTab = 'NDX';
@@ -606,7 +604,16 @@
 
         // 初始化
         window.onload = () => {
-            setTimeout(runSimulation, 500); // Wait for external JS object to load
+            fetch('../data/backtest_data.json?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    window.BACKTEST_DATA = data;
+                    setTimeout(runSimulation, 100);
+                })
+                .catch(err => {
+                    console.error('Failed to load backtest data:', err);
+                    alert("未找到本地脱水数据字典 backtest_data.json，请先运行 Python 脚本生成！");
+                });
         };
     </script>
 </body>
