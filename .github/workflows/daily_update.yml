@@ -18,17 +18,17 @@ jobs:
     
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
         
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests yfinance pandas
+        pip install requests yfinance pandas numpy
         
     - name: Run Python Script (Fetch, Calc & Notify)
       env:
@@ -51,6 +51,6 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add data/data.json data/backtest_data.js
+        git add data/data.json data/backtest_data.json
         git commit -m "Auto-update NASDAQ strategy and backtest data [skip ci]"
         git push

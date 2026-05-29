@@ -1,7 +1,7 @@
 """
 backtest.py - 回测数据生成器
 从 Yahoo Finance 获取价格/均线/波动率，从蛋卷获取 PE 历史并计算展开百分位。
-输出 backtest_data.js 供前端沙盘使用。
+输出 backtest_data.json 供前端沙盘使用。
 
 PE百分位约定: 越小 = 越高估(昂贵), 越大 = 越低估(便宜)
 计算方式: pe_percentile = (历史中 PE >= 当前 PE 的比例)
