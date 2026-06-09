@@ -371,15 +371,17 @@ def main():
     except Exception as e:
         print(f"写入文件失败: {e}")
 
-    # 4. 发送 Bark 推送 (如果有多个标的则发送聚合消息)
-    bark_key = os.environ.get("BARK_KEY")
-    if bark_key:
-        print("\n检测到 BARK_KEY，正在发送合并推送...")
-        try:
-            title = "指数定投评估"
-            body = "\n".join(bark_messages)
-            
-            bark_url = f"https://api.day.app/{bark_key}/"
+    # 4. 发送 Bark 推送 (支持逗号分隔多 Key，并行发送)
+    bark_key_str = os.environ.get("BARK_KEY", "")
+    bark_keys = [k.strip() for k in bark_key_str.split(",") if k.strip()]
+
+    if bark_keys:
+        print(f"\n检测到 {len(bark_keys)} 个 BARK_KEY，正在并行发送推送...")
+        title = "指数定投评估"
+        body = "\n".join(bark_messages)
+
+        def send_bark(key):
+            bark_url = f"https://api.day.app/{key}/"
             payload = {
                 "title": title,
                 "body": body,
@@ -387,19 +389,24 @@ def main():
                 "group": "US_INDEX",
                 "sound": "minuet"
             }
-            # 如果任何一个标的出现绿灯，就用高音
             if "🟢" in body:
                 payload["sound"] = "alarm"
             elif "🔴" in body:
                 payload["sound"] = "fail"
-                
-            response = requests.post(bark_url, json=payload, timeout=10)
-            if response.status_code == 200:
-                print("Bark 推送成功！")
-            else:
-                print(f"Bark 推送失败: {response.status_code}")
-        except Exception as e:
-            print(f"发送 Bark 推送异常: {e}")
+            try:
+                response = requests.post(bark_url, json=payload, timeout=10)
+                return key[:6] + "...", response.status_code
+            except Exception as e:
+                return key[:6] + "...", str(e)
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(bark_keys)) as executor:
+            futures = {executor.submit(send_bark, key): key for key in bark_keys}
+            for future in concurrent.futures.as_completed(futures):
+                key_short, result = future.result()
+                if result == 200:
+                    print(f"Bark 推送成功 (Key: {key_short})")
+                else:
+                    print(f"Bark 推送失败 (Key: {key_short}): {result}")
     else:
         print("\n未配置 BARK_KEY 环境变量，跳过消息推送。")
 
