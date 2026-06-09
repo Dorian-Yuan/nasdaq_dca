@@ -274,6 +274,76 @@ console.log(JSON.stringify({{
     return decision, reasons, individual_decisions
 
 
+def update_ohlc_data():
+    """增量更新OHLC数据到 data/ohlc_data.json（独立文件，不影响现有数据）"""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    ohlc_path = os.path.join(project_root, "data", "ohlc_data.json")
+
+    # 读取现有数据
+    existing = {}
+    if os.path.exists(ohlc_path):
+        try:
+            with open(ohlc_path, 'r', encoding='utf-8') as f:
+                existing = json.load(f)
+        except Exception as e:
+            print(f"读取 ohlc_data.json 失败，将重新创建: {e}")
+            existing = {}
+
+    indices = {
+        "NDX": "%5ENDX",
+        "SP500": "%5EGSPC"
+    }
+
+    for key, ticker in indices.items():
+        try:
+            # 从Yahoo Finance获取近1年OHLC数据
+            url = f"https://query2.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=2y"
+            res = requests.get(url, headers=HEADERS, timeout=15)
+            data = res.json()
+
+            timestamps = data['chart']['result'][0]['timestamp']
+            quotes = data['chart']['result'][0]['indicators']['quote'][0]
+
+            # 构建新数据列表
+            new_records = []
+            for i, ts in enumerate(timestamps):
+                dt_str = datetime.fromtimestamp(ts, timezone.utc).strftime('%Y-%m-%d')
+                if all(quotes[k][i] is not None for k in ['open', 'high', 'low', 'close']):
+                    new_records.append({
+                        "date": dt_str,
+                        "open": round(quotes['open'][i], 2),
+                        "high": round(quotes['high'][i], 2),
+                        "low": round(quotes['low'][i], 2),
+                        "close": round(quotes['close'][i], 2),
+                        "volume": quotes['volume'][i] if quotes['volume'][i] else 0
+                    })
+
+            # 增量合并：仅追加新日期
+            existing_dates = {r['date'] for r in existing.get(key, [])}
+            existing_records = existing.get(key, [])
+            appended = 0
+            for record in new_records:
+                if record['date'] not in existing_dates:
+                    existing_records.append(record)
+                    appended += 1
+
+            # 按日期排序
+            existing_records.sort(key=lambda x: x['date'])
+            existing[key] = existing_records
+            print(f"  {key} OHLC: {len(existing_records)} 条, 新增 {appended} 条")
+        except Exception as e:
+            print(f"  {key} OHLC 更新失败: {e}")
+
+    # 写回文件
+    try:
+        with open(ohlc_path, 'w', encoding='utf-8') as f:
+            json.dump(existing, f, ensure_ascii=False, indent=2)
+        print(f"OHLC数据已更新: {ohlc_path}")
+    except Exception as e:
+        print(f"写入 ohlc_data.json 失败: {e}")
+
+
 def main():
     INDICES = {
         "NDX": {
@@ -371,6 +441,12 @@ def main():
     except Exception as e:
         print(f"写入文件失败: {e}")
 
+    # 3.5 增量更新OHLC数据（独立文件，不影响现有数据）
+    print("\n=========================================")
+    print("增量更新OHLC数据")
+    print("=========================================")
+    update_ohlc_data()
+
     # 4. 发送 Bark 推送 (支持逗号分隔多 Key，并行发送)
     bark_key_str = os.environ.get("BARK_KEY", "")
     bark_keys = [k.strip() for k in bark_key_str.split(",") if k.strip()]
@@ -385,9 +461,10 @@ def main():
             payload = {
                 "title": title,
                 "body": body,
-                "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/icon2.png",
+                "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/web/assets/icon2.png",
                 "group": "US_INDEX",
-                "sound": "minuet"
+                "sound": "minuet",
+                "image": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/charts/kline_chart.png"
             }
             if "🟢" in body:
                 payload["sound"] = "alarm"
