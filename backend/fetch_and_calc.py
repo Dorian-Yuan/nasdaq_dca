@@ -43,7 +43,7 @@ def fetch_price_and_bias(price_ticker, tencent_ticker):
                     pass
 
         # 第二步：获取过去 1 年的历史折线以计算 MA200 和 乖离率
-        url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{price_ticker}?metrics=high?&interval=1d&range=1y"
+        url_1y = f"https://query2.finance.yahoo.com/v8/finance/chart/{price_ticker}?interval=1d&range=1y"
         res_1y = requests.get(url_1y, headers=HEADERS, timeout=10)
         data_1y = res_1y.json()
         
@@ -66,21 +66,50 @@ def fetch_price_and_bias(price_ticker, tencent_ticker):
         daily_return = None
         current_price = valid_prices[-1] if valid_prices else None
         
+        # 优先使用 Yahoo meta 数据计算涨跌幅
+        # 情况1: regularMarketPrice 和 regularMarketPreviousClose 都可用
         if 'regularMarketPrice' in meta and 'regularMarketPreviousClose' in meta:
             mrkt_price = meta['regularMarketPrice']
             prev_close = meta['regularMarketPreviousClose']
             if prev_close and prev_close > 0:
                 daily_return = (mrkt_price - prev_close) / prev_close
                 current_price = mrkt_price
-        elif len(valid_prices) >= 2:
+        
+        # 情况2: regularMarketPrice 可用但 regularMarketPreviousClose 为 None
+        # (Yahoo API 在盘前经常出现此情况：历史数据未更新，但 meta 有最新价)
+        # 此时用 regularMarketPrice 作为当前价，历史最后一个收盘价作为前日收盘
+        if daily_return is None and 'regularMarketPrice' in meta and valid_prices:
+            mrkt_price = meta['regularMarketPrice']
+            last_hist_close = valid_prices[-1]
+            # 仅当 meta 价格与历史最后收盘价不同时才使用（避免重复计算同一日数据）
+            if mrkt_price and last_hist_close and last_hist_close > 0 and abs(mrkt_price - last_hist_close) > 0.01:
+                daily_return = (mrkt_price - last_hist_close) / last_hist_close
+                current_price = mrkt_price
+                print(f"  ℹ Yahoo meta有最新价但缺前收，使用历史最后收盘作为前收: {last_hist_close:.2f}")
+        
+        # 情况3: meta 不可用，使用历史价格序列
+        if daily_return is None and len(valid_prices) >= 2:
             prev_close = valid_prices[-2]
             if prev_close and prev_close > 0:
                 daily_return = (current_price - prev_close) / prev_close
         
-        # 如果 Yahoo 的 daily_return 为 0 (可能还是因为各种原因)，
-        # 且 Tencent 有数据，可以考虑优先用 Tencent，或者至少兜底
-        if (daily_return is None or daily_return == 0) and daily_return_tencent is not None:
+        # 如果 Yahoo 的 daily_return 为 None（获取失败），
+        # 使用腾讯备选数据；daily_return == 0 是合法值（平盘），不应覆盖
+        if daily_return is None and daily_return_tencent is not None:
             daily_return = daily_return_tencent
+            print(f"  ⚠ Yahoo未返回涨跌幅，使用腾讯备选数据: {daily_return_tencent*100:.2f}%")
+
+        # 记录涨跌幅数据来源
+        if daily_return is not None:
+            if 'regularMarketPrice' in meta and meta.get('regularMarketPreviousClose') and meta['regularMarketPreviousClose'] > 0:
+                source = "Yahoo(meta完整)"
+            elif 'regularMarketPrice' in meta and valid_prices and abs(meta.get('regularMarketPrice', 0) - valid_prices[-1]) > 0.01:
+                source = "Yahoo(meta+历史前收)"
+            elif len(valid_prices) >= 2:
+                source = "Yahoo(纯历史)"
+            else:
+                source = "腾讯备选"
+            print(f"  涨跌幅数据来源: {source}, 值: {daily_return*100:.2f}%")
         
         if not valid_prices or len(valid_prices) < 200:
             print(f"警告：获取到的 {price_ticker} 价格历史不足 200 天，无法准确计算 MA200")
