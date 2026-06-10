@@ -1,7 +1,7 @@
 """
 chart_generator.py - K线图生成器
 从本地 data/ohlc_data.json 读取OHLC数据，生成纳指100和标普500近3个月的K线图，
-包含MA10/MA20/250均线和RSI(14)指标，合并为一张高清图片输出到 charts/kline_chart.png。
+包含MA20/60/250均线和RSI(14)指标，合并为一张高清图片输出到 charts/kline_chart.png。
 """
 
 import json
@@ -75,7 +75,7 @@ def calculate_rsi(series, period=14):
 def generate_single_chart(df, name_cn, months=3):
     """生成单个指数的K线图+MA+RSI，返回(figure, axes)"""
     # 计算均线
-    df['MA10'] = df['close'].rolling(window=10).mean()
+    df['MA60'] = df['close'].rolling(window=60).mean()
     df['MA20'] = df['close'].rolling(window=20).mean()
     df['MA250'] = df['close'].rolling(window=250).mean()
 
@@ -96,7 +96,7 @@ def generate_single_chart(df, name_cn, months=3):
 
     # 构建附加均线（浅色背景配色）
     apds = [
-        mpf.make_addplot(df_display['MA10'], color='#E65100', width=1.0, label='MA10'),   # 深橙色
+        mpf.make_addplot(df_display['MA60'], color='#E65100', width=1.0, label='MA60'),   # 深橙色
         mpf.make_addplot(df_display['MA20'], color='#1565C0', width=1.0, label='MA20'),   # 深蓝色
         mpf.make_addplot(df_display['MA250'], color='#7B1FA2', width=1.2, label='MA250'), # 深紫色
         mpf.make_addplot(df_display['RSI'], panel=2, color='#1565C0', width=1.2,
