@@ -32,7 +32,15 @@ jobs:
         
     - name: Run Python Script (Fetch, Calc & Notify)
       env:
-        BARK_KEY: ${{ secrets.BARK_KEY }}
+        BARK_KEY1: ${{ secrets.BARK_KEY1 }}
+        BARK_KEY2: ${{ secrets.BARK_KEY2 }}
+        BARK_KEY3: ${{ secrets.BARK_KEY3 }}
+        BARK_KEY4: ${{ secrets.BARK_KEY4 }}
+        BARK_KEY5: ${{ secrets.BARK_KEY5 }}
+        BARK_KEY6: ${{ secrets.BARK_KEY6 }}
+        BARK_KEY7: ${{ secrets.BARK_KEY7 }}
+        BARK_KEY8: ${{ secrets.BARK_KEY8 }}
+        BARK_KEY9: ${{ secrets.BARK_KEY9 }}
       run: |
         python backend/fetch_and_calc.py
 

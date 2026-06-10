@@ -447,9 +447,12 @@ def main():
     print("=========================================")
     update_ohlc_data()
 
-    # 4. 发送 Bark 推送 (支持逗号分隔多 Key，并行发送)
-    bark_key_str = os.environ.get("BARK_KEY", "")
-    bark_keys = [k.strip() for k in bark_key_str.split(",") if k.strip()]
+    # 4. 发送 Bark 推送 (从 BARK_KEY1 ~ BARK_KEY9 逐个检查，有就发送)
+    bark_keys = []
+    for i in range(1, 10):
+        key = os.environ.get(f"BARK_KEY{i}", "").strip()
+        if key:
+            bark_keys.append(key)
 
     if bark_keys:
         print(f"\n检测到 {len(bark_keys)} 个 BARK_KEY，正在并行发送推送...")
