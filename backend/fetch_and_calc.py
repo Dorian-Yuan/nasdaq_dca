@@ -476,48 +476,8 @@ def main():
     print("=========================================")
     update_ohlc_data()
 
-    # 4. 发送 Bark 推送 (从 BARK_KEY1 ~ BARK_KEY9 逐个检查，有就发送)
-    bark_keys = []
-    for i in range(1, 10):
-        key = os.environ.get(f"BARK_KEY{i}", "").strip()
-        if key:
-            bark_keys.append(key)
-
-    if bark_keys:
-        print(f"\n检测到 {len(bark_keys)} 个 BARK_KEY，正在并行发送推送...")
-        title = "指数定投评估"
-        body = "\n".join(bark_messages)
-
-        def send_bark(key):
-            bark_url = f"https://api.day.app/{key}/"
-            payload = {
-                "title": title,
-                "body": body,
-                "icon": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/web/assets/icon2.png",
-                "group": "US_INDEX",
-                "sound": "minuet",
-                "image": "https://raw.githubusercontent.com/Dorian-Yuan/nasdaq_dca/main/charts/kline_chart.png"
-            }
-            if "🟢" in body:
-                payload["sound"] = "alarm"
-            elif "🔴" in body:
-                payload["sound"] = "fail"
-            try:
-                response = requests.post(bark_url, json=payload, timeout=10)
-                return key[:6] + "...", response.status_code
-            except Exception as e:
-                return key[:6] + "...", str(e)
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(bark_keys)) as executor:
-            futures = {executor.submit(send_bark, key): key for key in bark_keys}
-            for future in concurrent.futures.as_completed(futures):
-                key_short, result = future.result()
-                if result == 200:
-                    print(f"Bark 推送成功 (Key: {key_short})")
-                else:
-                    print(f"Bark 推送失败 (Key: {key_short}): {result}")
-    else:
-        print("\n未配置 BARK_KEY 环境变量，跳过消息推送。")
+    # 4. Bark推送已独立为 backend/bark_notify.py，在 git push 之后执行
+    print("\n数据获取和计算完成，Bark推送将由独立步骤执行。")
 
 
 if __name__ == "__main__":

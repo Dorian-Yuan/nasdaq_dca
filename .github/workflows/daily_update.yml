@@ -30,7 +30,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests yfinance pandas numpy mplfinance
         
-    - name: Run Python Script (Fetch, Calc & Notify)
+    - name: Run Python Script (Fetch & Calc)
       env:
         BARK_KEY1: ${{ secrets.BARK_KEY1 }}
         BARK_KEY2: ${{ secrets.BARK_KEY2 }}
@@ -53,17 +53,25 @@ jobs:
       run: |
         python backend/backtest.py
         
-    - name: Check for changes
-      id: git-check
-      run: |
-        git diff --exit-code || echo "changes=true" >> $GITHUB_OUTPUT
-        
     - name: Commit and Push Data
-      if: steps.git-check.outputs.changes == 'true'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add data/data.json data/backtest_data.json data/ohlc_data.json charts/
-        git commit -m "Auto-update NASDAQ strategy and backtest data [skip ci]"
+        git diff --staged --quiet || git commit -m "Auto-update NASDAQ strategy and backtest data [skip ci]"
         git pull --rebase origin main
         git push
+
+    - name: Send Bark Notification
+      env:
+        BARK_KEY1: ${{ secrets.BARK_KEY1 }}
+        BARK_KEY2: ${{ secrets.BARK_KEY2 }}
+        BARK_KEY3: ${{ secrets.BARK_KEY3 }}
+        BARK_KEY4: ${{ secrets.BARK_KEY4 }}
+        BARK_KEY5: ${{ secrets.BARK_KEY5 }}
+        BARK_KEY6: ${{ secrets.BARK_KEY6 }}
+        BARK_KEY7: ${{ secrets.BARK_KEY7 }}
+        BARK_KEY8: ${{ secrets.BARK_KEY8 }}
+        BARK_KEY9: ${{ secrets.BARK_KEY9 }}
+      run: |
+        python backend/bark_notify.py
