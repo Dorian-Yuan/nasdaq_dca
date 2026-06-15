@@ -1,58 +1,58 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-06-15 16:45:49",
-      "decision": "🟡",
+      "update_time": "2026-06-16 07:15:09",
+      "decision": "🔴",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
-        "估值数据缺失，给予默认得分 1.0",
-        "情绪因子得分: 0.40 (VXN 27.27)",
-        "趋势因子得分: 0.29 (乖离率 15.3%)",
-        "综合计算权重: 0.61倍"
+        "估值因子得分: 0.51 (PE分位 32.0%)",
+        "情绪因子得分: 0.37 (VXN 25.92)",
+        "趋势因子得分: 0.12 (乖离率 18.7%)",
+        "综合计算权重: 0.35倍"
       ],
       "individual_decisions": {
-        "bias_decision": "0.29x",
-        "pe_decision": "1.00x",
-        "vol_decision": "0.40x",
-        "final_weight": 0.61
+        "bias_decision": "0.12x",
+        "pe_decision": "0.51x",
+        "vol_decision": "0.37x",
+        "final_weight": 0.35
       },
       "metrics": {
-        "price": 29635.95,
-        "ma200": 25698.49,
-        "bias_percent": 15.32,
-        "daily_return_percent": 0.64,
-        "pe": null,
-        "pe_percentile": null,
-        "volatility": 27.27,
+        "price": 30543.92,
+        "ma200": 25733.38,
+        "bias_percent": 18.69,
+        "daily_return_percent": 3.06,
+        "pe": 34.2492,
+        "pe_percentile": 0.32,
+        "volatility": 25.92,
         "vol_name": "VXN"
       }
     }
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-06-15 16:45:49",
+      "update_time": "2026-06-16 07:15:09",
       "decision": "🔴",
       "reasons": [
         "使用动态策略模型: 三因子策略",
         "估值因子得分: 0.19 (PE分位 19.6%)",
-        "情绪因子得分: 0.27 (VIX 16.65)",
-        "趋势因子得分: 0.90 (乖离率 8.0%)",
-        "综合计算权重: 0.43倍"
+        "情绪因子得分: 0.28 (VIX 17.68)",
+        "趋势因子得分: 0.73 (乖离率 9.7%)",
+        "综合计算权重: 0.38倍"
       ],
       "individual_decisions": {
-        "bias_decision": "0.90x",
+        "bias_decision": "0.73x",
         "pe_decision": "0.19x",
-        "vol_decision": "0.27x",
-        "final_weight": 0.43
+        "vol_decision": "0.28x",
+        "final_weight": 0.38
       },
       "metrics": {
-        "price": 7431.46,
-        "ma200": 6881.99,
-        "bias_percent": 7.98,
-        "daily_return_percent": 0.5,
+        "price": 7554.29,
+        "ma200": 6887.36,
+        "bias_percent": 9.68,
+        "daily_return_percent": 1.65,
         "pe": 28.3727,
         "pe_percentile": 0.1956,
-        "volatility": 16.65,
+        "volatility": 17.68,
         "vol_name": "VIX"
       }
     }
