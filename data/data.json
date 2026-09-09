@@ -1,28 +1,28 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-09-09 07:29:22",
+      "update_time": "2026-09-09 15:36:03",
       "decision": "🟢",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
-        "估值因子得分: 1.39 (PE分位 52.8%)",
+        "估值因子得分: 1.40 (PE分位 53.0%)",
         "情绪因子得分: 0.29 (VXN 21.71)",
         "趋势因子得分: 0.79 (乖离率 9.1%)",
-        "综合计算权重: 0.88倍"
+        "综合计算权重: 0.89倍"
       ],
       "individual_decisions": {
         "bias_decision": "0.79x",
-        "pe_decision": "1.39x",
+        "pe_decision": "1.40x",
         "vol_decision": "0.29x",
-        "final_weight": 0.88
+        "final_weight": 0.89
       },
       "metrics": {
         "price": 29507.7,
         "ma200": 27054.51,
         "bias_percent": 9.07,
         "daily_return_percent": -0.12,
-        "pe": 30.3066,
-        "pe_percentile": 0.5276,
+        "pe": 30.2828,
+        "pe_percentile": 0.5296,
         "volatility": 21.71,
         "vol_name": "VXN"
       }
@@ -30,29 +30,29 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-09-09 07:29:22",
+      "update_time": "2026-09-09 15:36:03",
       "decision": "🟡",
       "reasons": [
         "使用动态策略模型: 三因子策略",
-        "估值因子得分: 0.86 (PE分位 41.4%)",
-        "情绪因子得分: 0.26 (VIX 15.72)",
+        "估值因子得分: 0.91 (PE分位 42.6%)",
+        "情绪因子得分: 0.26 (VIX 15.62)",
         "趋势因子得分: 0.97 (乖离率 7.4%)",
-        "综合计算权重: 0.71倍"
+        "综合计算权重: 0.73倍"
       ],
       "individual_decisions": {
         "bias_decision": "0.97x",
-        "pe_decision": "0.86x",
+        "pe_decision": "0.91x",
         "vol_decision": "0.26x",
-        "final_weight": 0.71
+        "final_weight": 0.73
       },
       "metrics": {
         "price": 7673.52,
         "ma200": 7147.05,
         "bias_percent": 7.37,
         "daily_return_percent": -0.58,
-        "pe": 25.3304,
-        "pe_percentile": 0.4144,
-        "volatility": 15.72,
+        "pe": 25.2003,
+        "pe_percentile": 0.426,
+        "volatility": 15.62,
         "vol_name": "VIX"
       }
     }
