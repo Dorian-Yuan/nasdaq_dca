@@ -1,57 +1,57 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-10-17 07:44:17",
+      "update_time": "2026-10-19 14:29:36",
       "decision": "🟢",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
-        "估值因子得分: 1.51 (PE分位 54.9%)",
-        "情绪因子得分: 0.31 (VXN 22.89)",
+        "估值因子得分: 1.72 (PE分位 58.6%)",
+        "情绪因子得分: 0.40 (VXN 27.13)",
         "趋势因子得分: 1.22 (乖离率 5.2%)",
-        "综合计算权重: 1.06倍"
+        "综合计算权重: 1.17倍"
       ],
       "individual_decisions": {
         "bias_decision": "1.22x",
-        "pe_decision": "1.51x",
-        "vol_decision": "0.31x",
-        "final_weight": 1.06
+        "pe_decision": "1.72x",
+        "vol_decision": "0.40x",
+        "final_weight": 1.17
       },
       "metrics": {
         "price": 29187.55,
         "ma200": 27737.98,
         "bias_percent": 5.23,
         "daily_return_percent": -2.5,
-        "pe": 30.0447,
-        "pe_percentile": 0.5492,
-        "volatility": 22.89,
+        "pe": 29.3906,
+        "pe_percentile": 0.586,
+        "volatility": 27.13,
         "vol_name": "VXN"
       }
     }
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-10-17 07:44:17",
-      "decision": "🟡",
+      "update_time": "2026-10-19 14:29:36",
+      "decision": "🟢",
       "reasons": [
         "使用动态策略模型: 三因子策略",
-        "估值因子得分: 0.95 (PE分位 43.7%)",
+        "估值因子得分: 1.06 (PE分位 46.1%)",
         "情绪因子得分: 0.32 (VIX 19.99)",
         "趋势因子得分: 1.21 (乖离率 5.3%)",
-        "综合计算权重: 0.84倍"
+        "综合计算权重: 0.89倍"
       ],
       "individual_decisions": {
         "bias_decision": "1.21x",
-        "pe_decision": "0.95x",
+        "pe_decision": "1.06x",
         "vol_decision": "0.32x",
-        "final_weight": 0.84
+        "final_weight": 0.89
       },
       "metrics": {
         "price": 7659.44,
         "ma200": 7271.44,
         "bias_percent": 5.34,
         "daily_return_percent": -1.09,
-        "pe": 25.0982,
-        "pe_percentile": 0.4368,
+        "pe": 24.7922,
+        "pe_percentile": 0.4612,
         "volatility": 19.99,
         "vol_name": "VIX"
       }
