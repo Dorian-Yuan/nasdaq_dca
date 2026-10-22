@@ -1,28 +1,28 @@
 {
   "NDX": {
     "latest": {
-      "update_time": "2026-10-22 08:04:04",
+      "update_time": "2026-10-22 16:00:31",
       "decision": "🟢",
       "reasons": [
         "使用动态策略模型: Gemini权衡策略",
-        "估值因子得分: 1.66 (PE分位 57.6%)",
+        "估值因子得分: 1.62 (PE分位 57.0%)",
         "情绪因子得分: 0.33 (VXN 24.42)",
         "趋势因子得分: 0.98 (乖离率 7.3%)",
-        "综合计算权重: 1.06倍"
+        "综合计算权重: 1.04倍"
       ],
       "individual_decisions": {
         "bias_decision": "0.98x",
-        "pe_decision": "1.66x",
+        "pe_decision": "1.62x",
         "vol_decision": "0.33x",
-        "final_weight": 1.06
+        "final_weight": 1.04
       },
       "metrics": {
         "price": 29822.52,
         "ma200": 27802.91,
         "bias_percent": 7.26,
         "daily_return_percent": 1.13,
-        "pe": 29.6121,
-        "pe_percentile": 0.5764,
+        "pe": 29.7658,
+        "pe_percentile": 0.57,
         "volatility": 24.42,
         "vol_name": "VXN"
       }
@@ -30,29 +30,29 @@
   },
   "SP500": {
     "latest": {
-      "update_time": "2026-10-22 08:04:04",
+      "update_time": "2026-10-22 16:00:31",
       "decision": "🟡",
       "reasons": [
         "使用动态策略模型: 三因子策略",
-        "估值因子得分: 1.01 (PE分位 45.0%)",
-        "情绪因子得分: 0.27 (VIX 16.68)",
+        "估值因子得分: 1.03 (PE分位 45.5%)",
+        "情绪因子得分: 0.29 (VIX 18.24)",
         "趋势因子得分: 1.07 (乖离率 6.5%)",
-        "综合计算权重: 0.81倍"
+        "综合计算权重: 0.82倍"
       ],
       "individual_decisions": {
         "bias_decision": "1.07x",
-        "pe_decision": "1.01x",
-        "vol_decision": "0.27x",
-        "final_weight": 0.81
+        "pe_decision": "1.03x",
+        "vol_decision": "0.29x",
+        "final_weight": 0.82
       },
       "metrics": {
         "price": 7757.17,
         "ma200": 7284.21,
         "bias_percent": 6.49,
         "daily_return_percent": 0.58,
-        "pe": 24.9167,
-        "pe_percentile": 0.4504,
-        "volatility": 16.68,
+        "pe": 24.8816,
+        "pe_percentile": 0.4548,
+        "volatility": 18.24,
         "vol_name": "VIX"
       }
     }
