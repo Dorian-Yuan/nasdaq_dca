@@ -1,58 +1,186 @@
 name: Daily NASDAQ DCA Strategy Update
 
 on:
-  # 每天定时执行 (使用 cron，UTC时间)
+  # 每个中国工作日（非周末、非法定节假日）北京时间 10:00 执行一次完整流程：
+  # 抓取数据 -> 生成 K 线图 -> 回测 -> 提交数据 -> Bark 推送。
+  # GitHub 的 schedule 在高峰期可能延迟 1~4 小时，因此提前到 UTC 21:30（北京时间 05:30）触发，
+  # 再由后面的 “Wait until 10:00 Beijing Time” 步骤等到北京时间 10:00 再执行。
+  # 注意：GitHub cron 使用 UTC，北京时间 = UTC+8（无夏令时）。
+  # 每天触发（* * *）是为了让调休上班的周六/周日也能执行；节假日由 check-workday 过滤。
   schedule:
-    - cron: '30 21 * * 1-5'  # 美股收盘后 (北京时间早上 5:30)，周二到周六早晨
-    - cron: '0 3 * * 1-5'    # 预期北京时间 11:00（补偿 GitHub 调度延迟约 2-3h，实际约 13:00-14:00 触发）
-  
-  # 允许手动在 GitHub Actions 页面或通过 Webhook 触发
+    - cron: '30 21 * * *'
+
+  # 允许手动在 GitHub Actions 页面或通过 Webhook 触发：
+  # 跳过节假日检查，但同样会等待到北京时间 10:00 执行（10:00 之后触发则立即执行）
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  update-data:
+  # 判断北京时间的今天是否为中国工作日（含法定节假日与调休），周末或法定节假日直接跳过。
+  # 日历优先使用 chinese_calendar（每次运行都会安装/升级到最新版）；若安装失败或该库尚未覆盖当年，
+  # 自动回退到 holiday-cn 在线日历，最后退化为周一至周五，保证每日任务不会因日历问题中断。
+  check-workday:
     runs-on: ubuntu-latest
-    
+    outputs:
+      should_run: ${{ steps.guard.outputs.should_run }}
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-        
+
+    - name: Install/Update Holiday Calendar
+      continue-on-error: true
+      run: |
+        python -m pip install --upgrade --no-cache-dir chinese_calendar requests
+        python -m pip show chinese_calendar | grep -E '^(Name|Version):' || true
+
+    - name: Check Chinese Workday (Beijing Time)
+      id: guard
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        python - <<'PY'
+        import json
+        import os
+        from datetime import datetime, timedelta, timezone
+
+        TZ = timezone(timedelta(hours=8))
+        today = datetime.now(TZ).date()
+
+
+        def check_with_chinese_calendar(day):
+            """优先使用离线包 chinese_calendar（每次运行都会安装/升级到最新版本）。"""
+            try:
+                import chinese_calendar
+                from chinese_calendar import is_workday
+
+                try:
+                    version = chinese_calendar.__version__
+                except AttributeError:
+                    try:
+                        from importlib.metadata import version as pkg_version
+                        version = pkg_version("chinese_calendar")
+                    except Exception:
+                        version = "unknown"
+                return is_workday(day), f"chinese_calendar {version}"
+            except Exception as e:
+                print(f"chinese_calendar 不可用（{type(e).__name__}: {e}），尝试在线日历")
+                return None, None
+
+
+        def fetch_json(url):
+            headers = {"User-Agent": "nasdaq-dca-action/1.0"}
+            for attempt in range(2):
+                try:
+                    import requests
+                    response = requests.get(url, headers=headers, timeout=10)
+                    response.raise_for_status()
+                    return response.json()
+                except Exception as e:
+                    print(f"  requests 获取失败（第 {attempt + 1} 次）: {type(e).__name__}: {e}")
+                try:
+                    import urllib.request
+                    request = urllib.request.Request(url, headers=headers)
+                    with urllib.request.urlopen(request, timeout=10) as response:
+                        return json.loads(response.read().decode("utf-8"))
+                except Exception as e:
+                    print(f"  urllib 获取失败（第 {attempt + 1} 次）: {type(e).__name__}: {e}")
+            return None
+
+
+        def check_with_holiday_cn(day):
+            """chinese_calendar 未覆盖该年份时，回退到 holiday-cn 在线日历（含调休）。"""
+            urls = [
+                f"https://raw.githubusercontent.com/NateScarlet/holiday-cn/master/{day.year}.json",
+                f"https://cdn.jsdelivr.net/gh/NateScarlet/holiday-cn@master/{day.year}.json",
+            ]
+            for url in urls:
+                data = fetch_json(url)
+                if not data or data.get("year") != day.year:
+                    continue
+                for item in data.get("days", []):
+                    if item.get("date") == day.isoformat():
+                        return (not item.get("isOffDay", False)), "holiday-cn"
+                # 日历未列出该日期（普通工作日/周末，或当年放假安排尚未公布）
+                return day.weekday() < 5, "holiday-cn(未列出日期)"
+            return None, None
+
+
+        should_run, source = None, None
+        if os.environ.get("EVENT_NAME") == "workflow_dispatch":
+            should_run, source = True, "手动触发"
+        else:
+            try:
+                should_run, source = check_with_chinese_calendar(today)
+                if should_run is None:
+                    should_run, source = check_with_holiday_cn(today)
+            except Exception as e:
+                print(f"日历判断异常: {type(e).__name__}: {e}")
+
+        # 所有数据源都不可用时，退化为周一至周五，保证每日更新不中断
+        if should_run is None:
+            should_run, source = today.weekday() < 5, "周一至周五兜底"
+
+        status = "工作日，继续执行" if should_run else "周末或法定节假日，跳过执行"
+        reason = f"北京时间 {today}：{status}（数据源：{source}）"
+        print(reason)
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+            f.write(f"{reason}\n")
+        with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+            f.write(f"should_run={'true' if should_run else 'false'}\n")
+        PY
+
+  update-data:
+    needs: check-workday
+    if: needs.check-workday.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Wait until 10:00 Beijing Time
+      run: |
+        python - <<'PY'
+        import time
+        from datetime import datetime, timedelta, timezone
+
+        tz = timezone(timedelta(hours=8))
+        now = datetime.now(tz)
+        target = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        remaining = (target - now).total_seconds()
+        if remaining > 0:
+            print(f"等待 {remaining / 60:.1f} 分钟，直到北京时间 10:00 ...")
+            time.sleep(remaining)
+        else:
+            print("已过北京时间 10:00（GitHub 调度延迟），立即执行")
+        PY
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests yfinance pandas numpy mplfinance
-        
+
     - name: Run Python Script (Fetch & Calc)
-      env:
-        BARK_KEY1: ${{ secrets.BARK_KEY1 }}
-        BARK_KEY2: ${{ secrets.BARK_KEY2 }}
-        BARK_KEY3: ${{ secrets.BARK_KEY3 }}
-        BARK_KEY4: ${{ secrets.BARK_KEY4 }}
-        BARK_KEY5: ${{ secrets.BARK_KEY5 }}
-        BARK_KEY6: ${{ secrets.BARK_KEY6 }}
-        BARK_KEY7: ${{ secrets.BARK_KEY7 }}
-        BARK_KEY8: ${{ secrets.BARK_KEY8 }}
-        BARK_KEY9: ${{ secrets.BARK_KEY9 }}
       run: |
         python backend/fetch_and_calc.py
 
     - name: Generate K-line Charts
       run: |
         python backend/chart_generator.py
-        
-    - name: Run Backtest Data Generator (Only at ~13:00 BJ / 03:00 UTC or Manual)
-      if: github.event.schedule == '0 3 * * 1-5' || github.event_name == 'workflow_dispatch'
+
+    - name: Run Backtest Data Generator
       run: |
         python backend/backtest.py
-        
+
     - name: Commit and Push Data
       run: |
         git config --local user.email "action@github.com"
