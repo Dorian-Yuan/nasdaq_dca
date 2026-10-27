@@ -21734,6 +21734,15 @@
       "pe": 28.681,
       "pe_percentile": 0.6381,
       "volatility": 28.3
+    },
+    {
+      "date": "2026-10-26",
+      "price": 29273.4,
+      "ma200": 27854.85,
+      "bias": 0.0509,
+      "pe": 28.89,
+      "pe_percentile": 0.6304,
+      "volatility": 26.4
     }
   ],
   "SP500": [
@@ -43480,6 +43489,15 @@
       "pe": 24.4395,
       "pe_percentile": 0.5078,
       "volatility": 19.45
+    },
+    {
+      "date": "2026-10-26",
+      "price": 7676.77,
+      "ma200": 7295.09,
+      "bias": 0.0523,
+      "pe": 24.5864,
+      "pe_percentile": 0.5019,
+      "volatility": 18.39
     }
   ]
 }
